@@ -7,6 +7,8 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls
 {
+	import flash.geom.Point;
+	
 	import feathers.core.FeathersControl;
 	import feathers.core.IFeathersControl;
 	import feathers.core.IFocusDisplayObject;
@@ -206,6 +208,7 @@ package feathers.controls
 		 * @see feathers.core.IFeathersControl#nameList
 		 */
 		public static const ALTERNATE_NAME_FORWARD_BUTTON:String = "feathers-forward-button";
+		
 		
 		/**
 		 * Identifier for the button's up state. Can be used for styling purposes.
@@ -3383,5 +3386,40 @@ package feathers.controls
 				this.isSelected = !this._isSelected;
 			}
 		}
-	}
+		
+		/**
+		 * Caused by our dynamic assetloading (and disposing) we have to call dispose on every (AsseLoaded)Images once they are not
+		 * needed any more to ensure a correct use-count
+		 *
+		 * We have to override this function because the dispose will be called only for child-elements on the displaylist - so on temporary unused
+		 * items like skins and icons, the dispose won´t be called. Therefore we have to check if there is a unused (otherwise dispose will be called twice)
+		 * skin or icon and call dispose
+		 * @see #disposeNotOnStageDisplayObjects()
+		 */
+		override public function dispose(): void {
+			
+			disposeNotOnStageDisplayObject( _iconSelector.defaultValue as DisplayObject);
+			disposeNotOnStageDisplayObject( _iconSelector.defaultSelectedValue as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.defaultValue as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.defaultSelectedValue as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_UP, false) as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_DOWN, false) as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_HOVER, false) as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_DISABLED, false) as DisplayObject);
+			
+			super.dispose();
+		}
+		
+		/**
+		 * This function will call the dispose-method of the given displayobject if
+		 * it´s not added to this "container"
+		 * @param item : Object
+		 * @see #dispose()
+		 */		
+		private function disposeNotOnStageDisplayObject(item: DisplayObject): void {
+			if (item && !contains(item)) {
+				item.dispose();
+			}
+		}
+	} 	
 }
