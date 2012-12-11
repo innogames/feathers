@@ -24,6 +24,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 package feathers.controls
 {
+	import flash.geom.Point;
+	
 	import feathers.core.FeathersControl;
 	import feathers.core.IFeathersControl;
 	import feathers.core.ITextRenderer;
@@ -31,9 +33,7 @@ package feathers.controls
 	import feathers.core.PropertyProxy;
 	import feathers.display.ScrollRectManager;
 	import feathers.skins.StateWithToggleValueSelector;
-
-	import flash.geom.Point;
-
+	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	import starling.events.Touch;
@@ -81,7 +81,6 @@ package feathers.controls
 		 */
 		public static const DEFAULT_CHILD_NAME_LABEL:String = "feathers-button-label";
 		
-		public static const STATES:Array = [STATE_UP, STATE_DOWN, STATE_HOVER, STATE_DISABLED];
 		
 		/**
 		 * @private
@@ -2483,44 +2482,37 @@ package feathers.controls
 		/**
 		 * Caused by our dynamic assetloading (and disposing) we have to call dispose on every (AsseLoaded)Images once they are not
 		 * needed any more to ensure a correct use-count
-		 * 
+		 *
 		 * We have to override this function because the dispose will be called only for child-elements on the displaylist - so on temporary unused
 		 * items like skins and icons, the dispose won´t be called. Therefore we have to check if there is a unused (otherwise dispose will be called twice)
-		 * skin or icon and call dispose  
+		 * skin or icon and call dispose
+		 * @see #disposeNotOnStageDisplayObjects()
 		 */
 		override public function dispose(): void {
 			
-			//defaulticon
-			_iconSelector.defaultValue && !contains(DisplayObject(_iconSelector.defaultValue)) ? _iconSelector.defaultValue.dispose() : null;
-			
-			//selectedIcon
-			_iconSelector.defaultSelectedValue && !contains(DisplayObject(_iconSelector.defaultSelectedValue)) ? _iconSelector.defaultSelectedValue.dispose() :
-				null;
-			
-			//defaultskin
-			_skinSelector.defaultValue && !contains(DisplayObject(_skinSelector.defaultValue)) ? _skinSelector.defaultValue.dispose() : null;
-			
-			//defaultselectedskin
-			_skinSelector.defaultSelectedValue && !contains(DisplayObject(_skinSelector.defaultSelectedValue)) ? _skinSelector.defaultSelectedValue.dispose() :	null;
-
-			//upSkin
-			_skinSelector.getValueForState(STATE_UP, false) && !contains(DisplayObject(_skinSelector.getValueForState(STATE_UP, false))) ?
-				_skinSelector.getValueForState(STATE_UP, false).dispose() : null;
-			
-			//downSkin
-			_skinSelector.getValueForState(STATE_DOWN, false) && !contains(DisplayObject(_skinSelector.getValueForState(STATE_DOWN, false))) ?
-				_skinSelector.getValueForState(STATE_DOWN, false).dispose() : null;
-			
-			//hoverSkin
-			_skinSelector.getValueForState(STATE_HOVER, false) && !contains(DisplayObject(_skinSelector.getValueForState(STATE_HOVER, false))) ?
-				_skinSelector.getValueForState(STATE_HOVER, false).dispose() : null;
-			
-			//disabledSkin
-			_skinSelector.getValueForState(STATE_DISABLED, false) && !contains(DisplayObject(_skinSelector.getValueForState(STATE_DISABLED, false))) ?
-				_skinSelector.getValueForState(STATE_DISABLED, false).dispose() : null;
-			
+			disposeNotOnStageDisplayObjects( _iconSelector.defaultValue as DisplayObject);
+			disposeNotOnStageDisplayObjects( _iconSelector.defaultSelectedValue as DisplayObject);
+			disposeNotOnStageDisplayObjects( _skinSelector.defaultValue as DisplayObject);
+			disposeNotOnStageDisplayObjects( _skinSelector.defaultSelectedValue as DisplayObject);
+			disposeNotOnStageDisplayObjects( _skinSelector.getValueForState(STATE_UP, false) as DisplayObject);
+			disposeNotOnStageDisplayObjects( _skinSelector.getValueForState(STATE_DOWN, false) as DisplayObject);
+			disposeNotOnStageDisplayObjects( _skinSelector.getValueForState(STATE_HOVER, false) as DisplayObject);
+			disposeNotOnStageDisplayObjects( _skinSelector.getValueForState(STATE_DISABLED, false) as DisplayObject);
 			
 			super.dispose();
+		}
+		
+		/**
+		 * This function will ony call the dispose-method of the given displayobject if
+		 * it´s not added to this "container" - otherwise it will be called twice in the 
+		 * buttons dispose 
+		 * @param item : Object
+		 * @see #dispose()
+		 */		
+		private function disposeNotOnStageDisplayObjects(item: DisplayObject): void {
+			if (item && !contains(item)) {
+				item.dispose();
+			}
 		}
 	} 	
 }
