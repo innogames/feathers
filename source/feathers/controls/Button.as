@@ -2490,26 +2490,25 @@ package feathers.controls
 		 */
 		override public function dispose(): void {
 			
-			disposeNotOnStageDisplayObjects( _iconSelector.defaultValue as DisplayObject);
-			disposeNotOnStageDisplayObjects( _iconSelector.defaultSelectedValue as DisplayObject);
-			disposeNotOnStageDisplayObjects( _skinSelector.defaultValue as DisplayObject);
-			disposeNotOnStageDisplayObjects( _skinSelector.defaultSelectedValue as DisplayObject);
-			disposeNotOnStageDisplayObjects( _skinSelector.getValueForState(STATE_UP, false) as DisplayObject);
-			disposeNotOnStageDisplayObjects( _skinSelector.getValueForState(STATE_DOWN, false) as DisplayObject);
-			disposeNotOnStageDisplayObjects( _skinSelector.getValueForState(STATE_HOVER, false) as DisplayObject);
-			disposeNotOnStageDisplayObjects( _skinSelector.getValueForState(STATE_DISABLED, false) as DisplayObject);
+			disposeNotOnStageDisplayObject( _iconSelector.defaultValue as DisplayObject);
+			disposeNotOnStageDisplayObject( _iconSelector.defaultSelectedValue as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.defaultValue as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.defaultSelectedValue as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_UP, false) as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_DOWN, false) as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_HOVER, false) as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_DISABLED, false) as DisplayObject);
 			
 			super.dispose();
 		}
 		
 		/**
-		 * This function will ony call the dispose-method of the given displayobject if
-		 * it´s not added to this "container" - otherwise it will be called twice in the 
-		 * buttons dispose 
+		 * This function will call the dispose-method of the given displayobject if
+		 * it´s not added to this "container"
 		 * @param item : Object
 		 * @see #dispose()
 		 */		
-		private function disposeNotOnStageDisplayObjects(item: DisplayObject): void {
+		private function disposeNotOnStageDisplayObject(item: DisplayObject): void {
 			if (item && !contains(item)) {
 				item.dispose();
 			}
