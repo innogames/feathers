@@ -98,11 +98,12 @@
 			<fileset dir="${source.root}"/>
 		</copy>
 				
-		<echo message="Copying README and LICENSE"/>
+		<echo message="Copying informational documents"/>
 		<copy overwrite="true" todir="${output.path}">
 			<fileset dir="${basedir}">
 				<include name="README.md"/>
-				<include name="LICENSE"/>
+				<include name="LICENSE.md"/>
+				<include name="RELEASENOTES.md"/>
 			</fileset>
 		</copy>
 
@@ -112,6 +113,7 @@
 			<fileset dir="${examples.root}/AeonDesktopTheme">
 				<include name="README.md"/>
 				<include name="source/**"/>
+				<include name="assets/**"/>
 			</fileset>
 		</copy>
 
@@ -119,6 +121,7 @@
 			<fileset dir="${examples.root}/AzureMobileTheme">
 				<include name="README.md"/>
 				<include name="source/**"/>
+				<include name="assets/**"/>
 			</fileset>
 		</copy>
 
@@ -126,6 +129,7 @@
 			<fileset dir="${examples.root}/MetalWorksMobileTheme">
 				<include name="README.md"/>
 				<include name="source/**"/>
+				<include name="assets/**"/>
 			</fileset>
 		</copy>
 
@@ -133,6 +137,7 @@
 			<fileset dir="${examples.root}/MinimalMobileTheme">
 				<include name="README.md"/>
 				<include name="source/**"/>
+				<include name="assets/**"/>
 			</fileset>
 		</copy>
 
@@ -142,15 +147,8 @@
 			<fileset dir="${examples.root}/ComponentsExplorer">
 				<include name="README.md"/>
 				<include name="source/**"/>
+				<include name="assets/**"/>
 				<exclude name="source/ComponentsExplorerWeb.as"/>
-			</fileset>
-		</copy>
-
-		<copy overwrite="true" todir="${examples.output}/HelloWorld">
-			<fileset dir="${examples.root}/HelloWorld">
-				<include name="README.md"/>
-				<include name="source/**"/>
-				<exclude name="source/HelloWorldWeb.as"/>
 			</fileset>
 		</copy>
 
@@ -158,6 +156,7 @@
 			<fileset dir="${examples.root}/DisplayObjectExplorer">
 				<include name="README.md"/>
 				<include name="source/**"/>
+				<include name="assets/**"/>
 				<exclude name="source/DisplayObjectExplorerWeb.as"/>
 			</fileset>
 		</copy>
@@ -167,6 +166,15 @@
 				<include name="README.md"/>
 				<include name="source/**"/>
 				<exclude name="source/GalleryWeb.as"/>
+			</fileset>
+		</copy>
+
+		<copy overwrite="true" todir="${examples.output}/HelloWorld">
+			<fileset dir="${examples.root}/HelloWorld">
+				<include name="README.md"/>
+				<include name="source/**"/>
+				<include name="assets/**"/>
+				<exclude name="source/HelloWorldWeb.as"/>
 			</fileset>
 		</copy>
 
@@ -182,6 +190,7 @@
 			<fileset dir="${examples.root}/TileList">
 				<include name="README.md"/>
 				<include name="source/**"/>
+				<include name="assets/**"/>
 				<exclude name="source/TileListWeb.as"/>
 			</fileset>
 		</copy>

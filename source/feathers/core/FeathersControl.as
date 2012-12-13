@@ -1,40 +1,23 @@
 /*
- Copyright (c) 2012 Josh Tynjala
+Feathers
+Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
 
- Permission is hereby granted, free of charge, to any person
- obtaining a copy of this software and associated documentation
- files (the "Software"), to deal in the Software without
- restriction, including without limitation the rights to use,
- copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the
- Software is furnished to do so, subject to the following
- conditions:
-
- The above copyright notice and this permission notice shall be
- included in all copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- OTHER DEALINGS IN THE SOFTWARE.
- */
+This program is free software. You can redistribute and/or modify it in
+accordance with the terms of the accompanying license agreement.
+*/
 package feathers.core
 {
 	import feathers.controls.text.BitmapFontTextRenderer;
 	import feathers.controls.text.StageTextTextEditor;
-	import feathers.display.Sprite;
-	import feathers.events.FeathersEventType;
 	import feathers.events.FeathersEventType;
 
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
+	import starling.core.RenderSupport;
 	import starling.display.DisplayObject;
+	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.utils.MatrixUtil;
 
@@ -76,6 +59,14 @@ package feathers.core
 		 * Starling is initialized.
 		 */
 		protected static var VALIDATION_QUEUE:ValidationQueue = new ValidationQueue();
+
+		/**
+		 * @private
+		 * Used for clipping.
+		 *
+		 * @see #clipRect
+		 */
+		protected static var currentScissorRect:Rectangle;
 
 		/**
 		 * Flag to indicate that everything is invalid and should be redrawn.
@@ -581,6 +572,50 @@ package feathers.core
 			this.invalidate(INVALIDATION_FLAG_SIZE);
 		}
 
+		private var _scaledClipRectXY:Point;
+		private var _scissorRect:Rectangle;
+
+		/**
+		 * @private
+		 */
+		protected var _clipRect:Rectangle;
+
+		/**
+		 * @private
+		 * <strong>THIS PROPERTY MAY BE REMOVED WITHOUT WARNING</strong>. It
+		 * lives outside of the standard beta or deprecated system that Feathers
+		 * uses. After Starling Framework finalizes masking, it may be removed
+		 * or refactored. Use at your own risk.
+		 */
+		public function get clipRect():Rectangle
+		{
+			return this._clipRect;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set clipRect(value:Rectangle):void
+		{
+			this._clipRect = value;
+			if(this._clipRect)
+			{
+				if(!this._scaledClipRectXY)
+				{
+					this._scaledClipRectXY = new Point();
+				}
+				if(!this._scissorRect)
+				{
+					this._scissorRect = new Rectangle();
+				}
+			}
+			else
+			{
+				this._scaledClipRectXY = null;
+				this._scissorRect = null;
+			}
+		}
+
 		/**
 		 * @private
 		 * Flag to indicate that the control is currently validating.
@@ -597,11 +632,6 @@ package feathers.core
 		 */
 		public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
 		{
-			if(this.scrollRect)
-			{
-				return super.getBounds(targetSpace, resultRect);
-			}
-
 			if(!resultRect)
 			{
 				resultRect = new Rectangle();
@@ -657,8 +687,59 @@ package feathers.core
 		/**
 		 * @private
 		 */
+		override public function render(support:RenderSupport, parentAlpha:Number):void
+		{
+			if(this._clipRect)
+			{
+				this.getBounds(this.stage, this._scissorRect);
+
+				this._scissorRect.x += this._clipRect.x;
+				this._scissorRect.y += this._clipRect.y;
+				this._scissorRect.width = this._clipRect.width;
+				this._scissorRect.height = this._clipRect.height;
+
+				const oldRect:Rectangle = currentScissorRect;
+				if(oldRect)
+				{
+					this._scissorRect = this._scissorRect.intersection(oldRect);
+				}
+				//round to nearest pixels because the GPU will force it to
+				//happen, and the check that follows needs it
+				this._scissorRect.x = Math.round(this._scissorRect.x);
+				this._scissorRect.y = Math.round(this._scissorRect.y);
+				this._scissorRect.width = Math.round(this._scissorRect.width);
+				this._scissorRect.height = Math.round(this._scissorRect.height);
+				if(this._scissorRect.isEmpty() ||
+					this._scissorRect.x >= this.stage.stageWidth ||
+					this._scissorRect.y >= this.stage.stageHeight ||
+					(this._scissorRect.x + this._scissorRect.width) <= 0 ||
+					(this._scissorRect.y + this._scissorRect.height) <= 0)
+				{
+					//not in bounds of stage. don't render.
+					return;
+				}
+				support.finishQuadBatch();
+				support.scissorRectangle = this._scissorRect;
+				currentScissorRect = this._scissorRect;
+			}
+			super.render(support, parentAlpha);
+			if(this._clipRect)
+			{
+				support.finishQuadBatch();
+				currentScissorRect = oldRect;
+				support.scissorRectangle = oldRect;
+			}
+		}
+
+		/**
+		 * @private
+		 */
 		override public function hitTest(localPoint:Point, forTouch:Boolean=false):DisplayObject
 		{
+			if(this._clipRect && !this._clipRect.contains(localPoint.x, localPoint.y))
+			{
+				return null;
+			}
 			if(this._isQuickHitAreaEnabled)
 			{
 				if(forTouch && (!this.visible || !this.touchable))

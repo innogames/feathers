@@ -1,27 +1,10 @@
 /*
- Copyright (c) 2012 Josh Tynjala
+Feathers
+Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
 
- Permission is hereby granted, free of charge, to any person
- obtaining a copy of this software and associated documentation
- files (the "Software"), to deal in the Software without
- restriction, including without limitation the rights to use,
- copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the
- Software is furnished to do so, subject to the following
- conditions:
-
- The above copyright notice and this permission notice shall be
- included in all copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- OTHER DEALINGS IN THE SOFTWARE.
- */
+This program is free software. You can redistribute and/or modify it in
+accordance with the terms of the accompanying license agreement.
+*/
 package feathers.controls.text
 {
 	import feathers.core.FeathersControl;
@@ -31,7 +14,6 @@ package feathers.controls.text
 	import flash.display3D.textures.Texture;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
-	import flash.geom.Rectangle;
 	import flash.text.AntiAliasType;
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
@@ -91,6 +73,16 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
+		protected var _previousTextFieldWidth:Number = 0;
+
+		/**
+		 * @private
+		 */
+		protected var _previousTextFieldHeight:Number = 0;
+
+		/**
+		 * @private
+		 */
 		protected var _snapshotWidth:int = 0;
 
 		/**
@@ -121,13 +113,14 @@ package feathers.controls.text
 		 */
 		public function set text(value:String):void
 		{
-			if(!value)
-			{
-				value = "";
-			}
 			if(this._text == value)
 			{
 				return;
+			}
+			if(value === null)
+			{
+				//flash.text.TextField won't accept a null value
+				value = "";
 			}
 			this._text = value;
 			this.invalidate(INVALIDATION_FLAG_DATA);
@@ -253,11 +246,12 @@ package feathers.controls.text
 
 		/**
 		 * Determines if the text should be snapped to the nearest whole pixel
-		 * when rendered.
+		 * when rendered. When this is <code>false</code>, text may be displayed
+		 * on sub-pixels, which often results in blurred rendering.
 		 */
 		public function get snapToPixels():Boolean
 		{
-			return _snapToPixels;
+			return this._snapToPixels;
 		}
 
 		/**
@@ -271,7 +265,7 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
-		override public function render(support:RenderSupport, alpha:Number):void
+		override public function render(support:RenderSupport, parentAlpha:Number):void
 		{
 			if(this._textSnapshot)
 			{
@@ -280,19 +274,13 @@ package feathers.controls.text
 					this.getTransformationMatrix(this.stage, HELPER_MATRIX);
 					this._textSnapshot.x = Math.round(HELPER_MATRIX.tx) - HELPER_MATRIX.tx;
 					this._textSnapshot.y = Math.round(HELPER_MATRIX.ty) - HELPER_MATRIX.ty;
-					const scrollRect:Rectangle = this.scrollRect;
-					if(scrollRect)
-					{
-						this._textSnapshot.x += Math.round(scrollRect.x) - scrollRect.x;
-						this._textSnapshot.y += Math.round(scrollRect.y) - scrollRect.y;
-					}
 				}
 				else
 				{
 					this._textSnapshot.x = this._textSnapshot.y = 0;
 				}
 			}
-			super.render(support, alpha);
+			super.render(support, parentAlpha);
 		}
 
 		/**
@@ -443,8 +431,15 @@ package feathers.controls.text
 				this._needsNewBitmap = this._needsNewBitmap || !this._textSnapshotBitmapData || this._snapshotWidth != this._textSnapshotBitmapData.width || this._snapshotHeight != this._textSnapshotBitmapData.height;
 			}
 
-			if(stylesInvalid || dataInvalid || this._needsNewBitmap)
+			//instead of checking sizeInvalid, which will often be triggered by
+			//changing maxWidth or something for measurement, we check against
+			//the previous actualWidth/Height used for the snapshot.
+			if(stylesInvalid || dataInvalid || this._needsNewBitmap ||
+				this.actualWidth != this._previousTextFieldWidth ||
+				this.actualHeight != this._previousTextFieldHeight)
 			{
+				this._previousTextFieldWidth = this.actualWidth;
+				this._previousTextFieldHeight = this.actualHeight;
 				const hasText:Boolean = this._text.length > 0;
 				if(hasText)
 				{
@@ -557,6 +552,9 @@ package feathers.controls.text
 			}
 		}
 
+		/**
+		 * @private
+		 */
 		protected function enterFrameHandler(event:Event):void
 		{
 			this.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);

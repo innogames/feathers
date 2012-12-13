@@ -31,7 +31,6 @@ package feathers.controls
 	import feathers.core.ITextRenderer;
 	import feathers.core.IToggle;
 	import feathers.core.PropertyProxy;
-	import feathers.display.ScrollRectManager;
 	import feathers.skins.StateWithToggleValueSelector;
 	
 	import starling.display.DisplayObject;
@@ -275,7 +274,7 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected var _label:String = "";
+		protected var _label:String = null;
 		
 		/**
 		 * The text displayed on the button.
@@ -290,10 +289,6 @@ package feathers.controls
 		 */
 		public function set label(value:String):void
 		{
-			if(value === null)
-			{
-				value = "";
-			}
 			if(this._label == value)
 			{
 				return;
@@ -1092,6 +1087,7 @@ package feathers.controls
 		 * <pre>function():ITextRenderer</pre>
 		 *
 		 * @see feathers.core.ITextRenderer
+		 * @see feathers.core.FeathersControl#defaultTextRendererFactory
 		 */
 		public function get labelFactory():Function
 		{
@@ -1122,6 +1118,7 @@ package feathers.controls
 		 * other properties are defined for the button's current state. Intended
 		 * for use when multiple states should use the same properties.
 		 *
+		 * @see feathers.core.ITextRenderer
 		 * @see #defaultSelectedLabelProperties
 		 * @see #upLabelProperties
 		 * @see #downLabelProperties
@@ -1169,7 +1166,8 @@ package feathers.controls
 		 * A set of key/value pairs to be passed down ot the button's label
 		 * instance when the button is in the up state. If <code>null</code>,
 		 * then <code>defaultLabelProperties</code> is used instead.
-		 * 
+		 *
+		 * @see feathers.core.ITextRenderer
 		 * @see #defaultLabelProperties
 		 * @see #selectedUpLabelProperties
 		 */
@@ -1210,7 +1208,8 @@ package feathers.controls
 		 * A set of key/value pairs to be passed down ot the button's label
 		 * instance when the button is in the down state. If <code>null</code>,
 		 * then <code>defaultLabelProperties</code> is used instead.
-		 * 
+		 *
+		 * @see feathers.core.ITextRenderer
 		 * @see #defaultLabelProperties
 		 * @see #selectedDownLabelProperties
 		 */
@@ -1252,6 +1251,7 @@ package feathers.controls
 		 * instance when the button is in the hover state. If <code>null</code>,
 		 * then <code>defaultLabelProperties</code> is used instead.
 		 *
+		 * @see feathers.core.ITextRenderer
 		 * @see #defaultLabelProperties
 		 * @see #selectedHoverLabelProperties
 		 */
@@ -1292,7 +1292,8 @@ package feathers.controls
 		 * A set of key/value pairs to be passed down ot the button's label
 		 * instance when the button is in the disabled state. If <code>null</code>,
 		 * then <code>defaultLabelProperties</code> is used instead.
-		 * 
+		 *
+		 * @see feathers.core.ITextRenderer
 		 * @see #defaultLabelProperties
 		 * @see #selectedDisabledLabelProperties
 		 */
@@ -1335,7 +1336,8 @@ package feathers.controls
 		 * the button is selected and no other properties are defined for the
 		 * button's current state. If <code>null</code>, then
 		 * <code>defaultLabelProperties</code> is used instead.
-		 * 
+		 *
+		 * @see feathers.core.ITextRenderer
 		 * @see #defaultLabelProperties
 		 * @see #selectedUpLabelProperties
 		 * @see #selectedDownLabelProperties
@@ -1381,7 +1383,8 @@ package feathers.controls
 		 * <code>null</code>, then <code>defaultSelectedLabelProperties</code>
 		 * is used instead. If <code>defaultSelectedLabelProperties</code> is also
 		 * <code>null</code>, then <code>defaultLabelProperties</code> is used.
-		 * 
+		 *
+		 * @see feathers.core.ITextRenderer
 		 * @see #defaultLabelProperties
 		 * @see #defaultSelectedLabelProperties
 		 */
@@ -1424,7 +1427,8 @@ package feathers.controls
 		 * <code>null</code>, then <code>defaultSelectedLabelProperties</code>
 		 * is used instead. If <code>defaultSelectedLabelProperties</code> is also
 		 * <code>null</code>, then <code>defaultLabelProperties</code> is used.
-		 * 
+		 *
+		 * @see feathers.core.ITextRenderer
 		 * @see #defaultLabelProperties
 		 * @see #defaultSelectedLabelProperties
 		 */
@@ -1468,6 +1472,7 @@ package feathers.controls
 		 * is used instead. If <code>defaultSelectedLabelProperties</code> is also
 		 * <code>null</code>, then <code>defaultLabelProperties</code> is used.
 		 *
+		 * @see feathers.core.ITextRenderer
 		 * @see #defaultLabelProperties
 		 * @see #defaultSelectedLabelProperties
 		 */
@@ -1511,6 +1516,7 @@ package feathers.controls
 		 * is used instead. If <code>defaultSelectedLabelProperties</code> is also
 		 * <code>null</code>, then <code>defaultLabelProperties</code> is used.
 		 *
+		 * @see feathers.core.ITextRenderer
 		 * @see #defaultLabelProperties
 		 * @see #defaultSelectedLabelProperties
 		 */
@@ -2031,7 +2037,7 @@ package feathers.controls
 		protected function refreshLabelData():void
 		{
 			this.labelTextRenderer.text = this._label;
-			this.labelTextRenderer.visible = this._label.length > 0;
+			this.labelTextRenderer.visible = this._label && this._label.length > 0;
 		}
 
 		/**
@@ -2413,7 +2419,6 @@ package feathers.controls
 				}
 
 				touch.getLocation(this, HELPER_POINT);
-				ScrollRectManager.adjustTouchLocation(HELPER_POINT, this);
 				var isInBounds:Boolean = this.hitTest(HELPER_POINT, true) != null;
 				if(touch.phase == TouchPhase.MOVED)
 				{

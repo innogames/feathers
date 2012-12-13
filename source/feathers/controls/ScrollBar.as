@@ -1,27 +1,10 @@
 /*
- Copyright (c) 2012 Josh Tynjala
+Feathers
+Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
 
- Permission is hereby granted, free of charge, to any person
- obtaining a copy of this software and associated documentation
- files (the "Software"), to deal in the Software without
- restriction, including without limitation the rights to use,
- copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the
- Software is furnished to do so, subject to the following
- conditions:
-
- The above copyright notice and this permission notice shall be
- included in all copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- OTHER DEALINGS IN THE SOFTWARE.
- */
+This program is free software. You can redistribute and/or modify it in
+accordance with the terms of the accompanying license agreement.
+*/
 package feathers.controls
 {
 	import feathers.core.FeathersControl;
@@ -97,27 +80,31 @@ package feathers.controls
 		public static const DIRECTION_VERTICAL:String = "vertical";
 
 		/**
-		 * The scroll bar has only one track, stretching to fill the full length
-		 * of the scroll bar. In this layout mode, the minimum track is
-		 * displayed and fills the entire length of the scroll bar. The maximum
-		 * track will not exist.
+		 * The scroll bar has only one track, that fills the full length of the
+		 * scroll bar. In this layout mode, the "minimum" track is displayed and
+		 * fills the entire length of the scroll bar. The maximum track will not
+		 * exist.
 		 */
 		public static const TRACK_LAYOUT_MODE_SINGLE:String = "single";
 
 		/**
-		 * The scroll bar's minimum and maximum track will by resized by
-		 * changing their width and height values. Consider using a special
-		 * display object such as a Scale9Image, Scale3Image or a TiledImage if
-		 * the skins should be resizable.
+		 * The scroll bar has two tracks, stretching to fill each side of the
+		 * scroll bar with the thumb in the middle. The tracks will be resized
+		 * as the thumb moves. This layout mode is designed for scroll bars
+		 * where the two sides of the track may be colored differently to show
+		 * the value "filling up" as the slider is dragged or to highlight the
+		 * track when it is triggered to scroll by a page instead of a step.
+		 *
+		 * <p>Since the width and height of the tracks will change, consider
+		 * sing a special display object such as a <code>Scale9Image</code>,
+		 * <code>Scale3Image</code> or a <code>TiledImage</code> that is
+		 * designed to be resized dynamically.</p>
+		 *
+		 * @see feathers.display.Scale9Image
+		 * @see feathers.display.Scale3Image
+		 * @see feathers.display.TiledImage
 		 */
-		public static const TRACK_LAYOUT_MODE_STRETCH:String = "stretch";
-
-		/**
-		 * The scroll bar's minimum and maximum tracks will be resized and
-		 * cropped using a scrollRect to ensure that the skins maintain a static
-		 * appearance without altering the aspect ratio.
-		 */
-		public static const TRACK_LAYOUT_MODE_SCROLL:String = "scroll";
+		public static const TRACK_LAYOUT_MODE_MIN_MAX:String = "minMax";
 
 		/**
 		 * The default value added to the <code>nameList</code> of the minimum
@@ -246,6 +233,10 @@ package feathers.controls
 		 * Determines if the scroll bar's thumb can be dragged horizontally or
 		 * vertically. When this value changes, the scroll bar's width and
 		 * height values do not change automatically.
+		 *
+		 * @default DIRECTION_HORIZONTAL
+		 * @see #DIRECTION_HORIZONTAL
+		 * @see #DIRECTION_VERTICAL
 		 */
 		public function get direction():String
 		{
@@ -557,10 +548,14 @@ package feathers.controls
 		 */
 		protected var _trackLayoutMode:String = TRACK_LAYOUT_MODE_SINGLE;
 
-		[Inspectable(type="String",enumeration="single,stretch,scroll")]
+		[Inspectable(type="String",enumeration="single,minMax")]
 		/**
 		 * Determines how the minimum and maximum track skins are positioned and
 		 * sized.
+		 *
+		 * @default TRACK_LAYOUT_MODE_SINGLE
+		 * @see #TRACK_LAYOUT_MODE_SINGLE
+		 * @see #TRACK_LAYOUT_MODE_MIN_MAX
 		 */
 		public function get trackLayoutMode():String
 		{
@@ -1180,7 +1175,7 @@ package feathers.controls
 		 */
 		protected function createOrDestroyMaximumTrackIfNeeded():void
 		{
-			if(this._trackLayoutMode == TRACK_LAYOUT_MODE_SCROLL || this._trackLayoutMode == TRACK_LAYOUT_MODE_STRETCH)
+			if(this._trackLayoutMode == TRACK_LAYOUT_MODE_MIN_MAX)
 			{
 				if(!this.maximumTrack)
 				{
@@ -1206,13 +1201,9 @@ package feathers.controls
 			this.layoutStepButtons();
 			this.layoutThumb();
 
-			if(this._trackLayoutMode == TRACK_LAYOUT_MODE_SCROLL)
+			if(this._trackLayoutMode == TRACK_LAYOUT_MODE_MIN_MAX)
 			{
-				this.layoutTrackWithScrollRect();
-			}
-			else if(this._trackLayoutMode == TRACK_LAYOUT_MODE_STRETCH)
-			{
-				this.layoutTrackWithStretch();
+				this.layoutTrackWithMinMax();
 			}
 			else //single
 			{
@@ -1293,100 +1284,8 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected function layoutTrackWithScrollRect():void
+		protected function layoutTrackWithMinMax():void
 		{
-			if(this._direction == DIRECTION_VERTICAL)
-			{
-				//we want to scale the skins to match the height of the slider,
-				//but we also want to keep the original aspect ratio.
-				const minimumTrackScaledHeight:Number = this.minimumTrackOriginalHeight * this.actualWidth / this.minimumTrackOriginalWidth;
-				const maximumTrackScaledHeight:Number = this.maximumTrackOriginalHeight * this.actualWidth / this.maximumTrackOriginalWidth;
-				this.minimumTrack.width = this.actualWidth;
-				this.minimumTrack.height = minimumTrackScaledHeight;
-				this.maximumTrack.width = this.actualWidth;
-				this.maximumTrack.height = maximumTrackScaledHeight;
-
-				var middleOfThumb:Number = this.thumb.y + this.thumb.height / 2;
-				this.minimumTrack.x = 0;
-				this.minimumTrack.y = 0;
-				var currentScrollRect:Rectangle = this.minimumTrack.scrollRect;
-				if(!currentScrollRect)
-				{
-					currentScrollRect = new Rectangle();
-				}
-				currentScrollRect.x = 0;
-				currentScrollRect.y = 0;
-				currentScrollRect.width = this.actualWidth;
-				currentScrollRect.height = Math.min(minimumTrackScaledHeight, middleOfThumb);
-				this.minimumTrack.scrollRect = currentScrollRect;
-
-				this.maximumTrack.x = 0;
-				this.maximumTrack.y = Math.max(this.actualHeight - maximumTrackOriginalHeight, middleOfThumb);
-				currentScrollRect = this.maximumTrack.scrollRect;
-				if(!currentScrollRect)
-				{
-					currentScrollRect = new Rectangle();
-				}
-				currentScrollRect.width = this.actualWidth;
-				currentScrollRect.height = Math.min(maximumTrackScaledHeight, this.actualHeight - middleOfThumb);
-				currentScrollRect.x = 0;
-				currentScrollRect.y = Math.max(0, maximumTrackScaledHeight - currentScrollRect.height);
-				this.maximumTrack.scrollRect = currentScrollRect;
-			}
-			else //horizontal
-			{
-				//we want to scale the skins to match the height of the slider,
-				//but we also want to keep the original aspect ratio.
-				const minimumTrackScaledWidth:Number = this.minimumTrackOriginalWidth * this.actualHeight / this.minimumTrackOriginalHeight;
-				const maximumTrackScaledWidth:Number = this.maximumTrackOriginalWidth * this.actualHeight / this.maximumTrackOriginalHeight;
-				this.minimumTrack.width = minimumTrackScaledWidth;
-				this.minimumTrack.height = this.actualHeight;
-				this.maximumTrack.width = maximumTrackScaledWidth;
-				this.maximumTrack.height = this.actualHeight;
-
-				middleOfThumb = this.thumb.x + this.thumb.width / 2;
-				this.minimumTrack.x = 0;
-				this.minimumTrack.y = 0;
-				currentScrollRect = this.minimumTrack.scrollRect;
-				if(!currentScrollRect)
-				{
-					currentScrollRect = new Rectangle();
-				}
-				currentScrollRect.x = 0;
-				currentScrollRect.y = 0;
-				currentScrollRect.width = Math.min(minimumTrackScaledWidth, middleOfThumb);
-				currentScrollRect.height = this.actualHeight;
-				this.minimumTrack.scrollRect = currentScrollRect;
-
-				this.maximumTrack.x = Math.max(this.actualWidth - maximumTrackScaledWidth, middleOfThumb);
-				this.maximumTrack.y = 0;
-				currentScrollRect = this.maximumTrack.scrollRect;
-				if(!currentScrollRect)
-				{
-					currentScrollRect = new Rectangle();
-				}
-				currentScrollRect.width = Math.min(maximumTrackScaledWidth, this.actualWidth - middleOfThumb);
-				currentScrollRect.height = this.actualHeight;
-				currentScrollRect.x = Math.max(0, maximumTrackScaledWidth - currentScrollRect.width);
-				currentScrollRect.y = 0;
-				this.maximumTrack.scrollRect = currentScrollRect;
-			}
-		}
-
-		/**
-		 * @private
-		 */
-		protected function layoutTrackWithStretch():void
-		{
-			if(this.minimumTrack.scrollRect)
-			{
-				this.minimumTrack.scrollRect = null;
-			}
-			if(this.maximumTrack.scrollRect)
-			{
-				this.maximumTrack.scrollRect = null;
-			}
-
 			if(this._direction == DIRECTION_VERTICAL)
 			{
 				this.minimumTrack.x = 0;
@@ -1418,11 +1317,6 @@ package feathers.controls
 		 */
 		protected function layoutTrackWithSingle():void
 		{
-			if(this.minimumTrack.scrollRect)
-			{
-				this.minimumTrack.scrollRect = null;
-			}
-
 			if(this._direction == DIRECTION_VERTICAL)
 			{
 				this.minimumTrack.x = 0;

@@ -1,27 +1,10 @@
 /*
- Copyright (c) 2012 Josh Tynjala
+Feathers
+Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
 
- Permission is hereby granted, free of charge, to any person
- obtaining a copy of this software and associated documentation
- files (the "Software"), to deal in the Software without
- restriction, including without limitation the rights to use,
- copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the
- Software is furnished to do so, subject to the following
- conditions:
-
- The above copyright notice and this permission notice shall be
- included in all copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- OTHER DEALINGS IN THE SOFTWARE.
- */
+This program is free software. You can redistribute and/or modify it in
+accordance with the terms of the accompanying license agreement.
+*/
 package feathers.layout
 {
 	import flash.geom.Point;
@@ -633,6 +616,7 @@ package feathers.layout
 				result = new <int>[];
 			}
 			result.length = 0;
+			const visibleTypicalItemCount:int = Math.ceil(height / (this._typicalItemHeight + this._gap));
 			if(!this._hasVariableItemDimensions)
 			{
 				//this case can be optimized because we know that every item has
@@ -651,7 +635,11 @@ package feathers.layout
 					}
 				}
 				var minimum:int = -indexOffset + Math.max(0, (scrollY - this._paddingTop) / (this._typicalItemHeight + this._gap));
-				var maximum:int = minimum + Math.ceil(height / (this._typicalItemHeight + this._gap));
+				//if we're scrolling beyond the final item, we should keep the
+				//indices consistent so that items aren't destroyed and
+				//recreated unnecessarily
+				var maximum:int = Math.min(itemCount - 1, minimum + visibleTypicalItemCount);
+				minimum = Math.max(0, maximum - visibleTypicalItemCount);
 				for(var i:int = minimum; i <= maximum; i++)
 				{
 					result.push(i);
@@ -679,7 +667,35 @@ package feathers.layout
 
 				if(positionY >= maxPositionY)
 				{
-					return result;
+					break;
+				}
+			}
+
+			//similar to above, in order to avoid costly destruction and
+			//creation of item renderers, we're going to fill in some extra
+			//indices
+			var resultLength:int = result.length;
+			var visibleItemCountDifference:int = visibleTypicalItemCount - resultLength;
+			if(visibleItemCountDifference > 0 && resultLength > 0)
+			{
+				//add extra items before the first index
+				const firstExistingIndex:int = result[0];
+				const lastIndexToAdd:int = Math.max(0, firstExistingIndex - visibleItemCountDifference);
+				for(i = firstExistingIndex - 1; i >= lastIndexToAdd; i--)
+				{
+					result.unshift(i);
+				}
+			}
+			resultLength = result.length;
+			visibleItemCountDifference = visibleTypicalItemCount - resultLength;
+			if(visibleItemCountDifference > 0)
+			{
+				//add extra items after the last index
+				const startIndex:int = resultLength > 0 ? (result[resultLength - 1] + 1) : 0;
+				const endIndex:int = Math.min(itemCount, startIndex + visibleItemCountDifference);
+				for(i = startIndex; i < endIndex; i++)
+				{
+					result.push(i);
 				}
 			}
 			return result;
