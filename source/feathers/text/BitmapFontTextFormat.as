@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2012 Josh Tynjala
+Copyright 2012-2013 Joshua Tynjala
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -47,7 +47,7 @@ package feathers.text
 			}
 			if(!(font is BitmapFont))
 			{
-				throw new ArgumentError("BitmapFontTextFormat font must be a String or a BitmapFont instance.")
+				throw new ArgumentError("BitmapFontTextFormat font must be a String or a BitmapFont instance.");
 			}
 			this.font = BitmapFont(font);
 			this.size = size;

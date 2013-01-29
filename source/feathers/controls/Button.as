@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2012 Josh Tynjala
+Copyright 2012-2013 Joshua Tynjala
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -1885,14 +1885,6 @@ package feathers.controls
 			if(stylesInvalid || stateInvalid || selectedInvalid)
 			{
 				this.refreshSkin();
-				if(this.currentSkin && isNaN(this._originalSkinWidth))
-				{
-					this._originalSkinWidth = this.currentSkin.width;
-				}
-				if(this.currentSkin && isNaN(this._originalSkinHeight))
-				{
-					this._originalSkinHeight = this.currentSkin.height;
-				}
 				this.refreshIcon();
 			}
 
@@ -1910,15 +1902,6 @@ package feathers.controls
 			
 			if(textRendererInvalid || stylesInvalid || stateInvalid || selectedInvalid || dataInvalid || sizeInvalid)
 			{
-				if(this.currentSkin is IFeathersControl)
-				{
-					IFeathersControl(this.currentSkin).validate();
-				}
-				if(this.currentIcon is IFeathersControl)
-				{
-					IFeathersControl(this.currentIcon).validate();
-				}
-
 				this.layoutContent();
 			}
 			
@@ -1939,6 +1922,22 @@ package feathers.controls
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
+			}
+			if(this.currentSkin is IFeathersControl)
+			{
+				IFeathersControl(this.currentSkin).validate();
+			}
+			if(this.currentSkin && isNaN(this._originalSkinWidth))
+			{
+				this._originalSkinWidth = this.currentSkin.width;
+			}
+			if(this.currentSkin && isNaN(this._originalSkinHeight))
+			{
+				this._originalSkinHeight = this.currentSkin.height;
+			}
+			if(this.currentIcon is IFeathersControl)
+			{
+				IFeathersControl(this.currentIcon).validate();
 			}
 			this.refreshMaxLabelWidth(true);
 			this.labelTextRenderer.measureText(HELPER_POINT);
@@ -2143,6 +2142,10 @@ package feathers.controls
 		 */
 		protected function layoutContent():void
 		{
+			if(this.currentIcon is IFeathersControl)
+			{
+				IFeathersControl(this.currentIcon).validate();
+			}
 			this.refreshMaxLabelWidth(false);
 			if(this._label && this.currentIcon)
 			{
@@ -2161,7 +2164,7 @@ package feathers.controls
 			}
 			else if(!this._label && this.currentIcon && this._iconPosition != ICON_POSITION_MANUAL)
 			{
-				this.positionSingleChild(this.currentIcon)
+				this.positionSingleChild(this.currentIcon);
 			}
 
 			if(this.currentIcon)

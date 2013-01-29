@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2012 Josh Tynjala
+Copyright 2012-2013 Joshua Tynjala
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -142,7 +142,7 @@ package feathers.controls
 			}
 			else if(this._selectedIndex < 0)
 			{
-				this.selectedIndex = 0
+				this.selectedIndex = 0;
 			}
 			this.invalidate(INVALIDATION_FLAG_DATA);
 		}

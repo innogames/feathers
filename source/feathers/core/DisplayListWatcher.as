@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2012 Josh Tynjala
+Copyright 2012-2013 Joshua Tynjala
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -251,7 +251,7 @@ package feathers.core
 					this.applyAllStylesForTypeFromMaps(target, type, this._initializerSuperTypeMap);
 				}
 			}
-			type = Object(target).constructor;
+			type = Class(Object(target).constructor);
 			this.applyAllStylesForTypeFromMaps(target, type, this._initializerNoNameTypeMap, this._initializerNameTypeMap);
 		}
 

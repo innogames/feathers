@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -493,7 +493,7 @@ package feathers.controls
 			const eventListener:Function = function(event:Event):void
 			{
 				self.showScreen(screenID);
-			}
+			};
 
 			return eventListener;
 		}
@@ -510,14 +510,14 @@ package feathers.controls
 				var signalListener:Function = function(arg0:Object):void
 				{
 					self.showScreen(screenID);
-				}
+				};
 			}
 			else
 			{
 				signalListener = function(...rest:Array):void
 				{
 					self.showScreen(screenID);
-				}
+				};
 			}
 
 			return signalListener;

@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -1351,7 +1351,7 @@ package feathers.controls.supportClasses
 				}
 				if(!this._activeFirstItemRenderers)
 				{
-					this._activeFirstItemRenderers = new <IGroupedListItemRenderer>[]
+					this._activeFirstItemRenderers = new <IGroupedListItemRenderer>[];
 				}
 				if(!this._unrenderedFirstItems)
 				{
@@ -1377,7 +1377,7 @@ package feathers.controls.supportClasses
 				}
 				if(!this._activeLastItemRenderers)
 				{
-					this._activeLastItemRenderers = new <IGroupedListItemRenderer>[]
+					this._activeLastItemRenderers = new <IGroupedListItemRenderer>[];
 				}
 				if(!this._unrenderedLastItems)
 				{
@@ -1403,7 +1403,7 @@ package feathers.controls.supportClasses
 				}
 				if(!this._activeSingleItemRenderers)
 				{
-					this._activeSingleItemRenderers = new <IGroupedListItemRenderer>[]
+					this._activeSingleItemRenderers = new <IGroupedListItemRenderer>[];
 				}
 				if(!this._unrenderedSingleItems)
 				{
@@ -1911,18 +1911,17 @@ package feathers.controls.supportClasses
 			{
 				renderer = this._inactiveHeaderRenderers.shift();
 			}
-			const displayRenderer:DisplayObject = DisplayObject(renderer);
 			renderer.data = header;
 			renderer.groupIndex = groupIndex;
 			renderer.layoutIndex = layoutIndex;
 			renderer.owner = this._owner;
-			displayRenderer.visible = true;
+			renderer.visible = true;
 
 			if(!isTemporary)
 			{
 				this._headerRendererMap[header] = renderer;
 				this._activeHeaderRenderers.push(renderer);
-				displayRenderer.addEventListener(FeathersEventType.RESIZE, headerOrFooterRenderer_resizeHandler);
+				renderer.addEventListener(FeathersEventType.RESIZE, headerOrFooterRenderer_resizeHandler);
 				this._owner.dispatchEventWith(FeathersEventType.RENDERER_ADD, false, renderer);
 			}
 
@@ -1953,18 +1952,17 @@ package feathers.controls.supportClasses
 			{
 				renderer = this._inactiveFooterRenderers.shift();
 			}
-			const displayRenderer:DisplayObject = DisplayObject(renderer);
 			renderer.data = footer;
 			renderer.groupIndex = groupIndex;
 			renderer.layoutIndex = layoutIndex;
 			renderer.owner = this._owner;
-			displayRenderer.visible = true;
+			renderer.visible = true;
 
 			if(!isTemporary)
 			{
 				this._footerRendererMap[footer] = renderer;
 				this._activeFooterRenderers.push(renderer);
-				displayRenderer.addEventListener(FeathersEventType.RESIZE, headerOrFooterRenderer_resizeHandler);
+				renderer.addEventListener(FeathersEventType.RESIZE, headerOrFooterRenderer_resizeHandler);
 				this._owner.dispatchEventWith(FeathersEventType.RENDERER_ADD, false, renderer);
 			}
 
@@ -1973,24 +1971,27 @@ package feathers.controls.supportClasses
 
 		private function destroyItemRenderer(renderer:IGroupedListItemRenderer):void
 		{
-			const displayRenderer:DisplayObject = DisplayObject(renderer);
-			displayRenderer.removeEventListener(Event.CHANGE, renderer_changeHandler);
-			displayRenderer.removeEventListener(FeathersEventType.RESIZE, itemRenderer_resizeHandler);
-			this.removeChild(displayRenderer, true);
+			renderer.removeEventListener(Event.CHANGE, renderer_changeHandler);
+			renderer.removeEventListener(FeathersEventType.RESIZE, itemRenderer_resizeHandler);
+			renderer.owner = null;
+			renderer.data = null;
+			this.removeChild(DisplayObject(renderer), true);
 		}
 
 		private function destroyHeaderRenderer(renderer:IGroupedListHeaderOrFooterRenderer):void
 		{
-			const displayRenderer:DisplayObject = DisplayObject(renderer);
-			displayRenderer.removeEventListener(FeathersEventType.RESIZE, headerOrFooterRenderer_resizeHandler);
-			this.removeChild(displayRenderer, true);
+			renderer.removeEventListener(FeathersEventType.RESIZE, headerOrFooterRenderer_resizeHandler);
+			renderer.owner = null;
+			renderer.data = null;
+			this.removeChild(DisplayObject(renderer), true);
 		}
 
 		private function destroyFooterRenderer(renderer:IGroupedListHeaderOrFooterRenderer):void
 		{
-			const displayRenderer:DisplayObject = DisplayObject(renderer);
-			displayRenderer.removeEventListener(FeathersEventType.RESIZE, headerOrFooterRenderer_resizeHandler);
-			this.removeChild(displayRenderer, true);
+			renderer.removeEventListener(FeathersEventType.RESIZE, headerOrFooterRenderer_resizeHandler);
+			renderer.owner = null;
+			renderer.data = null;
+			this.removeChild(DisplayObject(renderer), true);
 		}
 
 		private function locationToDisplayIndex(groupIndex:int, itemIndex:int):int

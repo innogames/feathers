@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -190,6 +190,9 @@ package feathers.controls
 		[Inspectable(type="String",enumeration="horizontal,vertical")]
 		/**
 		 * The tab bar layout is either vertical or horizontal.
+		 *
+		 * @see #DIRECTION_HORIZONTAL
+		 * @see #DIRECTION_VERTICAL
 		 */
 		public function get direction():String
 		{
@@ -351,6 +354,9 @@ package feathers.controls
 		 * <code>label</code> and/or any of the <code>Button</code> icon fields
 		 * (<code>defaultIcon</code>, <code>upIcon</code>, etc.) are present in
 		 * the item.
+		 *
+		 * <p>This function is expected to have the following signature:</p>
+		 * <pre>function( tab:Button, item:Object ):void</pre>
 		 */
 		public function get tabInitializer():Function
 		{

@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -11,6 +11,7 @@ package feathers.controls
 	import feathers.events.FeathersEventType;
 
 	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.display.Loader;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
@@ -23,11 +24,13 @@ package feathers.controls
 	import flash.system.LoaderContext;
 
 	import starling.core.RenderSupport;
+	import starling.core.Starling;
 	import starling.display.Image;
 	import starling.events.Event;
 	import starling.textures.Texture;
 	import starling.textures.TextureSmoothing;
 	import starling.utils.RectangleUtil;
+	import starling.utils.ScaleMode;
 
 	/**
 	 * Dispatched when the source content finishes loading.
@@ -97,7 +100,22 @@ package feathers.controls
 		/**
 		 * @private
 		 */
+		protected var _textureFrame:Rectangle;
+
+		/**
+		 * @private
+		 */
 		protected var _texture:Texture;
+		
+		/**
+		 * @private
+		 */
+		protected var _textureBitmapData:BitmapData;
+
+		/**
+		 * @private
+		 */
+		protected var _isTextureOwner:Boolean = false;
 
 		/**
 		 * @private
@@ -123,6 +141,12 @@ package feathers.controls
 				return;
 			}
 			this._source = value;
+			this.cleanupTexture();
+			if(this.image)
+			{
+				this.image.visible = false;
+			}
+			this._lastURL = null;
 			this._isLoaded = false;
 			this.invalidate(INVALIDATION_FLAG_DATA);
 		}
@@ -292,6 +316,30 @@ package feathers.controls
 				support.translateMatrix(-(Math.round(HELPER_MATRIX.tx) - HELPER_MATRIX.tx), -(Math.round(HELPER_MATRIX.ty) - HELPER_MATRIX.ty));
 			}
 		}
+		
+		/**
+		 * @private
+		 */
+		override public function dispose():void
+		{
+			if(this.loader)
+			{
+				this.loader.contentLoaderInfo.removeEventListener(flash.events.Event.COMPLETE, loader_completeHandler);
+				this.loader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, loader_errorHandler);
+				this.loader.contentLoaderInfo.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, loader_errorHandler);
+				try
+				{
+					this.loader.close();
+				}
+				catch(error:Error)
+				{
+					//no need to do anything in response
+				}
+				this.loader = null;
+			}
+			this.cleanupTexture();
+			super.dispose();
+		}
 
 		/**
 		 * @private
@@ -338,7 +386,12 @@ package feathers.controls
 			{
 				if(this._texture)
 				{
-					newWidth = this._texture.width * this._textureScale;
+					newWidth = this._textureFrame.width * this._textureScale;
+					if(!needsHeight)
+					{
+						const heightScale:Number = this.explicitHeight / (this._textureFrame.height * this._textureScale);
+						newWidth *= heightScale;
+					}
 				}
 				else
 				{
@@ -351,7 +404,12 @@ package feathers.controls
 			{
 				if(this._texture)
 				{
-					newHeight = this._texture.height * this._textureScale;
+					newHeight = this._textureFrame.height * this._textureScale;
+					if(!needsWidth)
+					{
+						const widthScale:Number = this.explicitWidth / (this._textureFrame.width * this._textureScale);
+						newHeight *= widthScale;
+					}
 				}
 				else
 				{
@@ -380,7 +438,6 @@ package feathers.controls
 				if(!sourceURL)
 				{
 					this._lastURL = sourceURL;
-					this._texture = null;
 					this.commitTexture();
 					return;
 				}
@@ -395,12 +452,6 @@ package feathers.controls
 				}
 				else
 				{
-					if(this.image)
-					{
-						//hide the image for now. we'll dispose the old texture
-						//and make it visible again once the content is loaded.
-						this.image.visible = false;
-					}
 					this._lastURL = sourceURL;
 
 					if(this.loader)
@@ -455,13 +506,13 @@ package feathers.controls
 			{
 				HELPER_RECTANGLE.x = 0;
 				HELPER_RECTANGLE.y = 0;
-				HELPER_RECTANGLE.width = this._texture.width * this._textureScale;
-				HELPER_RECTANGLE.height = this._texture.height * this._textureScale;
+				HELPER_RECTANGLE.width = this._textureFrame.width * this._textureScale;
+				HELPER_RECTANGLE.height = this._textureFrame.height * this._textureScale;
 				HELPER_RECTANGLE2.x = 0;
 				HELPER_RECTANGLE2.y = 0;
 				HELPER_RECTANGLE2.width = this.actualWidth;
 				HELPER_RECTANGLE2.height = this.actualHeight;
-				RectangleUtil.fit(HELPER_RECTANGLE, HELPER_RECTANGLE2, true, HELPER_RECTANGLE);
+				RectangleUtil.fit(HELPER_RECTANGLE, HELPER_RECTANGLE2, ScaleMode.SHOW_ALL, false, HELPER_RECTANGLE);
 				this.image.x = HELPER_RECTANGLE.x;
 				this.image.y = HELPER_RECTANGLE.y;
 				this.image.width = HELPER_RECTANGLE.width;
@@ -491,6 +542,9 @@ package feathers.controls
 				return;
 			}
 
+			//save the texture's frame so that we don't need to create a new
+			//rectangle every time that we want to access it.
+			this._textureFrame = this._texture.frame;
 			if(!this.image)
 			{
 				this.image = new Image(this._texture);
@@ -498,14 +552,31 @@ package feathers.controls
 			}
 			else
 			{
-				if(this.image.texture)
-				{
-					this.image.texture.dispose();
-				}
 				this.image.texture = this._texture;
 				this.image.readjustSize();
 			}
 			this.image.visible = true;
+		}
+		
+		/**
+		 * @private
+		 */
+		protected function cleanupTexture():void
+		{
+			if(this._isTextureOwner)
+			{
+				if(this._textureBitmapData)
+				{
+					this._textureBitmapData.dispose();
+				}
+				if(this._texture)
+				{
+					this._texture.dispose();
+				}
+			}
+			this._textureBitmapData = null;
+			this._texture = null;
+			this._isTextureOwner = false;
 		}
 
 		/**
@@ -518,8 +589,21 @@ package feathers.controls
 			this.loader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, loader_errorHandler);
 			this.loader.contentLoaderInfo.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, loader_errorHandler);
 			this.loader = null;
-
-			this._texture = Texture.fromBitmap(bitmap);
+			
+			this.cleanupTexture();
+			const bitmapData:BitmapData = bitmap.bitmapData;
+			this._texture = Texture.fromBitmapData(bitmapData, false);
+			if(Starling.handleLostContext)
+			{
+				this._textureBitmapData = bitmapData;
+			}
+			else
+			{
+				//since Starling isn't handling the lost context, we don't need
+				//to save the texture bitmap data.
+				bitmapData.dispose();
+			}
+			this._isTextureOwner = true;
 			this.commitTexture();
 			this._isLoaded = true;
 			this.invalidate(INVALIDATION_FLAG_SIZE);
@@ -535,8 +619,8 @@ package feathers.controls
 			this.loader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, loader_errorHandler);
 			this.loader.contentLoaderInfo.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, loader_errorHandler);
 			this.loader = null;
-
-			this._texture = null;
+			
+			this.cleanupTexture();
 			this.commitTexture();
 			this.invalidate(INVALIDATION_FLAG_SIZE);
 			this.dispatchEventWith(FeathersEventType.ERROR, false, event);

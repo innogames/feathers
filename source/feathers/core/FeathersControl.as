@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -22,7 +22,8 @@ package feathers.core
 	import starling.utils.MatrixUtil;
 
 	/**
-	 * Dispatched after initialize() has been called.
+	 * Dispatched after initialize() has been called, but before the first time
+	 * that draw() has been called.
 	 *
 	 * @eventType feathers.events.FeathersEventType.INITIALIZE
 	 */
@@ -33,7 +34,7 @@ package feathers.core
 	 *
 	 * @eventType feathers.events.FeathersEventType.RESIZE
 	 */
-	[Event(name="resize",type="feathers.events.Event")]
+	[Event(name="resize",type="starling.events.Event")]
 
 	/**
 	 * Base class for all UI controls. Implements invalidation and sets up some
@@ -793,7 +794,7 @@ package feathers.core
 					this._invalidationFlags[flag] = true;
 				}
 			}
-			if(!this.stage)
+			if(!this.stage || !this._isInitialized)
 			{
 				//we'll add this component to the queue later, after it has been
 				//added to the stage.
@@ -823,7 +824,7 @@ package feathers.core
 		 */
 		public function validate():void
 		{
-			if(!this.stage || !this.isInvalid())
+			if(!this.stage || !this._isInitialized || !this.isInvalid())
 			{
 				return;
 			}

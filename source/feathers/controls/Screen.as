@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2012 Josh Tynjala
+Copyright 2012-2013 Joshua Tynjala
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -36,7 +36,6 @@ package feathers.controls
 
 	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 
 	/**
 	 * Provides useful capabilities for a menu screen displayed by
@@ -262,7 +261,7 @@ package feathers.controls
 			{
 				try
 				{
-					this._originalWidth = loaderInfo.width
+					this._originalWidth = loaderInfo.width;
 				} 
 				catch(error:Error) 
 				{

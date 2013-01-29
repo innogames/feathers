@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -74,11 +74,6 @@ package feathers.controls
 		 * @private
 		 */
 		private static const HELPER_TOUCHES_VECTOR:Vector.<Touch> = new <Touch>[];
-
-		/**
-		 * @private
-		 */
-		private static const FONT_SIZE:String = "fontSize";
 
 		/**
 		 * Constructor.
@@ -671,10 +666,6 @@ package feathers.controls
 				if(displayTextEditor.hasOwnProperty(propertyName))
 				{
 					var propertyValue:Object = this._textEditorProperties[propertyName];
-					if(propertyName == FONT_SIZE)
-					{
-						propertyValue = (propertyValue as Number) * Starling.contentScaleFactor;
-					}
 					this.textEditor[propertyName] = propertyValue;
 				}
 			}
