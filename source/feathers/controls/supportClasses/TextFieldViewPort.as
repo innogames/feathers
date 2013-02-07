@@ -26,7 +26,7 @@ package feathers.controls.supportClasses
 	/**
 	 * @private
 	 */
-	public final class TextFieldViewPort extends FeathersControl implements IViewPort
+	public class TextFieldViewPort extends FeathersControl implements IViewPort
 	{
 		private static const HELPER_MATRIX:Matrix = new Matrix();
 		private static const HELPER_POINT:Point = new Point();
@@ -38,8 +38,8 @@ package feathers.controls.supportClasses
 			this.addEventListener(Event.REMOVED_FROM_STAGE, removedFromStageHandler);
 		}
 
-		private var _textFieldContainer:Sprite;
-		private var _textField:TextField;
+		protected var _textFieldContainer:Sprite;
+		protected var _textField:TextField;
 
 		/**
 		 * @private
