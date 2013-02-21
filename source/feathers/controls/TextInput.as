@@ -8,6 +8,7 @@ accordance with the terms of the accompanying license agreement.
 package feathers.controls
 {
 	import feathers.core.FeathersControl;
+	import feathers.core.IFocusDisplayObject;
 	import feathers.core.ITextEditor;
 	import feathers.core.PropertyProxy;
 	import feathers.events.FeathersEventType;
@@ -63,7 +64,7 @@ package feathers.controls
 	 * @see http://wiki.starling-framework.org/feathers/text-input
 	 * @see feathers.core.ITextEditor
 	 */
-	public class TextInput extends FeathersControl
+	public class TextInput extends FeathersControl implements IFocusDisplayObject
 	{
 		/**
 		 * @private
@@ -82,6 +83,8 @@ package feathers.controls
 		{
 			this.isQuickHitAreaEnabled = true;
 			this.addEventListener(TouchEvent.TOUCH, touchHandler);
+			this.addEventListener(FeathersEventType.FOCUS_IN, textInput_focusInHandler);
+			this.addEventListener(FeathersEventType.FOCUS_OUT, textInput_focusOutHandler);
 		}
 
 		/**
@@ -295,6 +298,28 @@ package feathers.controls
 				this.addChildAt(this._backgroundDisabledSkin, 0);
 			}
 			this.invalidate(INVALIDATION_FLAG_SKIN);
+		}
+
+		/**
+		 * Quickly sets all padding properties to the same value. The
+		 * <code>padding</code> getter always returns the value of
+		 * <code>paddingTop</code>, but the other padding values may be
+		 * different.
+		 */
+		public function get padding():Number
+		{
+			return this._paddingTop;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set padding(value:Number):void
+		{
+			this.paddingTop = value;
+			this.paddingRight = value;
+			this.paddingBottom = value;
+			this.paddingLeft = value;
 		}
 
 		/**
@@ -525,6 +550,8 @@ package feathers.controls
 
 			if(this.textEditor)
 			{
+				this._pendingSelectionStartIndex = -1;
+				this._pendingSelectionEndIndex = -1;
 				this.textEditor.selectRange(startIndex, endIndex);
 			}
 			else
@@ -828,6 +855,30 @@ package feathers.controls
 		/**
 		 * @private
 		 */
+		protected function textInput_focusInHandler(event:Event):void
+		{
+			if(!this._focusManager)
+			{
+				return;
+			}
+			this.textEditor.setFocus();
+		}
+
+		/**
+		 * @private
+		 */
+		protected function textInput_focusOutHandler(event:Event):void
+		{
+			if(!this._focusManager)
+			{
+				return;
+			}
+			this.textEditor.clearFocus();
+		}
+
+		/**
+		 * @private
+		 */
 		protected function textEditor_changeHandler(event:Event):void
 		{
 			this.text = this.textEditor.text;
@@ -849,7 +900,14 @@ package feathers.controls
 			this._textEditorHasFocus = true;
 			this._touchPointID = -1;
 			this.invalidate(INVALIDATION_FLAG_STATE);
-			this.dispatchEventWith(FeathersEventType.FOCUS_IN);
+			if(this._focusManager)
+			{
+				this._focusManager.focus = this;
+			}
+			else
+			{
+				this.dispatchEventWith(FeathersEventType.FOCUS_IN);
+			}
 		}
 
 		/**
@@ -859,7 +917,17 @@ package feathers.controls
 		{
 			this._textEditorHasFocus = false;
 			this.invalidate(INVALIDATION_FLAG_STATE);
-			this.dispatchEventWith(FeathersEventType.FOCUS_OUT);
+			if(this._focusManager)
+			{
+				if(this._focusManager.focus == this)
+				{
+					this._focusManager.focus = null;
+				}
+			}
+			else
+			{
+				this.dispatchEventWith(FeathersEventType.FOCUS_OUT);
+			}
 		}
 	}
 }

@@ -301,6 +301,36 @@ package feathers.controls
 		}
 
 		/**
+		 * The original width of the source content, in pixels. This value will
+		 * be <code>0</code> until the source content finishes loading. If the
+		 * source is a texture, this value will be <code>0</code> until the
+		 * <code>ImageLoader</code> validates.
+		 */
+		public function get originalSourceWidth():Number
+		{
+			if(this._textureFrame)
+			{
+				return this._textureFrame.width;
+			}
+			return 0;
+		}
+
+		/**
+		 * The original height of the source content, in pixels. This value will
+		 * be <code>0</code> until the source content finishes loading. If the
+		 * source is a texture, this value will be <code>0</code> until the
+		 * <code>ImageLoader</code> validates.
+		 */
+		public function get originalSourceHeight():Number
+		{
+			if(this._textureFrame)
+			{
+				return this._textureFrame.height;
+			}
+			return 0;
+		}
+
+		/**
 		 * @private
 		 */
 		override public function render(support:RenderSupport, parentAlpha:Number):void
@@ -384,7 +414,7 @@ package feathers.controls
 			var newWidth:Number = this.explicitWidth;
 			if(needsWidth)
 			{
-				if(this._texture)
+				if(this._textureFrame)
 				{
 					newWidth = this._textureFrame.width * this._textureScale;
 					if(!needsHeight)
@@ -402,7 +432,7 @@ package feathers.controls
 			var newHeight:Number = this.explicitHeight;
 			if(needsHeight)
 			{
-				if(this._texture)
+				if(this._textureFrame)
 				{
 					newHeight = this._textureFrame.height * this._textureScale;
 					if(!needsWidth)
@@ -574,6 +604,7 @@ package feathers.controls
 					this._texture.dispose();
 				}
 			}
+			this._textureFrame = null;
 			this._textureBitmapData = null;
 			this._texture = null;
 			this._isTextureOwner = false;
