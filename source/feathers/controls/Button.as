@@ -1990,6 +1990,8 @@ package feathers.controls
 				this.unflatten();
 				this.flatten();
 			}
+			
+			super.draw();
 		}
 
 		/**
@@ -2580,7 +2582,7 @@ package feathers.controls
 		 * needed any more to ensure a correct use-count
 		 *
 		 * We have to override this function because the dispose will be called only for child-elements on the displaylist - so on temporary unused
-		 * items like skins and icons, the dispose won´t be called. Therefore we have to check if there is a unused (otherwise dispose will be called twice)
+		 * items like skins and icons, the dispose wonï¿½t be called. Therefore we have to check if there is a unused (otherwise dispose will be called twice)
 		 * skin or icon and call dispose
 		 * @see #disposeNotOnStageDisplayObjects()
 		 */
@@ -2600,7 +2602,7 @@ package feathers.controls
 		
 		/**
 		 * This function will call the dispose-method of the given displayobject if
-		 * it´s not added to this "container"
+		 * itï¿½s not added to this "container"
 		 * @param item : Object
 		 * @see #dispose()
 		 */		

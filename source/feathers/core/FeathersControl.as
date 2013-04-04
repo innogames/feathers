@@ -7,20 +7,20 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.core
 {
+	import flash.errors.IllegalOperationError;
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+	
 	import feathers.controls.text.BitmapFontTextRenderer;
 	import feathers.controls.text.StageTextTextEditor;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.ILayoutData;
 	import feathers.layout.ILayoutDisplayObject;
-
-	import flash.errors.IllegalOperationError;
-
-	import flash.geom.Matrix;
-	import flash.geom.Point;
-	import flash.geom.Rectangle;
-
+	
 	import starling.core.RenderSupport;
 	import starling.display.DisplayObject;
+	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.utils.MatrixUtil;
@@ -65,6 +65,11 @@ package feathers.core
 		 */
 		protected static var VALIDATION_QUEUE:ValidationQueue = new ValidationQueue();
 
+		/**
+		 * Flag to indicate that showHitArea property changed.
+		 */
+		public static const INVALIDATION_FLAG_HIT_AREA:String = "hitarea";
+		
 		/**
 		 * Flag to indicate that everything is invalid and should be redrawn.
 		 */
@@ -241,7 +246,31 @@ package feathers.core
 		 * @private
 		 */
 		protected var _hitArea:Rectangle = new Rectangle();
-
+		
+		
+		
+		/**
+		 * @private
+		 */
+		protected var _hitAreaVisualizer:Quad;
+		
+		/**
+		 * @private
+		 */
+		protected var _showHitArea:Boolean;
+		
+		/**
+		 * @param value
+		 */		
+		public function set showHitArea(value:Boolean):void
+		{
+			if( _showHitArea == value )
+				return;
+			
+			_showHitArea = value;
+			invalidate(INVALIDATION_FLAG_HIT_AREA);
+		}
+		
 		/**
 		 * @private
 		 */
@@ -1045,7 +1074,6 @@ package feathers.core
 		 */
 		protected function initialize():void
 		{
-
 		}
 
 		/**
@@ -1055,7 +1083,38 @@ package feathers.core
 		 */
 		protected function draw():void
 		{
-
+			const hitAreaInvalid: Boolean = isInvalid(INVALIDATION_FLAG_HIT_AREA);
+			const sizeInvalid:Boolean = isInvalid(INVALIDATION_FLAG_SIZE);
+			
+			if( hitAreaInvalid )
+			{
+				if( _showHitArea )
+				{
+					if( !_hitAreaVisualizer)
+					{
+						_hitAreaVisualizer = new Quad( 1, 1, 0x00FF00 );
+						_hitAreaVisualizer.alpha = .5;
+						addChildAt(this._hitAreaVisualizer, 0);
+					}
+				} else
+				{
+					if( _hitAreaVisualizer )
+					{
+						removeChild(_hitAreaVisualizer, true );
+					}
+				}
+			}
+			
+			if( sizeInvalid )
+			{
+				if( _hitAreaVisualizer )
+				{
+					_hitAreaVisualizer.x = _hitArea.x;
+					_hitAreaVisualizer.y = _hitArea.y;
+					_hitAreaVisualizer.width = _hitArea.width;
+					_hitAreaVisualizer.height = _hitArea.height;
+				}
+			}
 		}
 
 		/**
