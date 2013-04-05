@@ -89,6 +89,7 @@ package feathers.controls.text
 		public function TextFieldTextEditor()
 		{
 			this.isQuickHitAreaEnabled = true;
+			this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, removedFromStageHandler);
 		}
 
@@ -334,7 +335,7 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
-		protected var _maxChars:int = int.MAX_VALUE;
+		protected var _maxChars:int = 0;
 
 		/**
 		 * Same as the <code>flash.text.TextField</code> property with the same name.
@@ -408,10 +409,7 @@ package feathers.controls.text
 		 */
 		override public function dispose():void
 		{
-			if(this.textField.parent)
-			{
-				Starling.current.nativeStage.removeChild(this.textField);
-			}
+			this.disposeContent();
 			super.dispose();
 		}
 
@@ -665,11 +663,27 @@ package feathers.controls.text
 			}
 			if(this._isHTML)
 			{
-				this.textField.htmlText = this._text;
+				if(this.textField.htmlText != this._text)
+				{
+					if(this._pendingSelectionStartIndex < 0)
+					{
+						this._pendingSelectionStartIndex = this.textField.selectionBeginIndex;
+						this._pendingSelectionEndIndex = this.textField.selectionEndIndex;
+					}
+					this.textField.htmlText = this._text;
+				}
 			}
 			else
 			{
-				this.textField.text = this._text;
+				if(this.textField.text != this._text)
+				{
+					if(this._pendingSelectionStartIndex < 0)
+					{
+						this._pendingSelectionStartIndex = this.textField.selectionBeginIndex;
+						this._pendingSelectionEndIndex = this.textField.selectionEndIndex;
+					}
+					this.textField.text = this._text;
+				}
 			}
 		}
 
@@ -780,12 +794,44 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
-		protected function removedFromStageHandler(event:Event):void
+		protected function disposeContent():void
 		{
+			if(this._textSnapshotBitmapData)
+			{
+				this._textSnapshotBitmapData.dispose();
+				this._textSnapshotBitmapData = null;
+			}
+
+			if(this.textSnapshot)
+			{
+				//avoid the need to call dispose(). we'll create a new snapshot
+				//when the renderer is added to stage again.
+				this.textSnapshot.texture.dispose();
+				this.removeChild(this.textSnapshot, true);
+				this.textSnapshot = null;
+			}
+
 			if(this.textField.parent)
 			{
 				Starling.current.nativeStage.removeChild(this.textField);
 			}
+		}
+
+		/**
+		 * @private
+		 */
+		protected function addedToStageHandler(event:Event):void
+		{
+			//we need to invalidate in order to get a fresh snapshot
+			this.invalidate(INVALIDATION_FLAG_DATA);
+		}
+
+		/**
+		 * @private
+		 */
+		protected function removedFromStageHandler(event:Event):void
+		{
+			this.disposeContent();
 		}
 
 		/**

@@ -105,6 +105,11 @@ package feathers.controls
 		/**
 		 * @private
 		 */
+		protected var _ignoreTextChanges:Boolean = false;
+
+		/**
+		 * @private
+		 */
 		protected var _touchPointID:int = -1;
 
 		/**
@@ -142,12 +147,122 @@ package feathers.controls
 		/**
 		 * @private
 		 */
+		protected var _typicalText:String;
+
+		/**
+		 * The text used to measure the input when the dimensions are not set
+		 * explicitly (in addition to using the background skin for measurement).
+		 */
+		public function get typicalText():String
+		{
+			return this._typicalText;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set typicalText(value:String):void
+		{
+			if(this._typicalText == value)
+			{
+				return;
+			}
+			this._typicalText = value;
+			this.invalidate(INVALIDATION_FLAG_DATA);
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _maxChars:int = 0;
+
+		/**
+		 * The maximum number of characters that may be entered.
+		 */
+		public function get maxChars():int
+		{
+			return this._maxChars;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set maxChars(value:int):void
+		{
+			if(this._maxChars == value)
+			{
+				return;
+			}
+			this._maxChars = value;
+			this.invalidate(INVALIDATION_FLAG_STYLES);
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _displayAsPassword:Boolean = false;
+
+		/**
+		 * Determines if the entered text will be masked so that it cannot be
+		 * seen, such as for a password input.
+		 */
+		public function get displayAsPassword():Boolean
+		{
+			return this._displayAsPassword;
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _restrict:String;
+
+		/**
+		 * Limits the set of characters that may be entered.
+		 */
+		public function get restrict():String
+		{
+			return this._restrict;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set restrict(value:String):void
+		{
+			if(this._restrict == value)
+			{
+				return;
+			}
+			this._restrict = value;
+			this.invalidate(INVALIDATION_FLAG_STYLES);
+		}
+
+		/**
+		 * @private
+		 */
+		public function set displayAsPassword(value:Boolean):void
+		{
+			if(this._displayAsPassword == value)
+			{
+				return;
+			}
+			this._displayAsPassword = value;
+			this.invalidate(INVALIDATION_FLAG_STYLES);
+		}
+
+		/**
+		 * @private
+		 */
 		protected var _textEditorFactory:Function;
 
 		/**
 		 * A function used to instantiate the text editor. If null,
 		 * <code>FeathersControl.defaultTextEditorFactory</code> is used
-		 * instead.
+		 * instead. The text editor must be an instance of
+		 * <code>ITextEditor</code>. This factory can be used to change
+		 * properties on the text editor when it is first created. For instance,
+		 * if you are skinning Feathers components without a theme, you might
+		 * use this factory to set styles on the text editor.
 		 *
 		 * <p>The factory should have the following function signature:</p>
 		 * <pre>function():ITextEditor</pre>
@@ -459,7 +574,8 @@ package feathers.controls
 
 		/**
 		 * A set of key/value pairs to be passed down to the text input's
-		 * <code>ITextEditor</code> instance.
+		 * text editor. The text editor is an <code>ITextEditor</code> instanc
+		 * that is created by <code>textEditorFactory</code>.
 		 *
 		 * <p>If the subcomponent has its own subcomponents, their properties
 		 * can be set too, using attribute <code>&#64;</code> notation. For example,
@@ -468,6 +584,11 @@ package feathers.controls
 		 * you can use the following syntax:</p>
 		 * <pre>list.scrollerProperties.&#64;verticalScrollBarProperties.&#64;thumbProperties.defaultSkin = new Image(texture);</pre>
 		 *
+		 * <p>Setting properties in a <code>textEditorFactory</code> function
+		 * instead of using <code>textEditorProperties</code> will result in
+		 * better performance.</p>
+		 *
+		 * @see #textEditorFactory
 		 * @see feathers.core.ITextEditor
 		 */
 		public function get textEditorProperties():Object
@@ -585,7 +706,10 @@ package feathers.controls
 
 			if(textEditorInvalid || dataInvalid)
 			{
+				const oldIgnoreTextChanges:Boolean = this._ignoreTextChanges;
+				this._ignoreTextChanges = true;
 				this.textEditor.text = this._text;
+				this._ignoreTextChanges = oldIgnoreTextChanges;
 			}
 
 			if(textEditorInvalid || stateInvalid)
@@ -625,16 +749,39 @@ package feathers.controls
 				return false;
 			}
 
+			var typicalTextWidth:Number = 0;
+			var typicalTextHeight:Number = 0;
+			if(this._typicalText)
+			{
+				const oldIgnoreTextChanges:Boolean = this._ignoreTextChanges;
+				this._ignoreTextChanges = true;
+				this.textEditor.width = NaN;
+				this.textEditor.height = NaN;
+				this.textEditor.text = this._typicalText;
+				this.textEditor.measureText(HELPER_POINT);
+				this.textEditor.text = this._text;
+				this._ignoreTextChanges = oldIgnoreTextChanges;
+				typicalTextWidth = HELPER_POINT.x;
+				typicalTextHeight = HELPER_POINT.y;
+			}
+
 			var newWidth:Number = this.explicitWidth;
 			var newHeight:Number = this.explicitHeight;
 			if(needsWidth)
 			{
-				newWidth = this._originalSkinWidth;
+				newWidth = Math.max(this._originalSkinWidth, typicalTextWidth + this._paddingLeft + this._paddingRight);
 			}
 			if(needsHeight)
 			{
-				newHeight = this._originalSkinHeight;
+				newHeight = Math.max(this._originalSkinHeight, typicalTextHeight + this._paddingTop + this._paddingBottom);
 			}
+
+			if(this._typicalText)
+			{
+				this.textEditor.width = this.actualWidth - this._paddingLeft - this._paddingRight;
+				this.textEditor.height = this.actualHeight - this._paddingTop - this._paddingBottom;
+			}
+
 			return this.setSizeInternal(newWidth, newHeight, false);
 		}
 
@@ -687,6 +834,9 @@ package feathers.controls
 		 */
 		protected function refreshTextEditorProperties():void
 		{
+			this.textEditor.displayAsPassword = this._displayAsPassword;
+			this.textEditor.maxChars = this._maxChars;
+			this.textEditor.restrict = this._restrict;
 			const displayTextEditor:DisplayObject = DisplayObject(this.textEditor);
 			for(var propertyName:String in this._textEditorProperties)
 			{
@@ -819,10 +969,11 @@ package feathers.controls
 				if(touch.phase == TouchPhase.ENDED)
 				{
 					this._touchPointID = -1;
-					touch.getLocation(this, HELPER_POINT);
-					var isInBounds:Boolean = this.hitTest(HELPER_POINT, true) != null;
+					touch.getLocation(this.stage, HELPER_POINT);
+					const isInBounds:Boolean = this.contains(this.stage.hitTest(HELPER_POINT, true));
 					if(!this._textEditorHasFocus && isInBounds)
 					{
+						this.globalToLocal(HELPER_POINT, HELPER_POINT);
 						HELPER_POINT.x -= this._paddingLeft;
 						HELPER_POINT.y -= this._paddingTop;
 						this.textEditor.setFocus(HELPER_POINT);
@@ -881,6 +1032,10 @@ package feathers.controls
 		 */
 		protected function textEditor_changeHandler(event:Event):void
 		{
+			if(this._ignoreTextChanges)
+			{
+				return;
+			}
 			this.text = this.textEditor.text;
 		}
 

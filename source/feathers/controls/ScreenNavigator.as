@@ -8,6 +8,7 @@ accordance with the terms of the accompanying license agreement.
 package feathers.controls
 {
 	import feathers.core.FeathersControl;
+	import feathers.core.IFeathersControl;
 	import feathers.events.FeathersEventType;
 
 	import flash.errors.IllegalOperationError;
@@ -54,10 +55,23 @@ package feathers.controls
 	 * @see http://wiki.starling-framework.org/feathers/screen-navigator
 	 * @see http://wiki.starling-framework.org/feathers/transitions
 	 * @see feathers.controls.ScreenNavigatorItem
-	 * @see feathers.controls.Screen
 	 */
 	public class ScreenNavigator extends FeathersControl
 	{
+		/**
+		 * The screen navigator will auto size itself to fill the entire stage.
+		 *
+		 * @see #autoSizeMode
+		 */
+		public static const AUTO_SIZE_MODE_STAGE:String = "stage";
+
+		/**
+		 * The screen navigator will auto size itself to fit its content.
+		 *
+		 * @see #autoSizeMode
+		 */
+		public static const AUTO_SIZE_MODE_CONTENT:String = "content";
+
 		/**
 		 * @private
 		 */
@@ -188,6 +202,36 @@ package feathers.controls
 		protected var _clearAfterTransition:Boolean = false;
 
 		/**
+		 * @private
+		 */
+		protected var _autoSizeMode:String = AUTO_SIZE_MODE_STAGE;
+
+		/**
+		 * Determines how the screen navigator will set its own size when its
+		 * dimensions (width and height) aren't set explicitly.
+		 *
+		 * @see #AUTO_SIZE_MODE_STAGE
+		 * @see #AUTO_SIZE_MODE_CONTENT
+		 */
+		public function get autoSizeMode():String
+		{
+			return this._autoSizeMode;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set autoSizeMode(value:String):void
+		{
+			if(this._autoSizeMode == value)
+			{
+				return;
+			}
+			this._autoSizeMode = value;
+			this.invalidate(INVALIDATION_FLAG_SIZE);
+		}
+
+		/**
 		 * Displays a screen and returns a reference to it. If a previous
 		 * transition is running, the new screen will be queued, and no
 		 * reference will be returned.
@@ -217,6 +261,8 @@ package feathers.controls
 			{
 				this.clearScreenInternal(false);
 			}
+			
+			this._transitionIsActive = true;
 
 			const item:ScreenNavigatorItem = ScreenNavigatorItem(this._screens[id]);
 			this._activeScreen = item.getScreen();
@@ -277,7 +323,6 @@ package feathers.controls
 				VALIDATION_QUEUE.advanceTime(0);
 			}
 
-			this._transitionIsActive = true;
 			this.dispatchEventWith(FeathersEventType.TRANSITION_START);
 			this.transition(this._previousScreenInTransition, this._activeScreen, transitionComplete);
 
@@ -387,6 +432,18 @@ package feathers.controls
 		}
 
 		/**
+		 * Removes all screens.
+		 */
+		public function removeAllScreens():void
+		{
+			this.clearScreen();
+			for(var id:String in this._screens)
+			{
+				delete this._screens[id];
+			}
+		}
+
+		/**
 		 * Determines if the specified screen identifier has been added.
 		 */
 		public function hasScreen(id:String):Boolean
@@ -422,6 +479,15 @@ package feathers.controls
 				result.push(id);
 			}
 			return result;
+		}
+
+		/**
+		 * @private
+		 */
+		override public function dispose():void
+		{
+			this.clearScreenInternal(false);
+			super.dispose();
 		}
 
 		/**
@@ -475,16 +541,37 @@ package feathers.controls
 			{
 				return false;
 			}
+
+			if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT &&
+				this._activeScreen is IFeathersControl)
+			{
+				IFeathersControl(this._activeScreen).validate();
+			}
+
 			var newWidth:Number = this.explicitWidth;
 			if(needsWidth)
 			{
-				newWidth = this.stage.stageWidth;
+				if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT)
+				{
+					newWidth = this._activeScreen ? this._activeScreen.width : 0;
+				}
+				else
+				{
+					newWidth = this.stage.stageWidth;
+				}
 			}
 
 			var newHeight:Number = this.explicitHeight;
 			if(needsHeight)
 			{
-				newHeight = this.stage.stageHeight;
+				if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT)
+				{
+					newHeight = this._activeScreen ? this._activeScreen.height : 0;
+				}
+				else
+				{
+					newHeight = this.stage.stageHeight;
+				}
 			}
 
 			return this.setSizeInternal(newWidth, newHeight, false);
