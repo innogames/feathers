@@ -1377,16 +1377,26 @@ package feathers.controls
 			//this will auto-size the thumb, if needed
 			this.thumb.validate();
 
+			var rangeDiff: Number = _maximum - _minimum;
+			
 			if(this._direction == DIRECTION_VERTICAL)
 			{
 				const trackScrollableHeight:Number = this.actualHeight - this.thumb.height - this._minimumPadding - this._maximumPadding;
 				this.thumb.x = (this.actualWidth - this.thumb.width) / 2;
-				this.thumb.y = this._minimumPadding + trackScrollableHeight * (1 - (this._value - this._minimum) / (this._maximum - this._minimum));
+				if (rangeDiff != 0) {
+					this.thumb.y = this._minimumPadding + trackScrollableHeight * (1 - (this._value - this._minimum) / (this._maximum - this._minimum));
+				} else {
+					thumb.y = _minimumPadding;
+				}
 			}
 			else
 			{
 				const trackScrollableWidth:Number = this.actualWidth - this.thumb.width - this._minimumPadding - this._maximumPadding;
-				this.thumb.x = this._minimumPadding + (trackScrollableWidth * (this._value - this._minimum) / (this._maximum - this._minimum));
+				if (rangeDiff != 0) {
+					this.thumb.x = this._minimumPadding + (trackScrollableWidth * (this._value - this._minimum) / (this._maximum - this._minimum));
+				} else {
+					thumb.x = _minimumPadding;
+				}
 				this.thumb.y = (this.actualHeight - this.thumb.height) / 2;
 			}
 		}
