@@ -14,7 +14,6 @@ package feathers.controls
 	import feathers.core.PropertyProxy;
 	import feathers.data.HierarchicalCollection;
 	import feathers.events.CollectionEventType;
-	import feathers.events.FeathersEventType;
 	import feathers.layout.ILayout;
 	import feathers.layout.VerticalLayout;
 
@@ -70,21 +69,23 @@ package feathers.controls
 	 * <listing version="3.0">
 	 * var list:GroupedList = new GroupedList();
 	 * list.dataProvider = new HierarchicalCollection(
-	 * {
-	 *     header: "A",
-	 *     children:
-	 *     [
-	 *         { text: "Aardvark" },
-	 *         { text: "Alligator" }
-	 *     ]
-	 * },
-	 * {
-	 *     header: "B",
-	 *     children:
-	 *     [
-	 *         { text: "Baboon" }
-	 *     ]
-	 * });
+	 * [
+	 *     {
+	 *         header: "A",
+	 *         children:
+	 *         [
+	 *             { text: "Aardvark" },
+	 *             { text: "Alligator" }
+	 *         ]
+	 *     },
+	 *     {
+	 *         header: "B",
+	 *         children:
+	 *         [
+	 *             { text: "Baboon" }
+	 *         ]
+	 *     }
+	 * ]);
 	 * list.addEventListener( Event.CHANGE, list_changeHandler );
 	 * this.addChild( list );</listing>
 	 *
@@ -284,8 +285,6 @@ package feathers.controls
 		public function GroupedList()
 		{
 			super();
-			this.addEventListener(FeathersEventType.FOCUS_IN, list_focusInHandler);
-			this.addEventListener(FeathersEventType.FOCUS_OUT, list_focusOutHandler);
 		}
 
 		/**
@@ -293,6 +292,14 @@ package feathers.controls
 		 * The guts of the List's functionality. Handles layout and selection.
 		 */
 		protected var dataViewPort:GroupedListDataViewPort;
+
+		/**
+		 * @private
+		 */
+		override public function get isFocusEnabled():Boolean
+		{
+			return this._isSelectable && this._isFocusEnabled;
+		}
 
 		/**
 		 * @private
@@ -2034,6 +2041,7 @@ package feathers.controls
 				layout.gap = 0;
 				layout.horizontalAlign = VerticalLayout.HORIZONTAL_ALIGN_JUSTIFY;
 				layout.verticalAlign = VerticalLayout.VERTICAL_ALIGN_TOP;
+				layout.manageVisibility = true;
 				this._layout = layout;
 			}
 		}
@@ -2045,6 +2053,7 @@ package feathers.controls
 		{
 			this.refreshDataViewPortProperties();
 			super.draw();
+			this.refreshFocusIndicator();
 		}
 
 		/**
@@ -2121,16 +2130,18 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected function list_focusInHandler(event:Event):void
+		override protected function focusInHandler(event:Event):void
 		{
+			super.focusInHandler(event);
 			this.stage.addEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
 		}
 
 		/**
 		 * @private
 		 */
-		protected function list_focusOutHandler(event:Event):void
+		override protected function focusOutHandler(event:Event):void
 		{
+			super.focusOutHandler(event);
 			this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
 		}
 

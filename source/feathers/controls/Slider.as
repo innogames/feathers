@@ -64,11 +64,6 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		private static const HELPER_TOUCHES_VECTOR:Vector.<Touch> = new <Touch>[];
-
-		/**
-		 * @private
-		 */
 		protected static const INVALIDATION_FLAG_THUMB_FACTORY:String = "thumbFactory";
 
 		/**
@@ -195,8 +190,6 @@ package feathers.controls
 		public function Slider()
 		{
 			super();
-			this.addEventListener(FeathersEventType.FOCUS_IN, slider_focusInHandler);
-			this.addEventListener(FeathersEventType.FOCUS_OUT, slider_focusOutHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, slider_removedFromStageHandler);
 		}
 
@@ -1104,6 +1097,7 @@ package feathers.controls
 			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
 			var sizeInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SIZE);
 			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			const focusInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_FOCUS);
 			const thumbFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_THUMB_FACTORY);
 			const minimumTrackFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_MINIMUM_TRACK_FACTORY);
 			const maximumTrackFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_MAXIMUM_TRACK_FACTORY);
@@ -1124,22 +1118,23 @@ package feathers.controls
 			{
 				this.refreshThumbStyles();
 			}
-
-			if(minimumTrackFactoryInvalid || maximumTrackFactoryInvalid || stylesInvalid)
+			if(minimumTrackFactoryInvalid || stylesInvalid)
 			{
-				this.refreshTrackStyles();
+				this.refreshMinimumTrackStyles();
+			}
+			if((maximumTrackFactoryInvalid || stylesInvalid) && this.maximumTrack)
+			{
+				this.refreshMaximumTrackStyles();
 			}
 			
 			if(thumbFactoryInvalid || stateInvalid)
 			{
 				this.thumb.isEnabled = this._isEnabled;
 			}
-
 			if(minimumTrackFactoryInvalid || stateInvalid)
 			{
 				this.minimumTrack.isEnabled = this._isEnabled;
 			}
-
 			if((maximumTrackFactoryInvalid || stateInvalid) && this.maximumTrack)
 			{
 				this.maximumTrack.isEnabled = this._isEnabled;
@@ -1151,6 +1146,11 @@ package feathers.controls
 				dataInvalid || stylesInvalid || sizeInvalid)
 			{
 				this.layoutChildren();
+			}
+
+			if(sizeInvalid || focusInvalid)
+			{
+				this.refreshFocusIndicator();
 			}
 		}
 
@@ -1329,7 +1329,7 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected function refreshTrackStyles():void
+		protected function refreshMinimumTrackStyles():void
 		{
 			for(var propertyName:String in this._minimumTrackProperties)
 			{
@@ -1339,15 +1339,23 @@ package feathers.controls
 					this.minimumTrack[propertyName] = propertyValue;
 				}
 			}
-			if(this.maximumTrack)
+		}
+
+		/**
+		 * @private
+		 */
+		protected function refreshMaximumTrackStyles():void
+		{
+			if(!this.maximumTrack)
 			{
-				for(propertyName in this._maximumTrackProperties)
+				return;
+			}
+			for(var propertyName:String in this._maximumTrackProperties)
+			{
+				if(this.maximumTrack.hasOwnProperty(propertyName))
 				{
-					if(this.maximumTrack.hasOwnProperty(propertyName))
-					{
-						propertyValue = this._maximumTrackProperties[propertyName];
-						this.maximumTrack[propertyName] = propertyValue;
-					}
+					var propertyValue:Object = this._maximumTrackProperties[propertyName];
+					this.maximumTrack[propertyName] = propertyValue;
 				}
 			}
 		}
@@ -1543,21 +1551,11 @@ package feathers.controls
 			const page:Number = isNaN(this._page) ? this._step : this._page;
 			if(this._touchValue < this._value)
 			{
-				var newValue:Number = Math.max(this._touchValue, this._value - page);
-				if(page != 0)
-				{
-					newValue = roundToNearest(newValue, this._step);
-				}
-				this.value = newValue;
+				this.value = Math.max(this._touchValue, this._value - page);
 			}
 			else if(this._touchValue > this._value)
 			{
-				newValue = Math.min(this._touchValue, this._value + page);
-				if(page != 0)
-				{
-					newValue = roundToNearest(newValue, page);
-				}
-				this.value = newValue;
+				this.value = Math.min(this._touchValue, this._value + page);
 			}
 		}
 
@@ -1586,16 +1584,18 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected function slider_focusInHandler(event:Event):void
+		override protected function focusInHandler(event:Event):void
 		{
+			super.focusInHandler(event);
 			this.stage.addEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
 		}
 
 		/**
 		 * @private
 		 */
-		protected function slider_focusOutHandler(event:Event):void
+		override protected function focusOutHandler(event:Event):void
 		{
+			super.focusOutHandler(event);
 			this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
 		}
 		
@@ -1609,21 +1609,13 @@ package feathers.controls
 				this._touchPointID = -1;
 				return;
 			}
-			const touches:Vector.<Touch> = event.getTouches(DisplayObject(event.currentTarget), null, HELPER_TOUCHES_VECTOR);
+
+			const track:DisplayObject = DisplayObject(event.currentTarget);
 			if(this._touchPointID >= 0)
 			{
-				var touch:Touch;
-				for each(var currentTouch:Touch in touches)
-				{
-					if(currentTouch.id == this._touchPointID)
-					{
-						touch = currentTouch;
-						break;
-					}
-				}
+				var touch:Touch = event.getTouch(track, null, this._touchPointID);
 				if(!touch)
 				{
-					HELPER_TOUCHES_VECTOR.length = 0;
 					return;
 				}
 				if(!this._showThumb && touch.phase == TouchPhase.MOVED)
@@ -1648,41 +1640,38 @@ package feathers.controls
 			}
 			else
 			{
-				for each(touch in touches)
+				touch = event.getTouch(track, TouchPhase.BEGAN);
+				if(!touch)
 				{
-					if(touch.phase == TouchPhase.BEGAN)
-					{
-						touch.getLocation(this, HELPER_POINT);
-						this._touchPointID = touch.id;
-						if(this._direction == DIRECTION_VERTICAL)
-						{
-							this._thumbStartX = HELPER_POINT.x;
-							this._thumbStartY = Math.min(this.actualHeight - this.thumb.height, Math.max(0, HELPER_POINT.y - this.thumb.height / 2));
-						}
-						else //horizontal
-						{
-							this._thumbStartX = Math.min(this.actualWidth - this.thumb.width, Math.max(0, HELPER_POINT.x - this.thumb.width / 2));
-							this._thumbStartY = HELPER_POINT.y;
-						}
-						this._touchStartX = HELPER_POINT.x;
-						this._touchStartY = HELPER_POINT.y;
-						this._touchValue = this.locationToValue(HELPER_POINT);
-						this.isDragging = true;
-						this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
-						if(this._showThumb)
-						{
-							this.adjustPage();
-							this.startRepeatTimer(this.adjustPage);
-						}
-						else
-						{
-							this.value = this._touchValue;
-						}
-						break;
-					}
+					return;
+				}
+				touch.getLocation(this, HELPER_POINT);
+				this._touchPointID = touch.id;
+				if(this._direction == DIRECTION_VERTICAL)
+				{
+					this._thumbStartX = HELPER_POINT.x;
+					this._thumbStartY = Math.min(this.actualHeight - this.thumb.height, Math.max(0, HELPER_POINT.y - this.thumb.height / 2));
+				}
+				else //horizontal
+				{
+					this._thumbStartX = Math.min(this.actualWidth - this.thumb.width, Math.max(0, HELPER_POINT.x - this.thumb.width / 2));
+					this._thumbStartY = HELPER_POINT.y;
+				}
+				this._touchStartX = HELPER_POINT.x;
+				this._touchStartY = HELPER_POINT.y;
+				this._touchValue = this.locationToValue(HELPER_POINT);
+				this.isDragging = true;
+				this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
+				if(this._showThumb)
+				{
+					this.adjustPage();
+					this.startRepeatTimer(this.adjustPage);
+				}
+				else
+				{
+					this.value = this._touchValue;
 				}
 			}
-			HELPER_TOUCHES_VECTOR.length = 0;
 		}
 		
 		/**
@@ -1695,25 +1684,12 @@ package feathers.controls
 				this._touchPointID = -1;
 				return;
 			}
-			const touches:Vector.<Touch> = event.getTouches(this.thumb, null, HELPER_TOUCHES_VECTOR);
-			if(touches.length == 0)
-			{
-				return;
-			}
+
 			if(this._touchPointID >= 0)
 			{
-				var touch:Touch;
-				for each(var currentTouch:Touch in touches)
-				{
-					if(currentTouch.id == this._touchPointID)
-					{
-						touch = currentTouch;
-						break;
-					}
-				}
+				var touch:Touch = event.getTouch(this.thumb, null, this._touchPointID);
 				if(!touch)
 				{
-					HELPER_TOUCHES_VECTOR.length = 0;
 					return;
 				}
 				if(touch.phase == TouchPhase.MOVED)
@@ -1734,23 +1710,20 @@ package feathers.controls
 			}
 			else
 			{
-				for each(touch in touches)
+				touch = event.getTouch(this.thumb, TouchPhase.BEGAN);
+				if(!touch)
 				{
-					if(touch.phase == TouchPhase.BEGAN)
-					{
-						touch.getLocation(this, HELPER_POINT);
-						this._touchPointID = touch.id;
-						this._thumbStartX = this.thumb.x;
-						this._thumbStartY = this.thumb.y;
-						this._touchStartX = HELPER_POINT.x;
-						this._touchStartY = HELPER_POINT.y;
-						this.isDragging = true;
-						this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
-						break;
-					}
+					return;
 				}
+				touch.getLocation(this, HELPER_POINT);
+				this._touchPointID = touch.id;
+				this._thumbStartX = this.thumb.x;
+				this._thumbStartY = this.thumb.y;
+				this._touchStartX = HELPER_POINT.x;
+				this._touchStartY = HELPER_POINT.y;
+				this.isDragging = true;
+				this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
 			}
-			HELPER_TOUCHES_VECTOR.length = 0;
 		}
 
 		/**

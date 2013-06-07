@@ -3,6 +3,8 @@ package feathers.examples.componentsExplorer.screens
 	import feathers.controls.Button;
 	import feathers.controls.GroupedList;
 	import feathers.controls.PanelScreen;
+	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
+	import feathers.controls.renderers.IGroupedListItemRenderer;
 	import feathers.data.HierarchicalCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.examples.componentsExplorer.data.GroupedListSettings;
@@ -89,6 +91,13 @@ package feathers.examples.componentsExplorer.screens
 						{ text: "Eel" },
 						{ text: "Elk" },
 					]
+				},
+				{
+					header: "F",
+					children:
+					[
+						{ text: "Fox" },
+					]
 				}
 			];
 			groups.fixed = true;
@@ -104,7 +113,15 @@ package feathers.examples.componentsExplorer.screens
 			this._list.typicalFooter = "Footer 10";
 			this._list.isSelectable = this.settings.isSelectable;
 			this._list.hasElasticEdges = this.settings.hasElasticEdges;
-			this._list.itemRendererProperties.labelField = "text";
+			this._list.clipContent = false;
+			this._list.autoHideBackground = true;
+			this._list.itemRendererFactory = function():IGroupedListItemRenderer
+			{
+				var renderer:DefaultGroupedListItemRenderer = new DefaultGroupedListItemRenderer();
+				renderer.labelField = "text";
+				renderer.isQuickHitAreaEnabled = true;
+				return renderer;
+			};
 			this._list.addEventListener(Event.CHANGE, list_changeHandler);
 			this._list.layoutData = new AnchorLayoutData(0, 0, 0, 0);
 			this.addChildAt(this._list, 0);
@@ -122,6 +139,8 @@ package feathers.examples.componentsExplorer.screens
 				[
 					this._backButton
 				];
+
+				this.backButtonHandler = this.onBackButton;
 			}
 
 			this._settingsButton = new Button();
@@ -132,9 +151,6 @@ package feathers.examples.componentsExplorer.screens
 			[
 				this._settingsButton
 			];
-			
-			// handles the back hardware key on android
-			this.backButtonHandler = this.onBackButton;
 		}
 		
 		private function onBackButton():void

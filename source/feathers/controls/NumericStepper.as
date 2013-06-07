@@ -37,15 +37,19 @@ package feathers.controls
 	 * Select a value between a minimum and a maximum by using increment and
 	 * decrement buttons or typing in a value in a text input.
 	 *
+	 * <p><strong>Beta Component:</strong> This is a new component, and its APIs
+	 * may need some changes between now and the next version of Feathers to
+	 * account for overlooked requirements or other issues. Upgrading to future
+	 * versions of Feathers may involve manual changes to your code that uses
+	 * this component. The
+	 * <a href="http://wiki.starling-framework.org/feathers/deprecation-policy">Feathers deprecation policy</a>
+	 * will not go into effect until this component's status is upgraded from
+	 * beta to stable.</p>
+	 *
 	 * @see http://wiki.starling-framework.org/feathers/numeric-stepper
 	 */
 	public class NumericStepper extends FeathersControl implements IFocusDisplayObject
 	{
-		/**
-		 * @private
-		 */
-		private static const HELPER_TOUCHES_VECTOR:Vector.<Touch> = new <Touch>[];
-
 		/**
 		 * @private
 		 */
@@ -86,6 +90,32 @@ package feathers.controls
 		public static const DEFAULT_CHILD_NAME_TEXT_INPUT:String = "feathers-numeric-stepper-text-input";
 
 		/**
+		 * The decrement button will be placed on the left side of the text
+		 * input and the increment button will be placed on the right side of
+		 * the text input.
+		 *
+		 * @see #buttonLayoutMode
+		 */
+		public static const BUTTON_LAYOUT_MODE_SPLIT_HORIZONTAL:String = "splitHorizontal";
+
+		/**
+		 * The decrement button will be placed below the text input and the
+		 * increment button will be placed above the text input.
+		 *
+		 * @see #buttonLayoutMode
+		 */
+		public static const BUTTON_LAYOUT_MODE_SPLIT_VERTICAL:String = "splitVertical";
+
+		/**
+		 * Both the decrement and increment button will be placed on the right
+		 * side of the text input. The increment button will be above the
+		 * decrement button.
+		 *
+		 * @see #buttonLayoutMode
+		 */
+		public static const BUTTON_LAYOUT_MODE_RIGHT_SIDE_VERTICAL:String = "rightSideVertical";
+
+		/**
 		 * @private
 		 */
 		protected static function defaultDecrementButtonFactory():Button
@@ -114,8 +144,6 @@ package feathers.controls
 		 */
 		public function NumericStepper()
 		{
-			this.addEventListener(FeathersEventType.FOCUS_IN, numericStepper_focusInHandler);
-			this.addEventListener(FeathersEventType.FOCUS_OUT, numericStepper_focusOutHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, numericStepper_removedFromStageHandler);
 		}
 
@@ -332,6 +360,36 @@ package feathers.controls
 		/**
 		 * @private
 		 */
+		protected var _buttonLayoutMode:String = BUTTON_LAYOUT_MODE_SPLIT_HORIZONTAL;
+
+		/**
+		 * How the buttons are positioned relative to the text input.
+		 *
+		 * @see #BUTTON_LAYOUT_MODE_SPLIT_HORIZONTAL
+		 * @see #BUTTON_LAYOUT_MODE_SPLIT_VERTICAL
+		 * @see #BUTTON_LAYOUT_MODE_RIGHT_SIDE_VERTICAL
+		 */
+		public function get buttonLayoutMode():String
+		{
+			return this._buttonLayoutMode;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set buttonLayoutMode(value:String):void
+		{
+			if(this._buttonLayoutMode == value)
+			{
+				return;
+			}
+			this._buttonLayoutMode = value;
+			this.invalidate(INVALIDATION_FLAG_STYLES);
+		}
+
+		/**
+		 * @private
+		 */
 		protected var _decrementButtonFactory:Function;
 
 		/**
@@ -469,7 +527,7 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected var _decrementButtonLabel:String = "-";
+		protected var _decrementButtonLabel:String = null;
 
 		/**
 		 * The text displayed by the decrement button.
@@ -632,7 +690,7 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected var _incrementButtonLabel:String = "+";
+		protected var _incrementButtonLabel:String = null;
 
 		/**
 		 * The text displayed by the increment button.
@@ -804,6 +862,7 @@ package feathers.controls
 			const decrementButtonFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DECREMENT_BUTTON_FACTORY);
 			const incrementButtonFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_INCREMENT_BUTTON_FACTORY);
 			const textInputFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_INPUT_FACTORY);
+			const focusInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_FOCUS);
 
 			if(decrementButtonFactoryInvalid)
 			{
@@ -863,6 +922,11 @@ package feathers.controls
 			{
 				this.layoutChildren();
 			}
+
+			if(sizeInvalid || focusInvalid)
+			{
+				this.refreshFocusIndicator();
+			}
 		}
 
 		/**
@@ -877,26 +941,64 @@ package feathers.controls
 				return false;
 			}
 
-			this.decrementButton.validate();
-			this.incrementButton.validate();
-
-			const oldTextInputWidth:Number = this.textInput.width;
-			const oldTextInputHeight:Number = this.textInput.height;
-			this.textInput.minWidth = this._minWidth - this.decrementButton.width - this.incrementButton.width;
-			this.textInput.maxWidth = this._maxWidth - this.decrementButton.width - this.incrementButton.width;
-			this.textInput.width = this.explicitWidth - this.decrementButton.width - this.incrementButton.width;
-			this.textInput.height = this.explicitHeight;
-			this.textInput.validate();
-
 			var newWidth:Number = this.explicitWidth;
 			var newHeight:Number = this.explicitHeight;
-			if(needsWidth)
+
+			this.decrementButton.validate();
+			this.incrementButton.validate();
+			const oldTextInputWidth:Number = this.textInput.width;
+			const oldTextInputHeight:Number = this.textInput.height;
+			if(this._buttonLayoutMode == BUTTON_LAYOUT_MODE_RIGHT_SIDE_VERTICAL)
 			{
-				newWidth = this.decrementButton.width + this.textInput.width + this.incrementButton.width;
+				const maxButtonWidth:Number = Math.max(this.decrementButton.width, this.incrementButton.width);
+				this.textInput.minWidth = Math.max(0, this._minWidth - maxButtonWidth);
+				this.textInput.maxWidth = Math.max(0, this._maxWidth - maxButtonWidth);
+				this.textInput.width = Math.max(0, this.explicitWidth - maxButtonWidth)
+				this.textInput.height = this.explicitHeight;
+				this.textInput.validate();
+
+				if(needsWidth)
+				{
+					newWidth = this.textInput.width + maxButtonWidth;
+				}
+				if(needsHeight)
+				{
+					newHeight = Math.max(this.textInput.height, this.decrementButton.height + this.incrementButton.height);
+				}
 			}
-			if(needsHeight)
+			else if(this._buttonLayoutMode == BUTTON_LAYOUT_MODE_SPLIT_VERTICAL)
 			{
-				newHeight = Math.max(this.decrementButton.height, this.incrementButton.height, this.textInput.height);
+				this.textInput.minHeight = Math.max(0, this._minHeight - this.decrementButton.height - this.incrementButton.height);
+				this.textInput.maxHeight = Math.max(0, this._maxHeight - this.decrementButton.height - this.incrementButton.height);
+				this.textInput.height = Math.max(0, this.explicitHeight - this.decrementButton.height - this.incrementButton.height);
+				this.textInput.width = this.explicitWidth;
+				this.textInput.validate();
+
+				if(needsWidth)
+				{
+					newWidth = Math.max(this.decrementButton.width, this.incrementButton.width, this.textInput.width);
+				}
+				if(needsHeight)
+				{
+					newHeight = this.decrementButton.height + this.textInput.height + this.incrementButton.height;
+				}
+			}
+			else //split horizontal
+			{
+				this.textInput.minWidth = Math.max(0, this._minWidth - this.decrementButton.width - this.incrementButton.width);
+				this.textInput.maxWidth = Math.max(0, this._maxWidth - this.decrementButton.width - this.incrementButton.width);
+				this.textInput.width = Math.max(0, this.explicitWidth - this.decrementButton.width - this.incrementButton.width);
+				this.textInput.height = this.explicitHeight;
+				this.textInput.validate();
+
+				if(needsWidth)
+				{
+					newWidth = this.decrementButton.width + this.textInput.width + this.incrementButton.width;
+				}
+				if(needsHeight)
+				{
+					newHeight = Math.max(this.decrementButton.height, this.incrementButton.height, this.textInput.height);
+				}
 			}
 
 			this.textInput.width = oldTextInputWidth;
@@ -1044,19 +1146,60 @@ package feathers.controls
 		 */
 		protected function layoutChildren():void
 		{
-			this.decrementButton.x = 0;
-			this.decrementButton.y = 0;
-			this.decrementButton.height = this.actualHeight;
-			this.decrementButton.validate();
+			if(this._buttonLayoutMode == BUTTON_LAYOUT_MODE_RIGHT_SIDE_VERTICAL)
+			{
+				const buttonHeight:Number = this.actualHeight / 2;
+				this.incrementButton.y = 0;
+				this.incrementButton.height = buttonHeight;
+				this.incrementButton.validate();
 
-			this.incrementButton.y = 0;
-			this.incrementButton.height = this.actualHeight;
-			this.incrementButton.validate();
-			this.incrementButton.x = this.actualWidth - this.incrementButton.width;
+				this.decrementButton.y = buttonHeight;
+				this.decrementButton.height = buttonHeight;
+				this.decrementButton.validate();
 
-			this.textInput.x = this.decrementButton.width;
-			this.textInput.width = this.incrementButton.x - this.textInput.x;
-			this.textInput.height = this.actualHeight;
+				const buttonWidth:Number = Math.max(this.decrementButton.width, this.incrementButton.width);
+				const buttonX:Number = this.actualWidth - buttonWidth;
+				this.decrementButton.x = buttonX;
+				this.incrementButton.x = buttonX;
+
+				this.textInput.x = 0;
+				this.textInput.y = 0;
+				this.textInput.width = buttonX;
+				this.textInput.height = this.actualHeight;
+			}
+			else if(this._buttonLayoutMode == BUTTON_LAYOUT_MODE_SPLIT_VERTICAL)
+			{
+				this.incrementButton.x = 0;
+				this.incrementButton.y = 0;
+				this.incrementButton.width = this.actualWidth;
+				this.incrementButton.validate();
+
+				this.decrementButton.x = 0;
+				this.decrementButton.width = this.actualWidth;
+				this.decrementButton.validate();
+				this.decrementButton.y = this.actualHeight - this.decrementButton.height;
+
+				this.textInput.x = 0;
+				this.textInput.y = this.incrementButton.height;
+				this.textInput.width = this.actualWidth;
+				this.textInput.height = Math.max(0, this.decrementButton.y - this.incrementButton.height - this.incrementButton.y);
+			}
+			else //split horizontal
+			{
+				this.decrementButton.x = 0;
+				this.decrementButton.y = 0;
+				this.decrementButton.height = this.actualHeight;
+				this.decrementButton.validate();
+
+				this.incrementButton.y = 0;
+				this.incrementButton.height = this.actualHeight;
+				this.incrementButton.validate();
+				this.incrementButton.x = this.actualWidth - this.incrementButton.width;
+
+				this.textInput.x = this.decrementButton.width;
+				this.textInput.width = this.incrementButton.x - this.textInput.x;
+				this.textInput.height = this.actualHeight;
+			}
 		}
 
 		/**
@@ -1100,16 +1243,18 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected function numericStepper_focusInHandler(event:Event):void
+		override protected function focusInHandler(event:Event):void
 		{
+			super.focusInHandler(event);
 			this.stage.addEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
 		}
 
 		/**
 		 * @private
 		 */
-		protected function numericStepper_focusOutHandler(event:Event):void
+		override protected function focusOutHandler(event:Event):void
 		{
+			super.focusOutHandler(event);
 			this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
 		}
 
@@ -1144,54 +1289,33 @@ package feathers.controls
 		{
 			if(!this._isEnabled)
 			{
-				return;
-			}
-			const touches:Vector.<Touch> = event.getTouches(this.decrementButton, null, HELPER_TOUCHES_VECTOR);
-			if(touches.length == 0)
-			{
+				this.touchPointID = -1;
 				return;
 			}
 
 			if(this.touchPointID >= 0)
 			{
-				var touch:Touch;
-				for each(var currentTouch:Touch in touches)
-				{
-					if(currentTouch.id == this.touchPointID)
-					{
-						touch = currentTouch;
-						break;
-					}
-				}
-
+				var touch:Touch = event.getTouch(this.decrementButton, TouchPhase.ENDED, this.touchPointID);
 				if(!touch)
 				{
-					//end of hover
-					HELPER_TOUCHES_VECTOR.length = 0;
 					return;
 				}
-				if(touch.phase == TouchPhase.ENDED)
-				{
-					this.touchPointID = -1;
-					this._repeatTimer.stop();
-					this.dispatchEventWith(FeathersEventType.END_INTERACTION);
-				}
+				this.touchPointID = -1;
+				this._repeatTimer.stop();
+				this.dispatchEventWith(FeathersEventType.END_INTERACTION);
 			}
 			else //if we get here, we don't have a saved touch ID yet
 			{
-				for each(touch in touches)
+				touch = event.getTouch(this.decrementButton, TouchPhase.BEGAN);
+				if(!touch)
 				{
-					if(touch.phase == TouchPhase.BEGAN)
-					{
-						this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
-						this.decrement();
-						this.startRepeatTimer(this.decrement);
-						this.touchPointID = touch.id;
-						break;
-					}
+					return;
 				}
+				this.touchPointID = touch.id;
+				this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
+				this.decrement();
+				this.startRepeatTimer(this.decrement);
 			}
-			HELPER_TOUCHES_VECTOR.length = 0;
 		}
 
 		/**
@@ -1201,54 +1325,33 @@ package feathers.controls
 		{
 			if(!this._isEnabled)
 			{
-				return;
-			}
-			const touches:Vector.<Touch> = event.getTouches(this.incrementButton, null, HELPER_TOUCHES_VECTOR);
-			if(touches.length == 0)
-			{
+				this.touchPointID = -1;
 				return;
 			}
 
 			if(this.touchPointID >= 0)
 			{
-				var touch:Touch;
-				for each(var currentTouch:Touch in touches)
-				{
-					if(currentTouch.id == this.touchPointID)
-					{
-						touch = currentTouch;
-						break;
-					}
-				}
-
+				var touch:Touch = event.getTouch(this.incrementButton, TouchPhase.ENDED, this.touchPointID);
 				if(!touch)
 				{
-					//end of hover
-					HELPER_TOUCHES_VECTOR.length = 0;
 					return;
 				}
-				if(touch.phase == TouchPhase.ENDED)
-				{
-					this.touchPointID = -1;
-					this._repeatTimer.stop();
-					this.dispatchEventWith(FeathersEventType.END_INTERACTION);
-				}
+				this.touchPointID = -1;
+				this._repeatTimer.stop();
+				this.dispatchEventWith(FeathersEventType.END_INTERACTION);
 			}
 			else //if we get here, we don't have a saved touch ID yet
 			{
-				for each(touch in touches)
+				touch = event.getTouch(this.incrementButton, TouchPhase.BEGAN);
+				if(!touch)
 				{
-					if(touch.phase == TouchPhase.BEGAN)
-					{
-						this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
-						this.increment();
-						this.startRepeatTimer(this.increment);
-						this.touchPointID = touch.id;
-						break;
-					}
+					return;
 				}
+				this.touchPointID = touch.id;
+				this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
+				this.increment();
+				this.startRepeatTimer(this.increment);
 			}
-			HELPER_TOUCHES_VECTOR.length = 0;
 		}
 
 		/**

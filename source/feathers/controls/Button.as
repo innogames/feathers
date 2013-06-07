@@ -69,11 +69,6 @@ package feathers.controls
 		private static const HELPER_POINT:Point = new Point();
 
 		/**
-		 * @private
-		 */
-		private static const HELPER_TOUCHES_VECTOR:Vector.<Touch> = new <Touch>[];
-
-		/**
 		 * The default value added to the <code>nameList</code> of the label.
 		 *
 		 * @see feathers.core.IFeathersControl#nameList
@@ -331,8 +326,6 @@ package feathers.controls
 		{
 			this.isQuickHitAreaEnabled = true;
 			this.addEventListener(TouchEvent.TOUCH, button_touchHandler);
-			this.addEventListener(FeathersEventType.FOCUS_IN, button_focusInHandler);
-			this.addEventListener(FeathersEventType.FOCUS_OUT, button_focusOutHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, button_removedFromStageHandler);
 		}
 
@@ -2416,6 +2409,7 @@ package feathers.controls
 			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
 			const selectedInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SELECTED);
 			const textRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_RENDERER);
+			const focusInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_FOCUS);
 
 			if(textRendererInvalid)
 			{
@@ -2448,7 +2442,12 @@ package feathers.controls
 			if(textRendererInvalid || stylesInvalid || stateInvalid || selectedInvalid || dataInvalid || sizeInvalid)
 			{
 				this.layoutContent();
-			}
+				}
+
+				if(sizeInvalid || focusInvalid)
+				{
+					this.refreshFocusIndicator();
+				}
 			
 			if(this._autoFlatten)
 			{
@@ -2685,6 +2684,8 @@ package feathers.controls
 			{
 				return;
 			}
+			this.currentSkin.x = 0;
+			this.currentSkin.y = 0;
 			if(this.currentSkin.width != this.actualWidth)
 			{
 				this.currentSkin.width = this.actualWidth;
@@ -2936,8 +2937,9 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected function button_focusInHandler(event:Event):void
+		override protected function focusInHandler(event:Event):void
 		{
+			super.focusInHandler(event);
 			this.stage.addEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
 			this.stage.addEventListener(KeyboardEvent.KEY_UP, stage_keyUpHandler);
 		}
@@ -2945,8 +2947,9 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected function button_focusOutHandler(event:Event):void
+		override protected function focusOutHandler(event:Event):void
 		{
+			super.focusOutHandler(event);
 			this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
 			this.stage.removeEventListener(KeyboardEvent.KEY_UP, stage_keyUpHandler);
 		}
@@ -2967,38 +2970,20 @@ package feathers.controls
 		{
 			if(!this._isEnabled)
 			{
+				this._touchPointID = -1;
 				return;
 			}
 
-			const touches:Vector.<Touch> = event.getTouches(this, null, HELPER_TOUCHES_VECTOR);
-			if(touches.length == 0)
-			{
-				//end of hover
-				this.currentState = STATE_UP;
-				return;
-			}
 			if(this._touchPointID >= 0)
 			{
-				var touch:Touch;
-				for each(var currentTouch:Touch in touches)
-				{
-					if(currentTouch.id == this._touchPointID)
-					{
-						touch = currentTouch;
-						break;
-					}
-				}
-
+				var touch:Touch = event.getTouch(this, null, this._touchPointID);
 				if(!touch)
 				{
-					//end of hover
-					this.currentState = STATE_UP;
-					HELPER_TOUCHES_VECTOR.length = 0;
 					return;
 				}
 
 				touch.getLocation(this.stage, HELPER_POINT);
-				var isInBounds:Boolean = this.contains(this.stage.hitTest(HELPER_POINT, true));
+				const isInBounds:Boolean = this.contains(this.stage.hitTest(HELPER_POINT, true));
 				if(touch.phase == TouchPhase.MOVED)
 				{
 					if(isInBounds || this.keepDownStateOnRollOut)
@@ -3034,26 +3019,28 @@ package feathers.controls
 						this.currentState = STATE_UP;
 					}
 				}
+				return;
 			}
 			else //if we get here, we don't have a saved touch ID yet
 			{
-				for each(touch in touches)
+				touch = event.getTouch(this, TouchPhase.BEGAN);
+				if(touch)
 				{
-					if(touch.phase == TouchPhase.BEGAN)
-					{
-						this.currentState = STATE_DOWN;
-						this._touchPointID = touch.id;
-						break;
-					}
-					else if(touch.phase == TouchPhase.HOVER)
-					{
-						this.currentState = STATE_HOVER;
-						this._isHoverSupported = true;
-						break;
-					}
+					this.currentState = STATE_DOWN;
+					this._touchPointID = touch.id;
+					return;
 				}
+				touch = event.getTouch(this, TouchPhase.HOVER);
+				if(touch)
+				{
+					this.currentState = STATE_HOVER;
+					this._isHoverSupported = true;
+					return;
+				}
+
+				//end of hover
+				this.currentState = STATE_UP;
 			}
-			HELPER_TOUCHES_VECTOR.length = 0;
 		}
 		
 		/**

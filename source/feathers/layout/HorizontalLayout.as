@@ -347,9 +347,11 @@ package feathers.layout
 
 		/**
 		 * Determines if items will be set invisible if they are outside the
-		 * view port.
+		 * view port. Can improve performance, especially for non-virtual
+		 * layouts. If <code>true</code>, you will not be able to manually
+		 * change the <code>visible</code> property of any items in the layout.
 		 */
-		public var manageVisibility:Boolean = true;
+		public var manageVisibility:Boolean = false;
 
 		/**
 		 * @private
@@ -523,13 +525,9 @@ package feathers.layout
 				}
 				else
 				{
-					if(item is ILayoutDisplayObject)
+					if(item is ILayoutDisplayObject && !ILayoutDisplayObject(item).includeInLayout)
 					{
-						var layoutItem:ILayoutDisplayObject = ILayoutDisplayObject(item);
-						if(!layoutItem.includeInLayout)
-						{
-							continue;
-						}
+						continue;
 					}
 					item.x = positionX;
 					if(this._useVirtualLayout)
@@ -584,6 +582,10 @@ package feathers.layout
 					for(i = 0; i < discoveredItemCount; i++)
 					{
 						item = discoveredItems[i];
+						if(item is ILayoutDisplayObject && !ILayoutDisplayObject(item).includeInLayout)
+						{
+							continue;
+						}
 						item.x += horizontalAlignOffsetX;
 					}
 				}
@@ -592,6 +594,10 @@ package feathers.layout
 			for(i = 0; i < discoveredItemCount; i++)
 			{
 				item = discoveredItems[i];
+				if(item is ILayoutDisplayObject && !ILayoutDisplayObject(item).includeInLayout)
+				{
+					continue;
+				}
 				switch(this._verticalAlign)
 				{
 					case VERTICAL_ALIGN_BOTTOM:
@@ -913,11 +919,16 @@ package feathers.layout
 			const itemCount:int = items.length;
 			for(var i:int = 0; i < itemCount; i++)
 			{
-				var control:IFeathersControl = items[i] as IFeathersControl;
-				if(control)
+				var item:DisplayObject = items[i];
+				if(item is ILayoutDisplayObject && !ILayoutDisplayObject(item).includeInLayout)
 				{
-					control.validate();
+					continue;
 				}
+				if(!(item is IFeathersControl))
+				{
+					continue;
+				}
+				IFeathersControl(item).validate();
 			}
 		}
 	}

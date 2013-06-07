@@ -136,8 +136,6 @@ package feathers.controls
 		public function List()
 		{
 			super();
-			this.addEventListener(FeathersEventType.FOCUS_IN, list_focusInHandler);
-			this.addEventListener(FeathersEventType.FOCUS_OUT, list_focusOutHandler);
 			this._selectedIndices.addEventListener(Event.CHANGE, selectedIndices_changeHandler);
 		}
 
@@ -146,6 +144,14 @@ package feathers.controls
 		 * The guts of the List's functionality. Handles layout and selection.
 		 */
 		protected var dataViewPort:ListDataViewPort;
+
+		/**
+		 * @private
+		 */
+		override public function get isFocusEnabled():Boolean
+		{
+			return this._isSelectable && this._isFocusEnabled;
+		}
 
 		/**
 		 * @private
@@ -396,7 +402,7 @@ package feathers.controls
 			for(var i:int = 0; i < indexCount; i++)
 			{
 				var index:int = this._selectedIndices.getItemAt(i) as int;
-				var item:Object = this._dataProvider[index];
+				var item:Object = this._dataProvider.getItemAt(index);
 				items.push(item);
 			}
 			return items;
@@ -716,6 +722,7 @@ package feathers.controls
 				layout.gap = 0;
 				layout.horizontalAlign = VerticalLayout.HORIZONTAL_ALIGN_JUSTIFY;
 				layout.verticalAlign = VerticalLayout.VERTICAL_ALIGN_TOP;
+				layout.manageVisibility = true;
 				this._layout = layout;
 			}
 		}
@@ -727,6 +734,7 @@ package feathers.controls
 		{
 			this.refreshDataViewPortProperties();
 			super.draw();
+			this.refreshFocusIndicator();
 		}
 
 		/**
@@ -777,16 +785,18 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected function list_focusInHandler(event:Event):void
+		override protected function focusInHandler(event:Event):void
 		{
+			super.focusInHandler(event);
 			this.stage.addEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
 		}
 
 		/**
 		 * @private
 		 */
-		protected function list_focusOutHandler(event:Event):void
+		override protected function focusOutHandler(event:Event):void
 		{
+			super.focusOutHandler(event);
 			this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
 		}
 

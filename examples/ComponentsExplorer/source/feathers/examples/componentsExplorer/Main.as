@@ -3,6 +3,7 @@ package feathers.examples.componentsExplorer
 	import feathers.controls.ScreenNavigator;
 	import feathers.controls.ScreenNavigatorItem;
 	import feathers.controls.ScrollContainer;
+	import feathers.examples.componentsExplorer.data.EmbeddedAssets;
 	import feathers.examples.componentsExplorer.data.GroupedListSettings;
 	import feathers.examples.componentsExplorer.data.ItemRendererSettings;
 	import feathers.examples.componentsExplorer.data.ListSettings;
@@ -36,7 +37,7 @@ package feathers.examples.componentsExplorer
 	import feathers.motion.transitions.ScreenSlidingStackTransitionManager;
 	import feathers.system.DeviceCapabilities;
 	import feathers.themes.MetalWorksMobileTheme;
-
+	
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
@@ -94,7 +95,6 @@ package feathers.examples.componentsExplorer
 			this.addEventListener(Event.REMOVED_FROM_STAGE, removedFromStageHandler);
 		}
 		
-		private var _theme:MetalWorksMobileTheme;
 		private var _container:ScrollContainer;
 		private var _navigator:ScreenNavigator;
 		private var _menu:MainMenuScreen;
@@ -108,7 +108,8 @@ package feathers.examples.componentsExplorer
 		
 		private function addedToStageHandler(event:Event):void
 		{
-			this._theme = new MetalWorksMobileTheme();
+			EmbeddedAssets.initialize();
+			new MetalWorksMobileTheme();
 			
 			this._navigator = new ScreenNavigator();
 

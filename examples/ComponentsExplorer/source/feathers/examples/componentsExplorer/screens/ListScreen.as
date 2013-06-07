@@ -3,6 +3,8 @@ package feathers.examples.componentsExplorer.screens
 	import feathers.controls.Button;
 	import feathers.controls.List;
 	import feathers.controls.PanelScreen;
+	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ListCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.examples.componentsExplorer.data.ListSettings;
@@ -51,7 +53,19 @@ package feathers.examples.componentsExplorer.screens
 			this._list.isSelectable = this.settings.isSelectable;
 			this._list.allowMultipleSelection = this.settings.allowMultipleSelection;
 			this._list.hasElasticEdges = this.settings.hasElasticEdges;
-			this._list.itemRendererProperties.labelField = "text";
+			//optimization to reduce draw calls.
+			//only do this if the header or other content covers the edges of
+			//the list. otherwise, the list items may be displayed outside of
+			//the list's bounds.
+			this._list.clipContent = false;
+			this._list.autoHideBackground = true;
+			this._list.itemRendererFactory = function():IListItemRenderer
+			{
+				var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				renderer.labelField = "text";
+				renderer.isQuickHitAreaEnabled = true;
+				return renderer;
+			};
 			this._list.addEventListener(Event.CHANGE, list_changeHandler);
 			this._list.layoutData = new AnchorLayoutData(0, 0, 0, 0);
 			this.addChild(this._list);
@@ -69,6 +83,8 @@ package feathers.examples.componentsExplorer.screens
 				[
 					this._backButton
 				];
+
+				this.backButtonHandler = this.onBackButton;
 			}
 
 			this._settingsButton = new Button();
@@ -79,9 +95,6 @@ package feathers.examples.componentsExplorer.screens
 			[
 				this._settingsButton
 			];
-			
-			// handles the back hardware key on android
-			this.backButtonHandler = this.onBackButton;
 		}
 		
 		private function onBackButton():void

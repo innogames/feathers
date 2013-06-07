@@ -43,9 +43,14 @@ package feathers.controls.text
 	[Event(name="change",type="starling.events.Event")]
 
 	/**
-	 * Dispatched when the user presses the Enter key while the editor has focus.
+	 * Dispatched when the user presses the Enter key while the editor has
+	 * focus. This event may not be dispatched on some platforms, depending on
+	 * the value of <code>returnKeyLabel</code>. This issue may even occur when
+	 * using the <em>default value</em> of <code>returnKeyLabel</code>!
 	 *
 	 * @eventType feathers.events.FeathersEventType.ENTER
+	 * @see #returnKeyLabel
+	 * @see flash.text.ReturnKeyLabel
 	 */
 	[Event(name="enter",type="starling.events.Event")]
 
@@ -340,6 +345,14 @@ package feathers.controls.text
 		}
 
 		/**
+		 * @inheritDoc
+		 */
+		public function get setTouchFocusOnEndedPhase():Boolean
+		{
+			return true;
+		}
+
+		/**
 		 * @private
 		 */
 		protected var _fontFamily:String = null;
@@ -492,6 +505,36 @@ package feathers.controls.text
 				return;
 			}
 			this._maxChars = value;
+			this.invalidate(INVALIDATION_FLAG_STYLES);
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _multiline:Boolean = false;
+
+		/**
+		 * Same as the <code>StageText</code> property with the same name,
+		 * except it is configurable after the text renderer is created. The
+		 * <code>StageText</code> instance will be disposed and recreated when
+		 * this property changes after the <code>StageText</code> text was
+		 * initially created.
+		 */
+		public function get multiline():Boolean
+		{
+			return this._multiline;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set multiline(value:Boolean):void
+		{
+			if(this._multiline == value)
+			{
+				return;
+			}
+			this._multiline = value;
 			this.invalidate(INVALIDATION_FLAG_STYLES);
 		}
 
@@ -654,21 +697,48 @@ package feathers.controls.text
 			{
 				if(position)
 				{
-					if(position.x < 0)
+					const positionX:Number = position.x;
+					const positionY:Number = position.y;
+					if(positionX < 0)
 					{
 						this._pendingSelectionStartIndex = this._pendingSelectionEndIndex = 0;
 					}
 					else
 					{
-						this._pendingSelectionStartIndex = this._measureTextField.getCharIndexAtPoint(position.x, position.y);
+						this._pendingSelectionStartIndex = this._measureTextField.getCharIndexAtPoint(positionX, positionY);
 						if(this._pendingSelectionStartIndex < 0)
 						{
-							this._pendingSelectionStartIndex = this._text.length;
+							if(this._multiline)
+							{
+								const lineIndex:int = int(positionY / this._measureTextField.getLineMetrics(0).height);
+								try
+								{
+									this._pendingSelectionStartIndex = this._measureTextField.getLineOffset(lineIndex) + this._measureTextField.getLineLength(lineIndex);
+									if(this._pendingSelectionStartIndex != this._text.length)
+									{
+										this._pendingSelectionStartIndex--;
+									}
+								}
+								catch(error:Error)
+								{
+									//we may be checking for a line beyond the
+									//end that doesn't exist
+									this._pendingSelectionStartIndex = this._text.length;
+								}
+							}
+							else
+							{
+								this._pendingSelectionStartIndex = this._text.length;
+							}
 						}
-						const bounds:Rectangle = this._measureTextField.getCharBoundaries(this._pendingSelectionStartIndex);
-						if(bounds && (bounds.x + bounds.width - position.x) < (position.x - bounds.x))
+						else
 						{
-							this._pendingSelectionStartIndex++;
+							const bounds:Rectangle = this._measureTextField.getCharBoundaries(this._pendingSelectionStartIndex);
+							const boundsX:Number = bounds.x;
+							if(bounds && (boundsX + bounds.width - positionX) < (positionX - boundsX))
+							{
+								this._pendingSelectionStartIndex++;
+							}
 						}
 						this._pendingSelectionEndIndex = this._pendingSelectionStartIndex;
 					}
@@ -893,6 +963,15 @@ package feathers.controls.text
 		 */
 		protected function refreshStageTextProperties():void
 		{
+			if(this.stageText.multiline != this._multiline)
+			{
+				if(this.stageText)
+				{
+					this.disposeStageText();
+				}
+				this.createStageText();
+			}
+
 			this.stageText.autoCapitalize = this._autoCapitalize;
 			this.stageText.autoCorrect = this._autoCorrect;
 			this.stageText.color = this._color;
@@ -911,6 +990,7 @@ package feathers.controls.text
 			this._measureTextField.displayAsPassword = this._displayAsPassword;
 			this._measureTextField.maxChars = this._maxChars;
 			this._measureTextField.restrict = this._restrict;
+			this._measureTextField.multiline = this._measureTextField.wordWrap = this._multiline;
 
 			const format:TextFormat = this._measureTextField.defaultTextFormat;
 			format.color = this._color;
@@ -1042,6 +1122,9 @@ package feathers.controls.text
 				stageTextViewPort.height = 1;
 			}
 			this.stageText.viewPort = stageTextViewPort;
+
+			this._measureTextField.width = this.actualWidth;
+			this._measureTextField.height = this.actualHeight;
 		}
 
 		/**
@@ -1057,14 +1140,7 @@ package feathers.controls.text
 
 			if(this.stageText)
 			{
-				this.stageText.removeEventListener(flash.events.Event.CHANGE, stageText_changeHandler);
-				this.stageText.removeEventListener(KeyboardEvent.KEY_DOWN, stageText_keyDownHandler);
-				this.stageText.removeEventListener(FocusEvent.FOCUS_IN, stageText_focusInHandler);
-				this.stageText.removeEventListener(FocusEvent.FOCUS_OUT, stageText_focusOutHandler);
-				this.stageText.removeEventListener(flash.events.Event.COMPLETE, stageText_completeHandler);
-				this.stageText.stage = null;
-				this.stageText.dispose();
-				this.stageText = null;
+				this.disposeStageText();
 			}
 
 			if(this._textSnapshotBitmapData)
@@ -1081,6 +1157,56 @@ package feathers.controls.text
 				this.removeChild(this.textSnapshot, true);
 				this.textSnapshot = null;
 			}
+		}
+
+		/**
+		 * @private
+		 */
+		protected function disposeStageText():void
+		{
+			if(!this.stageText)
+			{
+				return;
+			}
+			this.stageText.removeEventListener(flash.events.Event.CHANGE, stageText_changeHandler);
+			this.stageText.removeEventListener(KeyboardEvent.KEY_DOWN, stageText_keyDownHandler);
+			this.stageText.removeEventListener(KeyboardEvent.KEY_UP, stageText_keyUpHandler);
+			this.stageText.removeEventListener(FocusEvent.FOCUS_IN, stageText_focusInHandler);
+			this.stageText.removeEventListener(FocusEvent.FOCUS_OUT, stageText_focusOutHandler);
+			this.stageText.removeEventListener(flash.events.Event.COMPLETE, stageText_completeHandler);
+			this.stageText.stage = null;
+			this.stageText.dispose();
+			this.stageText = null;
+		}
+
+		/**
+		 * @private
+		 */
+		protected function createStageText():void
+		{
+			this._stageTextIsComplete = false;
+			var StageTextType:Class;
+			var initOptions:Object;
+			try
+			{
+				StageTextType = Class(getDefinitionByName("flash.text.StageText"));
+				const StageTextInitOptionsType:Class = Class(getDefinitionByName("flash.text.StageTextInitOptions"));
+				initOptions = new StageTextInitOptionsType(this._multiline);
+			}
+			catch(error:Error)
+			{
+				StageTextType = StageTextField;
+				initOptions = { multiline: this._multiline };
+			}
+			this.stageText = new StageTextType(initOptions);
+			this.stageText.visible = false;
+			this.stageText.addEventListener(flash.events.Event.CHANGE, stageText_changeHandler);
+			this.stageText.addEventListener(KeyboardEvent.KEY_DOWN, stageText_keyDownHandler);
+			this.stageText.addEventListener(KeyboardEvent.KEY_UP, stageText_keyUpHandler);
+			this.stageText.addEventListener(FocusEvent.FOCUS_IN, stageText_focusInHandler);
+			this.stageText.addEventListener(FocusEvent.FOCUS_OUT, stageText_focusOutHandler);
+			this.stageText.addEventListener(flash.events.Event.COMPLETE, stageText_completeHandler);
+			this.invalidate();
 		}
 
 		/**
@@ -1105,28 +1231,7 @@ package feathers.controls.text
 				Starling.current.nativeStage.addChild(this._measureTextField);
 			}
 
-			this._stageTextIsComplete = false;
-			var StageTextType:Class;
-			var initOptions:Object;
-			try
-			{
-				StageTextType = Class(getDefinitionByName("flash.text.StageText"));
-				const StageTextInitOptionsType:Class = Class(getDefinitionByName("flash.text.StageTextInitOptions"));
-				initOptions = new StageTextInitOptionsType(false);
-			}
-			catch(error:Error)
-			{
-				StageTextType = StageTextField;
-				initOptions = { multiline: false };
-			}
-			this.stageText = new StageTextType(initOptions);
-			this.stageText.visible = false;
-			this.stageText.addEventListener(flash.events.Event.CHANGE, stageText_changeHandler);
-			this.stageText.addEventListener(KeyboardEvent.KEY_DOWN, stageText_keyDownHandler);
-			this.stageText.addEventListener(FocusEvent.FOCUS_IN, stageText_focusInHandler);
-			this.stageText.addEventListener(FocusEvent.FOCUS_OUT, stageText_focusOutHandler);
-			this.stageText.addEventListener(flash.events.Event.COMPLETE, stageText_completeHandler);
-			this.invalidate();
+			this.createStageText();
 		}
 
 		/**
@@ -1192,8 +1297,9 @@ package feathers.controls.text
 		 */
 		protected function stageText_keyDownHandler(event:KeyboardEvent):void
 		{
-			if(event.keyCode == Keyboard.ENTER)
+			if(!this._multiline && (event.keyCode == Keyboard.ENTER || event.keyCode == Keyboard.NEXT))
 			{
+				event.preventDefault();
 				this.dispatchEventWith(FeathersEventType.ENTER);
 			}
 			else if(event.keyCode == Keyboard.BACK)
@@ -1203,6 +1309,17 @@ package feathers.controls.text
 				//always need to prevent it here
 				event.preventDefault();
 				Starling.current.nativeStage.focus = Starling.current.nativeStage;
+			}
+		}
+
+		/**
+		 * @private
+		 */
+		protected function stageText_keyUpHandler(event:KeyboardEvent):void
+		{
+			if(!this._multiline && (event.keyCode == Keyboard.ENTER || event.keyCode == Keyboard.NEXT))
+			{
+				event.preventDefault();
 			}
 		}
 	}

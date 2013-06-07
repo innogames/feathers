@@ -16,6 +16,15 @@ package feathers.controls
 	 * A container with layout, optional scrolling, a header, and an optional
 	 * footer.
 	 *
+	 * <p><strong>Beta Component:</strong> This is a new component, and its APIs
+	 * may need some changes between now and the next version of Feathers to
+	 * account for overlooked requirements or other issues. Upgrading to future
+	 * versions of Feathers may involve manual changes to your code that uses
+	 * this component. The
+	 * <a href="http://wiki.starling-framework.org/feathers/deprecation-policy">Feathers deprecation policy</a>
+	 * will not go into effect until this component's status is upgraded from
+	 * beta to stable.</p>
+	 *
 	 * @see http://wiki.starling-framework.org/feathers/panel
 	 */
 	public class Panel extends ScrollContainer
@@ -505,11 +514,7 @@ package feathers.controls
 			}
 			if(needsHeight)
 			{
-				newHeight = this.header.height + this._viewPort.height + this._bottomViewPortOffset + this._topViewPortOffset;
-				if(this.footer)
-				{
-					newHeight += this.footer.height;
-				}
+				newHeight = this._viewPort.height + this._bottomViewPortOffset + this._topViewPortOffset;
 				if(!isNaN(this.originalBackgroundHeight))
 				{
 					newHeight = Math.max(newHeight, this.originalBackgroundHeight);
@@ -607,13 +612,13 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		override protected function calculateViewPortOffsets(forceScrollBars:Boolean = false):void
+		override protected function calculateViewPortOffsets(forceScrollBars:Boolean = false, useActualBounds:Boolean = false):void
 		{
 			super.calculateViewPortOffsets(forceScrollBars);
 
 			const oldHeaderWidth:Number = this.header.width;
 			const oldHeaderHeight:Number = this.header.height;
-			this.header.width = this.explicitWidth;
+			this.header.width = useActualBounds ? this.actualWidth : this.explicitWidth;
 			this.header.maxWidth = this._maxWidth;
 			this.header.height = NaN;
 			this.header.validate();
@@ -625,7 +630,7 @@ package feathers.controls
 			{
 				const oldFooterWidth:Number = this.footer.width;
 				const oldFooterHeight:Number = this.footer.height;
-				this.footer.width = this.explicitWidth;
+				this.footer.width = useActualBounds ? this.actualWidth : this.explicitWidth;
 				this.footer.maxWidth = this._maxWidth;
 				this.footer.height = NaN;
 				this.footer.validate();

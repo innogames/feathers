@@ -14,6 +14,7 @@ package feathers.controls
 
 	import starling.display.DisplayObject;
 	import starling.display.DisplayObjectContainer;
+	import starling.events.Event;
 
 	/**
 	 * Dispatched when the container is scrolled.
@@ -34,6 +35,28 @@ package feathers.controls
 		 * @private
 		 */
 		protected static const INVALIDATION_FLAG_MXML_CONTENT:String = "mxmlContent";
+
+		/**
+		 * An alternate name to use with ScrollContainer to allow a theme to
+		 * give it a toolbar style. If a theme does not provide a skin for the
+		 * toolbar style, the theme will automatically fall back to using the
+		 * default scroll container skin.
+		 *
+		 * <p>An alternate name should always be added to a component's
+		 * <code>nameList</code> before the component is added to the stage for
+		 * the first time.</p>
+		 *
+		 * <p>In the following example, the toolbar style is applied to a scroll
+		 * container:</p>
+		 *
+		 * <listing version="3.0">
+		 * var container:ScrollContainer = new ScrollContainer();
+		 * container.nameList.add( ScrollContainer.ALTERNATE_NAME_TOOLBAR );
+		 * this.addChild( container );</listing>
+		 *
+		 * @see feathers.core.IFeathersControl#nameList
+		 */
+		public static const ALTERNATE_NAME_TOOLBAR:String = "feathers-toolbar-scroll-container";
 
 		/**
 		 * @copy feathers.controls.Scroller#SCROLL_POLICY_AUTO
@@ -319,10 +342,12 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		override protected function initialize():void
+		override public function dispatchEvent(event:Event):void
 		{
-			super.initialize();
-			this.refreshMXMLContent();
+			const oldDisplayListBypassEnabled:Boolean = this.displayListBypassEnabled;
+			this.displayListBypassEnabled = true;
+			super.dispatchEvent(event);
+			this.displayListBypassEnabled = oldDisplayListBypassEnabled;
 		}
 
 		/**
@@ -334,6 +359,29 @@ package feathers.controls
 			this.displayListBypassEnabled = false;
 			super.validate();
 			this.displayListBypassEnabled = oldDisplayListBypassEnabled;
+		}
+
+		/**
+		 * Readjusts the layout of the container according to its current
+		 * content. Call this method when changes to the content cannot be
+		 * automatically detected by the container. For instance, Feathers
+		 * components dispatch <code>FeathersEventType.RESIZE</code> when their
+		 * width and height values change, but standard Starling display objects
+		 * like Sprites and Images do not.
+		 */
+		public function readjustLayout():void
+		{
+			this.layoutViewPort.readjustLayout();
+			this.invalidate(INVALIDATION_FLAG_SIZE);
+		}
+
+		/**
+		 * @private
+		 */
+		override protected function initialize():void
+		{
+			super.initialize();
+			this.refreshMXMLContent();
 		}
 
 		/**

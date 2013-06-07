@@ -9,6 +9,7 @@ package feathers.controls.renderers
 {
 	import feathers.controls.Button;
 	import feathers.controls.ImageLoader;
+	import feathers.controls.Scroller;
 	import feathers.controls.text.BitmapFontTextRenderer;
 	import feathers.core.FeathersControl;
 	import feathers.core.IFeathersControl;
@@ -22,8 +23,9 @@ package feathers.controls.renderers
 
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.Touch;
 	import starling.events.TouchEvent;
-	import starling.textures.Texture;
+	import starling.events.TouchPhase;
 
 	/**
 	 * An abstract class for item renderer implementations.
@@ -122,6 +124,7 @@ package feathers.controls.renderers
 		public function BaseDefaultItemRenderer()
 		{
 			super();
+			this.isFocusEnabled = false;
 			this.isQuickHitAreaEnabled = false;
 			this.addEventListener(Event.TRIGGERED, itemRenderer_triggeredHandler);
 		}
@@ -243,7 +246,12 @@ package feathers.controls.renderers
 		 */
 		public function set itemHasLabel(value:Boolean):void
 		{
+			if(this._itemHasLabel == value)
+			{
+				return;
+			}
 			this._itemHasLabel = value;
+			this.invalidate(INVALIDATION_FLAG_DATA);
 		}
 
 		/**
@@ -266,7 +274,40 @@ package feathers.controls.renderers
 		 */
 		public function set itemHasIcon(value:Boolean):void
 		{
+			if(this._itemHasIcon == value)
+			{
+				return;
+			}
 			this._itemHasIcon = value;
+			this.invalidate(INVALIDATION_FLAG_DATA);
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _itemHasAccessory:Boolean = true;
+
+		/**
+		 * If true, the accessory will come from the renderer's item using the
+		 * appropriate field or function for the accessory. If false, the
+		 * accessory may be set using other means.
+		 */
+		public function get itemHasAccessory():Boolean
+		{
+			return this._itemHasAccessory;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set itemHasAccessory(value:Boolean):void
+		{
+			if(this._itemHasAccessory == value)
+			{
+				return;
+			}
+			this._itemHasAccessory = value;
+			this.invalidate(INVALIDATION_FLAG_DATA);
 		}
 
 		/**
@@ -466,10 +507,15 @@ package feathers.controls.renderers
 		}
 
 		/**
-		 * If enabled, calls event.stopPropagation() when TouchEvents are
+		 * @private
+		 */
+		protected var _accessoryTouchPointID:int = -1;
+
+		/**
+		 * If enabled, calls owner.stopScrolling() when TouchEvents are
 		 * dispatched by the accessory.
 		 */
-		public var stopAccessoryTouchEventPropagation:Boolean = true;
+		public var stopScrollingOnAccessoryTouch:Boolean = true;
 
 		/**
 		 * @private
@@ -597,6 +643,15 @@ package feathers.controls.renderers
 		/**
 		 * A function used to generate an icon for a specific item.
 		 *
+		 * <p>Note: As the list scrolls, this function will almost always be
+		 * called more than once for each individual item in the list's data
+		 * provider. Your function should not simply return a new icon every
+		 * time. This will result in the unnecessary creation and destruction of
+		 * many icons, which will overwork the garbage collector and hurt
+		 * performance. It's better to return a new icon the first time this
+		 * function is called for a particular item and then return the same
+		 * icon if that item is passed to this function again.</p>
+		 *
 		 * <p>The function is expected to have the following signature:</p>
 		 * <pre>function( item:Object ):DisplayObject</pre>
 		 *
@@ -698,6 +753,19 @@ package feathers.controls.renderers
 		 * a <code>iconField</code> or <code>iconFunction</code>
 		 * because the renderer can avoid costly display list manipulation.</p>
 		 *
+		 * <p>Note: As the list scrolls, this function will almost always be
+		 * called more than once for each individual item in the list's data
+		 * provider. Your function should not simply return a new texture every
+		 * time. This will result in the unnecessary creation and destruction of
+		 * many textures, which will overwork the garbage collector and hurt
+		 * performance. Creating a new texture at all is dangerous, unless you
+		 * are absolutely sure to dispose it when necessary because neither the
+		 * list nor its item renderer will dispose of the texture for you. If
+		 * you are absolutely sure that you are managing the texture memory with
+		 * proper disposal, it's better to return a new texture the first
+		 * time this function is called for a particular item and then return
+		 * the same texture if that item is passed to this function again.</p>
+		 *
 		 * <p>The function is expected to have the following signature:</p>
 		 * <pre>function( item:Object ):Object</pre>
 		 *
@@ -791,6 +859,15 @@ package feathers.controls.renderers
 		 * accessory position of the renderer. If you wish to display an
 		 * <code>Image</code> in the accessory position, it's better for
 		 * performance to use <code>accessorySourceFunction</code> instead.
+		 *
+		 * <p>Note: As the list scrolls, this function will almost always be
+		 * called more than once for each individual item in the list's data
+		 * provider. Your function should not simply return a new accessory
+		 * every time. This will result in the unnecessary creation and
+		 * destruction of many icons, which will overwork the garbage collector
+		 * and hurt performance. It's better to return a new accessory the first
+		 * time this function is called for a particular item and then return
+		 * the same accessory if that item is passed to this function again.</p>
 		 *
 		 * <p>The function is expected to have the following signature:</p>
 		 * <pre>function( item:Object ):DisplayObject</pre>
@@ -900,6 +977,19 @@ package feathers.controls.renderers
 		 * passing in an <code>ImageLoader</code> or <code>Image</code> through
 		 * a <code>accessoryField</code> or <code>accessoryFunction</code>
 		 * because the renderer can avoid costly display list manipulation.</p>
+		 *
+		 * <p>Note: As the list scrolls, this function will almost always be
+		 * called more than once for each individual item in the list's data
+		 * provider. Your function should not simply return a new texture every
+		 * time. This will result in the unnecessary creation and destruction of
+		 * many textures, which will overwork the garbage collector and hurt
+		 * performance. Creating a new texture at all is dangerous, unless you
+		 * are absolutely sure to dispose it when necessary because neither the
+		 * list nor its item renderer will dispose of the texture for you. If
+		 * you are absolutely sure that you are managing the texture memory with
+		 * proper disposal, it's better to return a new texture the first
+		 * time this function is called for a particular item and then return
+		 * the same texture if that item is passed to this function again.</p>
 		 *
 		 * <p>The function is expected to have the following signature:</p>
 		 * <pre>function( item:Object ):Object</pre>
@@ -1265,11 +1355,11 @@ package feathers.controls.renderers
 		{
 			if(this._labelFunction != null)
 			{
-				return this._labelFunction(item) as String;
+				return this._labelFunction(item).toString();
 			}
 			else if(this._labelField != null && item && item.hasOwnProperty(this._labelField))
 			{
-				return item[this._labelField] as String;
+				return item[this._labelField].toString();
 			}
 			else if(item is Object)
 			{
@@ -1334,7 +1424,7 @@ package feathers.controls.renderers
 		{
 			if(this._accessorySourceFunction != null)
 			{
-				var source:Texture = this._accessorySourceFunction(item);
+				var source:Object = this._accessorySourceFunction(item);
 				this.refreshAccessorySource(source);
 				return this.accessoryImage;
 			}
@@ -1346,13 +1436,13 @@ package feathers.controls.renderers
 			}
 			else if(this._accessoryLabelFunction != null)
 			{
-				var label:String = this._accessoryLabelFunction(item) as String;
+				var label:String = this._accessoryLabelFunction(item).toString();
 				this.refreshAccessoryLabel(label);
 				return DisplayObject(this.accessoryLabel);
 			}
 			else if(this._accessoryLabelField != null && item && item.hasOwnProperty(this._accessoryLabelField))
 			{
-				label = item[this._accessoryLabelField] as String;
+				label = item[this._accessoryLabelField].toString();
 				this.refreshAccessoryLabel(label);
 				return DisplayObject(this.accessoryLabel);
 			}
@@ -1584,8 +1674,11 @@ package feathers.controls.renderers
 					const newIcon:DisplayObject = this.itemToIcon(this._data);
 					this.replaceIcon(newIcon);
 				}
-				const newAccessory:DisplayObject = this.itemToAccessory(this._data);
-				this.replaceAccessory(newAccessory);
+				if(this._itemHasAccessory)
+				{
+					const newAccessory:DisplayObject = this.itemToAccessory(this._data);
+					this.replaceAccessory(newAccessory);
+				}
 			}
 			else
 			{
@@ -1597,7 +1690,7 @@ package feathers.controls.renderers
 				{
 					this.replaceIcon(null);
 				}
-				if(this.accessory)
+				if(this._itemHasAccessory)
 				{
 					this.replaceAccessory(null);
 				}
@@ -1617,6 +1710,17 @@ package feathers.controls.renderers
 				this.iconImage = null;
 			}
 
+			if(this._itemHasIcon && this.currentIcon && this.currentIcon != newIcon && this.currentIcon.parent == this)
+			{
+				//the icon is created using the data provider, and it is not
+				//created inside this class, so it is not our responsibility to
+				//dispose the icon. if we dispose it, it may break something.
+				this.currentIcon.removeFromParent(false);
+				this.currentIcon = null;
+			}
+			//we're using currentIcon above, but defaultIcon here. if you're
+			//wondering, that's intentional. the currentIcon will set to the
+			//defaultIcon elsewhere.
 			this.defaultIcon = newIcon;
 		}
 
@@ -1635,11 +1739,14 @@ package feathers.controls.renderers
 				this.accessory.removeEventListener(FeathersEventType.RESIZE, accessory_resizeHandler);
 				this.accessory.removeEventListener(TouchEvent.TOUCH, accessory_touchHandler);
 
-				//the accessory may have come from outside of this class. it's
-				//up to that code to dispose of the accessory. in fact, if we
-				//disposed of it here, we will probably screw something up, so
-				//let's just remove it.
-				this.accessory.removeFromParent();
+				if(this.accessory.parent == this)
+				{
+					//the accessory may have come from outside of this class. it's
+					//up to that code to dispose of the accessory. in fact, if we
+					//disposed of it here, we will probably screw something up, so
+					//let's just remove it.
+					this.accessory.removeFromParent(false);
+				}
 			}
 
 			if(this.accessoryLabel && this.accessoryLabel != newAccessory)
@@ -2003,6 +2110,41 @@ package feathers.controls.renderers
 					relativeTo2.x += offsetX;
 					relativeTo2.y += offsetY;
 				}
+				if(gap == Number.POSITIVE_INFINITY && otherGap == Number.POSITIVE_INFINITY)
+				{
+					if(position == ACCESSORY_POSITION_RIGHT && otherPosition == ACCESSORY_POSITION_LEFT)
+					{
+						relativeTo.x = relativeTo2.x + (object.x - relativeTo2.x + relativeTo2.width - relativeTo.width) / 2;
+					}
+					else if(position == ACCESSORY_POSITION_LEFT && otherPosition == ACCESSORY_POSITION_RIGHT)
+					{
+						relativeTo.x = object.x + (relativeTo2.x - object.x + object.width - relativeTo.width) / 2;
+					}
+					else if(position == ACCESSORY_POSITION_RIGHT && otherPosition == ACCESSORY_POSITION_RIGHT)
+					{
+						relativeTo2.x = relativeTo.x + (object.x - relativeTo.x + relativeTo.width - relativeTo2.width) / 2;
+					}
+					else if(position == ACCESSORY_POSITION_LEFT && otherPosition == ACCESSORY_POSITION_LEFT)
+					{
+						relativeTo2.x = object.x + (relativeTo.x - object.x + object.width - relativeTo2.width) / 2;
+					}
+					else if(position == ACCESSORY_POSITION_BOTTOM && otherPosition == ACCESSORY_POSITION_TOP)
+					{
+						relativeTo.y = relativeTo2.y + (object.y - relativeTo2.y + relativeTo2.height - relativeTo.height) / 2;
+					}
+					else if(position == ACCESSORY_POSITION_TOP && otherPosition == ACCESSORY_POSITION_BOTTOM)
+					{
+						relativeTo.y = object.y + (relativeTo2.y - object.y + object.height - relativeTo.height) / 2;
+					}
+					else if(position == ACCESSORY_POSITION_BOTTOM && otherPosition == ACCESSORY_POSITION_BOTTOM)
+					{
+						relativeTo2.y = relativeTo.y + (object.y - relativeTo.y + relativeTo.height - relativeTo2.height) / 2;
+					}
+					else if(position == ACCESSORY_POSITION_TOP && otherPosition == ACCESSORY_POSITION_TOP)
+					{
+						relativeTo2.y = object.y + (relativeTo.y - object.y + object.height - relativeTo2.height) / 2;
+					}
+				}
 			}
 
 			if(position == ACCESSORY_POSITION_LEFT || position == ACCESSORY_POSITION_RIGHT)
@@ -2052,6 +2194,20 @@ package feathers.controls.renderers
 			{
 				super.currentState = Button.STATE_UP;
 			}
+
+			if(this._accessoryTouchPointID >= 0)
+			{
+				Scroller(this._owner).stopScrolling();
+			}
+		}
+
+		/**
+		 * @private
+		 */
+		override protected function button_removedFromStageHandler(event:Event):void
+		{
+			super.button_removedFromStageHandler(event);
+			this._accessoryTouchPointID = -1;
 		}
 
 		/**
@@ -2088,14 +2244,37 @@ package feathers.controls.renderers
 		 */
 		protected function accessory_touchHandler(event:TouchEvent):void
 		{
-			if(!this.stopAccessoryTouchEventPropagation ||
+			if(!this._isEnabled)
+			{
+				this._accessoryTouchPointID = -1;
+				return;
+			}
+			if(!this.stopScrollingOnAccessoryTouch ||
 				this.accessory == this.accessoryLabel ||
 				this.accessory == this.accessoryImage)
 			{
 				//do nothing
 				return;
 			}
-			event.stopPropagation();
+
+			if(this._accessoryTouchPointID >= 0)
+			{
+				var touch:Touch = event.getTouch(this.accessory, TouchPhase.ENDED, this._accessoryTouchPointID);
+				if(!touch)
+				{
+					return;
+				}
+				this._accessoryTouchPointID = -1;
+			}
+			else //if we get here, we don't have a saved touch ID yet
+			{
+				touch = event.getTouch(this.accessory, TouchPhase.BEGAN);
+				if(!touch)
+				{
+					return;
+				}
+				this._accessoryTouchPointID = touch.id;
+			}
 		}
 
 		/**

@@ -66,11 +66,6 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		private static const HELPER_TOUCHES_VECTOR:Vector.<Touch> = new <Touch>[];
-
-		/**
-		 * @private
-		 */
 		protected static const INVALIDATION_FLAG_THUMB_FACTORY:String = "thumbFactory";
 
 		/**
@@ -1478,7 +1473,7 @@ package feathers.controls
 			{
 				this.refreshMinimumTrackStyles();
 			}
-			if(maximumTrackFactoryInvalid || stylesInvalid)
+			if((maximumTrackFactoryInvalid || stylesInvalid) && this.maximumTrack)
 			{
 				this.refreshMaximumTrackStyles();
 			}
@@ -1630,6 +1625,7 @@ package feathers.controls
 			this.thumb = Button(factory());
 			this.thumb.nameList.add(thumbName);
 			this.thumb.keepDownStateOnRollOut = true;
+			this.thumb.isFocusEnabled = false;
 			this.thumb.addEventListener(TouchEvent.TOUCH, thumb_touchHandler);
 			this.addChild(this.thumb);
 		}
@@ -1650,6 +1646,7 @@ package feathers.controls
 			this.minimumTrack = Button(factory());
 			this.minimumTrack.nameList.add(minimumTrackName);
 			this.minimumTrack.keepDownStateOnRollOut = true;
+			this.minimumTrack.isFocusEnabled = false;
 			this.minimumTrack.addEventListener(TouchEvent.TOUCH, track_touchHandler);
 			this.addChildAt(this.minimumTrack, 0);
 		}
@@ -1675,6 +1672,7 @@ package feathers.controls
 				this.maximumTrack = Button(factory());
 				this.maximumTrack.nameList.add(maximumTrackName);
 				this.maximumTrack.keepDownStateOnRollOut = true;
+				this.maximumTrack.isFocusEnabled = false;
 				this.maximumTrack.addEventListener(TouchEvent.TOUCH, track_touchHandler);
 				this.addChildAt(this.maximumTrack, 1);
 			}
@@ -1701,6 +1699,7 @@ package feathers.controls
 			this.decrementButton = Button(factory());
 			this.decrementButton.nameList.add(decrementButtonName);
 			this.decrementButton.keepDownStateOnRollOut = true;
+			this.decrementButton.isFocusEnabled = false;
 			this.decrementButton.addEventListener(TouchEvent.TOUCH, decrementButton_touchHandler);
 			this.addChild(this.decrementButton);
 		}
@@ -1721,6 +1720,7 @@ package feathers.controls
 			this.incrementButton = Button(factory());
 			this.incrementButton.nameList.add(incrementButtonName);
 			this.incrementButton.keepDownStateOnRollOut = true;
+			this.incrementButton.isFocusEnabled = false;
 			this.incrementButton.addEventListener(TouchEvent.TOUCH, incrementButton_touchHandler);
 			this.addChild(this.incrementButton);
 		}
@@ -2094,55 +2094,36 @@ package feathers.controls
 				return;
 			}
 
-			const touches:Vector.<Touch> = event.getTouches(DisplayObject(event.currentTarget), null, HELPER_TOUCHES_VECTOR);
-			if(touches.length == 0)
-			{
-				return;
-			}
+			const track:DisplayObject = DisplayObject(event.currentTarget);
 			if(this._touchPointID >= 0)
 			{
-				var touch:Touch;
-				for each(var currentTouch:Touch in touches)
-				{
-					if(currentTouch.id == this._touchPointID)
-					{
-						touch = currentTouch;
-						break;
-					}
-				}
+				var touch:Touch = event.getTouch(track, TouchPhase.ENDED, this._touchPointID);
 				if(!touch)
 				{
-					HELPER_TOUCHES_VECTOR.length = 0;
 					return;
 				}
-				if(touch.phase == TouchPhase.ENDED)
-				{
-					this._touchPointID = -1;
-					this._repeatTimer.stop();
-					this.dispatchEventWith(FeathersEventType.END_INTERACTION);
-				}
+				this._touchPointID = -1;
+				this._repeatTimer.stop();
+				this.dispatchEventWith(FeathersEventType.END_INTERACTION);
 			}
 			else
 			{
-				for each(touch in touches)
+				touch = event.getTouch(track, TouchPhase.BEGAN);
+				if(!touch)
 				{
-					if(touch.phase == TouchPhase.BEGAN)
-					{
-						this._touchPointID = touch.id;
-						this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
-						touch.getLocation(this, HELPER_POINT);
-						this._touchStartX = HELPER_POINT.x;
-						this._touchStartY = HELPER_POINT.y;
-						this._thumbStartX = HELPER_POINT.x;
-						this._thumbStartY = HELPER_POINT.y;
-						this._touchValue = this.locationToValue(HELPER_POINT);
-						this.adjustPage();
-						this.startRepeatTimer(this.adjustPage);
-						break;
-					}
+					return;
 				}
+				this._touchPointID = touch.id;
+				this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
+				touch.getLocation(this, HELPER_POINT);
+				this._touchStartX = HELPER_POINT.x;
+				this._touchStartY = HELPER_POINT.y;
+				this._thumbStartX = HELPER_POINT.x;
+				this._thumbStartY = HELPER_POINT.y;
+				this._touchValue = this.locationToValue(HELPER_POINT);
+				this.adjustPage();
+				this.startRepeatTimer(this.adjustPage);
 			}
-			HELPER_TOUCHES_VECTOR.length = 0;
 		}
 
 		/**
@@ -2152,27 +2133,15 @@ package feathers.controls
 		{
 			if(!this._isEnabled)
 			{
+				this._touchPointID = -1;
 				return;
 			}
-			const touches:Vector.<Touch> = event.getTouches(this.thumb, null, HELPER_TOUCHES_VECTOR);
-			if(touches.length == 0)
-			{
-				return;
-			}
+
 			if(this._touchPointID >= 0)
 			{
-				var touch:Touch;
-				for each(var currentTouch:Touch in touches)
-				{
-					if(currentTouch.id == this._touchPointID)
-					{
-						touch = currentTouch;
-						break;
-					}
-				}
+				var touch:Touch = event.getTouch(this.thumb, null, this._touchPointID);
 				if(!touch)
 				{
-					HELPER_TOUCHES_VECTOR.length = 0;
 					return;
 				}
 				if(touch.phase == TouchPhase.MOVED)
@@ -2198,23 +2167,20 @@ package feathers.controls
 			}
 			else
 			{
-				for each(touch in touches)
+				touch = event.getTouch(this.thumb, TouchPhase.BEGAN);
+				if(!touch)
 				{
-					if(touch.phase == TouchPhase.BEGAN)
-					{
-						touch.getLocation(this, HELPER_POINT);
-						this._touchPointID = touch.id;
-						this._thumbStartX = this.thumb.x;
-						this._thumbStartY = this.thumb.y;
-						this._touchStartX = HELPER_POINT.x;
-						this._touchStartY = HELPER_POINT.y;
-						this.isDragging = true;
-						this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
-						break;
-					}
+					return;
 				}
+				touch.getLocation(this, HELPER_POINT);
+				this._touchPointID = touch.id;
+				this._thumbStartX = this.thumb.x;
+				this._thumbStartY = this.thumb.y;
+				this._touchStartX = HELPER_POINT.x;
+				this._touchStartY = HELPER_POINT.y;
+				this.isDragging = true;
+				this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
 			}
-			HELPER_TOUCHES_VECTOR.length = 0;
 		}
 
 		/**
@@ -2224,54 +2190,33 @@ package feathers.controls
 		{
 			if(!this._isEnabled)
 			{
-				return;
-			}
-			const touches:Vector.<Touch> = event.getTouches(this.decrementButton, null, HELPER_TOUCHES_VECTOR);
-			if(touches.length == 0)
-			{
+				this._touchPointID = -1;
 				return;
 			}
 
 			if(this._touchPointID >= 0)
 			{
-				var touch:Touch;
-				for each(var currentTouch:Touch in touches)
-				{
-					if(currentTouch.id == this._touchPointID)
-					{
-						touch = currentTouch;
-						break;
-					}
-				}
-
+				var touch:Touch = event.getTouch(this.decrementButton, TouchPhase.ENDED, this._touchPointID);
 				if(!touch)
 				{
-					//end of hover
-					HELPER_TOUCHES_VECTOR.length = 0;
 					return;
 				}
-				if(touch.phase == TouchPhase.ENDED)
-				{
-					this._touchPointID = -1;
-					this._repeatTimer.stop();
-					this.dispatchEventWith(FeathersEventType.END_INTERACTION);
-				}
+				this._touchPointID = -1;
+				this._repeatTimer.stop();
+				this.dispatchEventWith(FeathersEventType.END_INTERACTION);
 			}
 			else //if we get here, we don't have a saved touch ID yet
 			{
-				for each(touch in touches)
+				touch = event.getTouch(this.decrementButton, TouchPhase.BEGAN);
+				if(!touch)
 				{
-					if(touch.phase == TouchPhase.BEGAN)
-					{
-						this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
-						this.decrement();
-						this.startRepeatTimer(this.decrement);
-						this._touchPointID = touch.id;
-						break;
-					}
+					return;
 				}
+				this._touchPointID = touch.id;
+				this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
+				this.decrement();
+				this.startRepeatTimer(this.decrement);
 			}
-			HELPER_TOUCHES_VECTOR.length = 0;
 		}
 
 		/**
@@ -2281,54 +2226,33 @@ package feathers.controls
 		{
 			if(!this._isEnabled)
 			{
-				return;
-			}
-			const touches:Vector.<Touch> = event.getTouches(this.incrementButton, null, HELPER_TOUCHES_VECTOR);
-			if(touches.length == 0)
-			{
+				this._touchPointID = -1;
 				return;
 			}
 
 			if(this._touchPointID >= 0)
 			{
-				var touch:Touch;
-				for each(var currentTouch:Touch in touches)
-				{
-					if(currentTouch.id == this._touchPointID)
-					{
-						touch = currentTouch;
-						break;
-					}
-				}
-
+				var touch:Touch = event.getTouch(this.incrementButton, TouchPhase.ENDED, this._touchPointID);
 				if(!touch)
 				{
-					//end of hover
-					HELPER_TOUCHES_VECTOR.length = 0;
 					return;
 				}
-				if(touch.phase == TouchPhase.ENDED)
-				{
-					this._touchPointID = -1;
-					this._repeatTimer.stop();
-					this.dispatchEventWith(FeathersEventType.END_INTERACTION);
-				}
+				this._touchPointID = -1;
+				this._repeatTimer.stop();
+				this.dispatchEventWith(FeathersEventType.END_INTERACTION);
 			}
 			else //if we get here, we don't have a saved touch ID yet
 			{
-				for each(touch in touches)
+				touch = event.getTouch(this.incrementButton, TouchPhase.BEGAN);
+				if(!touch)
 				{
-					if(touch.phase == TouchPhase.BEGAN)
-					{
-						this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
-						this.increment();
-						this.startRepeatTimer(this.increment);
-						this._touchPointID = touch.id;
-						break;
-					}
+					return;
 				}
+				this._touchPointID = touch.id;
+				this.dispatchEventWith(FeathersEventType.BEGIN_INTERACTION);
+				this.increment();
+				this.startRepeatTimer(this.increment);
 			}
-			HELPER_TOUCHES_VECTOR.length = 0;
 		}
 
 		/**

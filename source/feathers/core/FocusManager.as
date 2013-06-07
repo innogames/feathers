@@ -7,18 +7,29 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.core
 {
+	import feathers.controls.supportClasses.LayoutViewPort;
 	import feathers.events.FeathersEventType;
 
+	import flash.display.Sprite;
+	import flash.display.Stage;
+	import flash.events.FocusEvent;
 	import flash.ui.Keyboard;
 
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.display.DisplayObjectContainer;
 	import starling.events.Event;
-	import starling.events.KeyboardEvent;
+	import starling.events.Touch;
+	import starling.events.TouchEvent;
+	import starling.events.TouchPhase;
 
 	/**
 	 * Manages touch and keyboard focus.
+	 *
+	 * <p>Note: When enabling focus management, you should always use
+	 * <code>TextFieldTextEditor</code> as the text editor for <code>TextInput</code>
+	 * components. <code>StageTextTextEditor</code> is not compatible with the
+	 * focus manager.</p>
 	 */
 	public class FocusManager implements IFocusManager
 	{
@@ -31,6 +42,11 @@ package feathers.core
 		 * @private
 		 */
 		protected static var _defaultFocusManager:IFocusManager;
+
+		/**
+		 * @private
+		 */
+		protected static var _nativeFocusTarget:Sprite;
 
 		/**
 		 * Determines if the default focus manager is enabled.
@@ -53,11 +69,28 @@ package feathers.core
 			if(value)
 			{
 				_defaultFocusManager = pushFocusManager();
+
+				//we need a native display object on the native stage to receive
+				//key focus change events!
+				_nativeFocusTarget = new Sprite();
+				_nativeFocusTarget.tabEnabled = true;
+				_nativeFocusTarget.mouseEnabled = false;
+				_nativeFocusTarget.mouseChildren = false;
+				_nativeFocusTarget.alpha = 0;
+				Starling.current.nativeOverlay.addChild(_nativeFocusTarget);
 			}
-			else if(_defaultFocusManager)
+			else
 			{
-				removeFocusManager(_defaultFocusManager);
-				_defaultFocusManager = null;
+				if(_nativeFocusTarget)
+				{
+					_nativeFocusTarget.parent.removeChild(_nativeFocusTarget);
+					_nativeFocusTarget = null;
+				}
+				if(_defaultFocusManager)
+				{
+					removeFocusManager(_defaultFocusManager);
+					_defaultFocusManager = null;
+				}
 			}
 		}
 
@@ -165,7 +198,9 @@ package feathers.core
 				}
 				this._topLevelContainer.addEventListener(Event.ADDED, topLevelContainer_addedHandler);
 				this._topLevelContainer.addEventListener(Event.REMOVED, topLevelContainer_removedHandler);
-				Starling.current.stage.addEventListener(KeyboardEvent.KEY_DOWN, topLevelContainer_keyDownHandler);
+				this._topLevelContainer.addEventListener(TouchEvent.TOUCH, topLevelContainer_touchHandler);
+				Starling.current.nativeStage.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, stage_keyFocusChangeHandler, false, 0, true);
+				Starling.current.nativeStage.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, stage_mouseFocusChangeHandler, false, 0, true);
 				this.focus = this._savedFocus;
 				this._savedFocus = null;
 			}
@@ -173,7 +208,9 @@ package feathers.core
 			{
 				this._topLevelContainer.removeEventListener(Event.ADDED, topLevelContainer_addedHandler);
 				this._topLevelContainer.removeEventListener(Event.REMOVED, topLevelContainer_removedHandler);
-				Starling.current.stage.removeEventListener(KeyboardEvent.KEY_DOWN, topLevelContainer_keyDownHandler);
+				this._topLevelContainer.removeEventListener(TouchEvent.TOUCH, topLevelContainer_touchHandler);
+				Starling.current.nativeStage.removeEventListener(FocusEvent.KEY_FOCUS_CHANGE, stage_keyFocusChangeHandler);
+				Starling.current.nativeStage.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, stage_mouseFocusChangeHandler);
 				const focusToSave:IFocusDisplayObject = this.focus;
 				this.focus = null;
 				this._savedFocus = focusToSave;
@@ -209,15 +246,31 @@ package feathers.core
 			}
 			if(this._focus)
 			{
+				this._focus.removeEventListener(Event.REMOVED_FROM_STAGE, focus_removedFromStageHandler);
 				this._focus.dispatchEventWith(FeathersEventType.FOCUS_OUT);
 				this._focus = null;
+			}
+			if(!value || !value.isFocusEnabled)
+			{
+				this._focus = null;
+				return;
 			}
 			if(this._isEnabled)
 			{
 				this._focus = value;
 				if(this._focus)
 				{
+					const nativeStage:Stage = Starling.current.nativeStage;
+					if(!nativeStage.focus)
+					{
+						nativeStage.focus = _nativeFocusTarget;
+					}
+					this._focus.addEventListener(Event.REMOVED_FROM_STAGE, focus_removedFromStageHandler);
 					this._focus.dispatchEventWith(FeathersEventType.FOCUS_IN);
+				}
+				else
+				{
+					Starling.current.nativeStage.focus = null;
 				}
 			}
 			else
@@ -273,8 +326,55 @@ package feathers.core
 		/**
 		 * @private
 		 */
+		protected function findPreviousFocus(container:DisplayObjectContainer, beforeChild:DisplayObject = null):IFocusDisplayObject
+		{
+			if(container is LayoutViewPort)
+			{
+				container = container.parent;
+			}
+			var startIndex:int = container.numChildren - 1;
+			if(beforeChild)
+			{
+				startIndex = container.getChildIndex(beforeChild) - 1;
+			}
+			for(var i:int = startIndex; i >= 0; i--)
+			{
+				var child:DisplayObject = container.getChildAt(i);
+				if(child is IFocusDisplayObject)
+				{
+					var childWithFocus:IFocusDisplayObject = IFocusDisplayObject(child);
+					if(childWithFocus.isFocusEnabled)
+					{
+						return childWithFocus;
+					}
+				}
+				if(child is DisplayObjectContainer)
+				{
+					var childContainer:DisplayObjectContainer = DisplayObjectContainer(child);
+					var foundChild:IFocusDisplayObject = this.findPreviousFocus(childContainer);
+					if(foundChild)
+					{
+						return foundChild;
+					}
+				}
+			}
+
+			if(beforeChild && container != this._topLevelContainer)
+			{
+				return this.findPreviousFocus(container.parent, container);
+			}
+			return null;
+		}
+
+		/**
+		 * @private
+		 */
 		protected function findNextFocus(container:DisplayObjectContainer, afterChild:DisplayObject = null):IFocusDisplayObject
 		{
+			if(container is LayoutViewPort)
+			{
+				container = container.parent;
+			}
 			var startIndex:int = 0;
 			if(afterChild)
 			{
@@ -313,38 +413,70 @@ package feathers.core
 		/**
 		 * @private
 		 */
-		protected function topLevelContainer_keyDownHandler(event:KeyboardEvent):void
+		protected function stage_mouseFocusChangeHandler(event:FocusEvent):void
 		{
-			if(event.keyCode != Keyboard.TAB)
+			event.preventDefault();
+		}
+
+		/**
+		 * @private
+		 */
+		protected function stage_keyFocusChangeHandler(event:FocusEvent):void
+		{
+			//keyCode 0 is sent by IE, for some reason
+			if(event.keyCode != Keyboard.TAB && event.keyCode != 0)
 			{
 				return;
 			}
 
+			var newFocus:IFocusDisplayObject;
+			const currentFocus:IFocusDisplayObject = this._focus;
 			if(event.shiftKey)
 			{
-
-			}
-			else
-			{
-				if(this._focus)
+				if(currentFocus)
 				{
-					if(this._focus.nextTabFocus)
+					if(currentFocus.previousTabFocus)
 					{
-						this.focus = this._focus.nextTabFocus;
-						return;
+						newFocus = currentFocus.previousTabFocus;
 					}
 					else
 					{
-						var found:IFocusDisplayObject = this.findNextFocus(this._focus.parent, DisplayObject(this._focus));
-						if(found)
-						{
-							this.focus = found;
-							return;
-						}
+						newFocus = this.findPreviousFocus(currentFocus.parent, DisplayObject(currentFocus));
 					}
 				}
-				this.focus = this.findNextFocus(this._topLevelContainer);
+				if(!newFocus)
+				{
+					newFocus = this.findPreviousFocus(this._topLevelContainer);
+				}
 			}
+			else
+			{
+				if(currentFocus)
+				{
+					if(currentFocus.nextTabFocus)
+					{
+						newFocus = currentFocus.nextTabFocus;
+					}
+					else
+					{
+						newFocus = this.findNextFocus(currentFocus.parent, DisplayObject(currentFocus));
+					}
+				}
+				if(!newFocus)
+				{
+					newFocus = this.findNextFocus(this._topLevelContainer);
+				}
+			}
+			if(newFocus)
+			{
+				event.preventDefault();
+			}
+			this.focus = newFocus;
+			if(this._focus)
+			{
+				this._focus.showFocus();
+			}
+
 		}
 
 		/**
@@ -353,6 +485,7 @@ package feathers.core
 		protected function topLevelContainer_addedHandler(event:Event):void
 		{
 			this.setFocusManager(DisplayObject(event.target));
+
 		}
 
 		/**
@@ -361,6 +494,39 @@ package feathers.core
 		protected function topLevelContainer_removedHandler(event:Event):void
 		{
 			this.clearFocusManager(DisplayObject(event.target));
+		}
+
+		/**
+		 * @private
+		 */
+		protected function topLevelContainer_touchHandler(event:TouchEvent):void
+		{
+			const touch:Touch = event.getTouch(this._topLevelContainer, TouchPhase.BEGAN);
+			if(!touch)
+			{
+				return;
+			}
+
+			var focusTarget:IFocusDisplayObject = null;
+			var target:DisplayObject = touch.target;
+			do
+			{
+				if(target is IFocusDisplayObject)
+				{
+					focusTarget = IFocusDisplayObject(target);
+				}
+				target = target.parent;
+			}
+			while(target)
+			this.focus = focusTarget;
+		}
+
+		/**
+		 * @private
+		 */
+		protected function focus_removedFromStageHandler(event:Event):void
+		{
+			this.focus = null;
 		}
 
 	}
