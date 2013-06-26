@@ -7,6 +7,8 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls.supportClasses
 {
+	import flash.geom.Point;
+	
 	import feathers.controls.Scroller;
 	import feathers.core.FeathersControl;
 	import feathers.core.IFeathersControl;
@@ -16,12 +18,9 @@ package feathers.controls.supportClasses
 	import feathers.layout.IVirtualLayout;
 	import feathers.layout.LayoutBoundsResult;
 	import feathers.layout.ViewPortBounds;
-
-	import flash.geom.Point;
-
+	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
-	import starling.events.EventDispatcher;
 
 	/**
 	 * @private
@@ -330,7 +329,7 @@ package feathers.controls.supportClasses
 
 		private function invalidateParent():void
 		{
-			Scroller(this.parent).invalidate(INVALIDATION_FLAG_LAYOUT);
+			this.parent ? Scroller(this.parent).invalidate(INVALIDATION_FLAG_LAYOUT) : null;
 		}
 
 		private function layout_changeHandler(event:Event):void
