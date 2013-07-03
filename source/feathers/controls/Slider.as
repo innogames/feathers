@@ -52,6 +52,19 @@ package feathers.controls
 	 * the bounds of a track. The slider's track is divided into two parts split
 	 * by the thumb.
 	 *
+	 * <p>The following example sets the slider's values and listens for when
+	 * when the value changes:</p>
+	 *
+	 * <listing version="3.0">
+	 * var slider:Slider = new Slider();
+	 * slider.minimum = 0;
+	 * slider.maximum = 100;
+	 * slider.step = 1;
+	 * slider.page = 10;
+	 * slider.value = 12;
+	 * slider.addEventListener( Event.CHANGE, slider_changeHandler );
+	 * this.addChild( slider );</listing>
+	 *
 	 * @see http://wiki.starling-framework.org/feathers/slider
 	 */
 	public class Slider extends FeathersControl implements IScrollBar, IFocusDisplayObject
@@ -79,14 +92,14 @@ package feathers.controls
 		/**
 		 * The slider's thumb may be dragged horizontally (on the x-axis).
 		 *
-		 * #direction
+		 * @see #direction
 		 */
 		public static const DIRECTION_HORIZONTAL:String = "horizontal";
 		
 		/**
 		 * The slider's thumb may be dragged vertically (on the y-axis).
 		 *
-		 * #direction
+		 * @see #direction
 		 */
 		public static const DIRECTION_VERTICAL:String = "vertical";
 
@@ -96,7 +109,7 @@ package feathers.controls
 		 * fills the entire length of the slider. The maximum track will not
 		 * exist.
 		 *
-		 * #trackLayoutMode
+		 * @see #trackLayoutMode
 		 */
 		public static const TRACK_LAYOUT_MODE_SINGLE:String = "single";
 
@@ -108,11 +121,11 @@ package feathers.controls
 		 * "filling up" as the slider is dragged.
 		 *
 		 * <p>Since the width and height of the tracks will change, consider
-		 * sing a special display object such as a <code>Scale9Image</code>,
+		 * using a special display object such as a <code>Scale9Image</code>,
 		 * <code>Scale3Image</code> or a <code>TiledImage</code> that is
 		 * designed to be resized dynamically.</p>
 		 *
-		 * #trackLayoutMode
+		 * @see #trackLayoutMode
 		 * @see feathers.display.Scale9Image
 		 * @see feathers.display.Scale3Image
 		 * @see feathers.display.TiledImage
@@ -123,7 +136,7 @@ package feathers.controls
 		 * The slider's track dimensions fill the full width and height of the
 		 * slider.
 		 *
-		 * #trackScaleMode
+		 * @see #trackScaleMode
 		 */
 		public static const TRACK_SCALE_MODE_EXACT_FIT:String = "exactFit";
 
@@ -133,7 +146,7 @@ package feathers.controls
 		 * vertical, the height of the track will fill the full height of the
 		 * slider. The other edge will not be scaled.
 		 *
-		 * #trackScaleMode
+		 * @see #trackScaleMode
 		 */
 		public static const TRACK_SCALE_MODE_DIRECTIONAL:String = "directional";
 
@@ -281,7 +294,13 @@ package feathers.controls
 		 * vertically. When this value changes, the slider's width and height
 		 * values do not change automatically.
 		 *
-		 * @default DIRECTION_HORIZONTAL
+		 * <p>In the following example, the direction is changed to vertical:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.direction = Slider.DIRECTION_VERTICAL;</listing>
+		 *
+		 * @default Slider.DIRECTION_HORIZONTAL
+		 *
 		 * @see #DIRECTION_HORIZONTAL
 		 * @see #DIRECTION_VERTICAL
 		 */
@@ -313,6 +332,17 @@ package feathers.controls
 		
 		/**
 		 * The value of the slider, between the minimum and maximum.
+		 *
+		 * <p>In the following example, the value is changed to 12:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.minimum = 0;
+		 * slider.maximum = 100;
+		 * slider.step = 1;
+		 * slider.page = 10
+		 * slider.value = 12;</listing>
+		 *
+		 * @default 0
 		 */
 		public function get value():Number
 		{
@@ -348,6 +378,19 @@ package feathers.controls
 		
 		/**
 		 * The slider's value will not go lower than the minimum.
+		 *
+		 * <p>In the following example, the minimum is set to 0:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.minimum = 0;
+		 * slider.maximum = 100;
+		 * slider.step = 1;
+		 * slider.page = 10
+		 * slider.value = 12;</listing>
+		 *
+		 * @default 0
+		 *
+		 * @see #maximum
 		 */
 		public function get minimum():Number
 		{
@@ -373,7 +416,20 @@ package feathers.controls
 		protected var _maximum:Number = 0;
 		
 		/**
-		 * The slider's value will not go higher than the maximum.
+		 * The slider's value will not go higher than the maximum. The maximum
+		 * is zero (<code>0</code>), by default, and it should almost always be
+		 * changed to something more appropriate.
+		 *
+		 * <p>In the following example, the maximum is set to 100:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.minimum = 0;
+		 * slider.maximum = 100;
+		 * slider.step = 1;
+		 * slider.page = 10
+		 * slider.value = 12;</listing>
+		 *
+		 * @default 0
 		 */
 		public function get maximum():Number
 		{
@@ -402,7 +458,20 @@ package feathers.controls
 		 * As the slider's thumb is dragged, the value is snapped to a multiple
 		 * of the step. Paging using the slider's track will use the <code>step</code>
 		 * value if the <code>page</code> value is <code>NaN</code>. If the
-		 * <code>step</code> is zero, paging with the track will not be possible.
+		 * <code>step</code> is zero (<code>0</code>), paging with the track will not be possible.
+		 *
+		 * <p>In the following example, the step is changed to 1:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.minimum = 0;
+		 * slider.maximum = 100;
+		 * slider.step = 1;
+		 * slider.page = 10;
+		 * slider.value = 10;</listing>
+		 *
+		 * @default 0
+		 *
+		 * @see #page
 		 */
 		public function get step():Number
 		{
@@ -435,6 +504,15 @@ package feathers.controls
 		 * <p>If this value is <code>NaN</code>, the <code>step</code> value
 		 * will be used instead. If the <code>step</code> value is zero, paging
 		 * with the track is not possible.</p>
+		 *
+		 * <p>In the following example, the page is changed to 10:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.minimum = 0;
+		 * slider.maximum = 100;
+		 * slider.step = 1;
+		 * slider.page = 10
+		 * slider.value = 12;</listing>
 		 */
 		public function get page():Number
 		{
@@ -461,6 +539,13 @@ package feathers.controls
 		/**
 		 * Determines if the slider dispatches the <code>Event.CHANGE</code>
 		 * event every time the thumb moves, or only once it stops moving.
+		 *
+		 * <p>In the following example, live dragging is disabled:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.liveDragging = false;</listing>
+		 *
+		 * @default true
 		 */
 		public var liveDragging:Boolean = true;
 		
@@ -471,6 +556,13 @@ package feathers.controls
 		
 		/**
 		 * Determines if the thumb should be displayed.
+		 *
+		 * <p>In the following example, the thumb is hidden:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.showThumb = false;</listing>
+		 *
+		 * @default true
 		 */
 		public function get showThumb():Boolean
 		{
@@ -499,6 +591,11 @@ package feathers.controls
 		 * The space, in pixels, between the minimum position of the thumb and
 		 * the minimum edge of the track. May be negative to extend the range of
 		 * the thumb.
+		 *
+		 * <p>In the following example, minimum padding is set to 20 pixels:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.minimumPadding = 20;</listing>
 		 */
 		public function get minimumPadding():Number
 		{
@@ -527,6 +624,11 @@ package feathers.controls
 		 * The space, in pixels, between the maximum position of the thumb and
 		 * the maximum edge of the track. May be negative to extend the range
 		 * of the thumb.
+		 *
+		 * <p>In the following example, maximum padding is set to 20 pixels:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.maximumPadding = 20;</listing>
 		 */
 		public function get maximumPadding():Number
 		{
@@ -556,7 +658,12 @@ package feathers.controls
 		 * Determines how the minimum and maximum track skins are positioned and
 		 * sized.
 		 *
-		 * @default TRACK_LAYOUT_MODE_SINGLE
+		 * <p>In the following example, the slider is given two tracks:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.trackLayoutMode = Slider.TRACK_LAYOUT_MODE_MIN_MAX;</listing>
+		 *
+		 * @default Slider.TRACK_LAYOUT_MODE_SINGLE
 		 *
 		 * @see #TRACK_LAYOUT_MODE_SINGLE
 		 * @see #TRACK_LAYOUT_MODE_MIN_MAX
@@ -589,7 +696,12 @@ package feathers.controls
 		 * Determines how the minimum and maximum track skins are positioned and
 		 * sized.
 		 *
-		 * @default TRACK_SCALE_MODE_DIRECTIONAL
+		 * <p>In the following example, the slider's track layout is customized:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.trackScaleMode = Slider.TRACK_SCALE_MODE_EXACT_FIT;</listing>
+		 *
+		 * @default Slider.TRACK_SCALE_MODE_DIRECTIONAL
 		 *
 		 * @see #TRACK_SCALE_MODE_DIRECTIONAL
 		 * @see #TRACK_SCALE_MODE_EXACT_FIT
@@ -632,6 +744,14 @@ package feathers.controls
 		 * The time, in seconds, before actions are repeated. The first repeat
 		 * happens after a delay that is five times longer than the following
 		 * repeats.
+		 *
+		 * <p>In the following example, the slider's repeat delay is set to
+		 * 500 milliseconds:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.repeatDelay = 0.5;</listing>
+		 *
+		 * @default 0.05
 		 */
 		public function get repeatDelay():Number
 		{
@@ -667,6 +787,18 @@ package feathers.controls
 		 * <p>The function should have the following signature:</p>
 		 * <pre>function():Button</pre>
 		 *
+		 * <p>In the following example, a custom minimum track factory is passed
+		 * to the slider:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.minimumTrackFactory = function():Button
+		 * {
+		 *     var track:Button = new Button();
+		 *     track.defaultSkin = new Image( upTexture );
+		 *     track.downSkin = new Image( downTexture );
+		 *     return track;
+		 * };</listing>
+		 *
 		 * @see feathers.controls.Button
 		 * @see #minimumTrackProperties
 		 */
@@ -697,7 +829,21 @@ package feathers.controls
 		 * A name to add to the slider's minimum track sub-component. Typically
 		 * used by a theme to provide different skins to different sliders.
 		 *
+		 * <p>In the following example, a custom minimum track name is passed
+		 * to the slider:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.customMinimumTrackName = "my-custom-minimum-track";</listing>
+		 *
+		 * <p>In your theme, you can target this sub-component name to provide
+		 * different skins than the default style:</p>
+		 *
+		 * <listing version="3.0">
+		 * setInitializerForClass( Button, customMinimumTrackInitializer, "my-custom-minimum-track");</listing>
+		 *
+		 * @see #DEFAULT_CHILD_NAME_MINIMUM_TRACK
 		 * @see feathers.core.FeathersControl#nameList
+		 * @see feathers.core.DisplayListWatcher
 		 * @see #minimumTrackFactory
 		 * @see #minimumTrackProperties
 		 */
@@ -740,6 +886,13 @@ package feathers.controls
 		 * <p>Setting properties in a <code>minimumTrackFactory</code> function
 		 * instead of using <code>minimumTrackProperties</code> will result in
 		 * better performance.</p>
+		 *
+		 * <p>In the following example, the slider's minimum track properties
+		 * are updated:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.minimumTrackProperties.defaultSkin = new Image( upTexture );
+		 * slider.minimumTrackProperties.downSkin = new Image( downTexture );</listing>
 		 *
 		 * @see #minimumTrackFactory
 		 * @see feathers.controls.Button
@@ -803,6 +956,18 @@ package feathers.controls
 		 * <p>The function should have the following signature:</p>
 		 * <pre>function():Button</pre>
 		 *
+		 * <p>In the following example, a custom maximum track factory is passed
+		 * to the slider:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.maximumTrackFactory = function():Button
+		 * {
+		 *     var track:Button = new Button();
+		 *     track.defaultSkin = new Image( upTexture );
+		 *     track.downSkin = new Image( downTexture );
+		 *     return track;
+		 * };</listing>
+		 *
 		 * @see feathers.controls.Button
 		 * @see #maximumTrackProperties
 		 */
@@ -833,7 +998,21 @@ package feathers.controls
 		 * A name to add to the slider's maximum track sub-component. Typically
 		 * used by a theme to provide different skins to different sliders.
 		 *
+		 * <p>In the following example, a custom maximum track name is passed
+		 * to the slider:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.customMaximumTrackName = "my-custom-maximum-track";</listing>
+		 *
+		 * <p>In your theme, you can target this sub-component name to provide
+		 * different skins than the default style:</p>
+		 *
+		 * <listing version="3.0">
+		 * setInitializerForClass( Button, customMaximumTrackInitializer, "my-custom-maximum-track");</listing>
+		 *
+		 * @see #DEFAULT_CHILD_NAME_MAXIMUM_TRACK
 		 * @see feathers.core.FeathersControl#nameList
+		 * @see feathers.core.DisplayListWatcher
 		 * @see #maximumTrackFactory
 		 * @see #maximumTrackProperties
 		 */
@@ -876,6 +1055,13 @@ package feathers.controls
 		 * <p>Setting properties in a <code>maximumTrackFactory</code> function
 		 * instead of using <code>maximumTrackProperties</code> will result in
 		 * better performance.</p>
+		 *
+		 * <p>In the following example, the slider's maximum track properties
+		 * are updated:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.maximumTrackProperties.defaultSkin = new Image( upTexture );
+		 * slider.maximumTrackProperties.downSkin = new Image( downTexture );</listing>
 		 *
 		 * @see #maximumTrackFactory
 		 * @see feathers.controls.Button
@@ -939,6 +1125,18 @@ package feathers.controls
 		 * <p>The function should have the following signature:</p>
 		 * <pre>function():Button</pre>
 		 *
+		 * <p>In the following example, a custom thumb factory is passed
+		 * to the slider:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.thumbFactory = function():Button
+		 * {
+		 *     var thumb:Button = new Button();
+		 *     thumb.defaultSkin = new Image( upTexture );
+		 *     thumb.downSkin = new Image( downTexture );
+		 *     return thumb;
+		 * };</listing>
+		 *
 		 * @see feathers.controls.Button
 		 * @see #thumbProperties
 		 */
@@ -969,7 +1167,21 @@ package feathers.controls
 		 * A name to add to the slider's thumb sub-component. Typically
 		 * used by a theme to provide different skins to different sliders.
 		 *
+		 * <p>In the following example, a custom thumb name is passed
+		 * to the slider:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.customThumbName = "my-custom-thumb";</listing>
+		 *
+		 * <p>In your theme, you can target this sub-component name to provide
+		 * different skins than the default style:</p>
+		 *
+		 * <listing version="3.0">
+		 * setInitializerForClass( Button, customThumbInitializer, "my-custom-thumb");</listing>
+		 *
+		 * @see #DEFAULT_CHILD_NAME_THUMB
 		 * @see feathers.core.FeathersControl#nameList
+		 * @see feathers.core.DisplayListWatcher
 		 * @see #thumbFactory
 		 * @see #thumbProperties
 		 */
@@ -1011,6 +1223,13 @@ package feathers.controls
 		 * <p>Setting properties in a <code>thumbFactory</code> function instead
 		 * of using <code>thumbProperties</code> will result in better
 		 * performance.</p>
+		 *
+		 * <p>In the following example, the slider's thumb properties
+		 * are updated:</p>
+		 *
+		 * <listing version="3.0">
+		 * slider.thumbProperties.defaultSkin = new Image( upTexture );
+		 * slider.thumbProperties.downSkin = new Image( downTexture );</listing>
 		 * 
 		 * @see feathers.controls.Button
 		 * @see #thumbFactory

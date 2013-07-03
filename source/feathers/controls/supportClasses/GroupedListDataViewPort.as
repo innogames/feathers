@@ -178,12 +178,20 @@ package feathers.controls.supportClasses
 
 		public function get horizontalScrollStep():Number
 		{
-			return Math.min(this._typicalItemWidth, this._typicalItemHeight);
+			if(this._typicalItemWidth < this._typicalItemHeight)
+			{
+				return this._typicalItemWidth;
+			}
+			return this._typicalItemHeight;
 		}
 
 		public function get verticalScrollStep():Number
 		{
-			return Math.min(this._typicalItemWidth, this._typicalItemHeight);
+			if(this._typicalItemWidth < this._typicalItemHeight)
+			{
+				return this._typicalItemWidth;
+			}
+			return this._typicalItemHeight;
 		}
 
 		private var _typicalItemWidth:Number = NaN;
@@ -1058,9 +1066,9 @@ package feathers.controls.supportClasses
 				else
 				{
 					this._typicalHeaderWidth = 0;
-					this._typicalFooterWidth = 0;
-					this._typicalFooterHeight= 0;
 					this._typicalHeaderHeight = 0;
+					this._typicalFooterWidth = 0;
+					this._typicalFooterHeight = 0;
 				}
 			}
 
@@ -1121,18 +1129,15 @@ package feathers.controls.supportClasses
 			}
 
 			var typicalItem:Object = this._typicalItem;
+			if(!typicalItem && this._dataProvider && this._dataProvider.getLength() > 0 && this._dataProvider.getLength(0) > 0)
+			{
+				typicalItem = this._dataProvider.getItemAt(0, 0);
+			}
 			if(!typicalItem)
 			{
-				if(this._dataProvider && this._dataProvider.getLength() > 0)
-				{
-					typicalItem = this._dataProvider.getItemAt(0);
-				}
-				else
-				{
-					this._typicalItemWidth = 0;
-					this._typicalItemHeight = 0;
-					return;
-				}
+				this._typicalItemWidth = 0;
+				this._typicalItemHeight = 0;
+				return;
 			}
 
 			needsDestruction = true;
@@ -1458,6 +1463,8 @@ package feathers.controls.supportClasses
 				this._minimumItemCount = Math.ceil(HELPER_POINT.y / this._typicalItemHeight) + 1;
 			}
 			var currentIndex:int = 0;
+			var unrenderedHeadersLastIndex:int = this._unrenderedHeaders.length;
+			var unrenderedFootersLastIndex:int = this._unrenderedFooters.length;
 			for(i = 0; i < groupCount; i++)
 			{
 				group = this._dataProvider.getItemAt(i);
@@ -1483,8 +1490,10 @@ package feathers.controls.supportClasses
 						}
 						else
 						{
-							this._unrenderedHeaders.push(i);
-							this._unrenderedHeaders.push(currentIndex);
+							this._unrenderedHeaders[unrenderedHeadersLastIndex] = i;
+							unrenderedHeadersLastIndex++;
+							this._unrenderedHeaders[unrenderedHeadersLastIndex] = currentIndex;
+							unrenderedHeadersLastIndex++;
 						}
 					}
 					currentIndex++;
@@ -1544,8 +1553,10 @@ package feathers.controls.supportClasses
 						}
 						else
 						{
-							this._unrenderedFooters.push(i);
-							this._unrenderedFooters.push(currentIndex);
+							this._unrenderedFooters[unrenderedFootersLastIndex] = i;
+							unrenderedFootersLastIndex++;
+							this._unrenderedFooters[unrenderedFootersLastIndex] = currentIndex;
+							unrenderedFootersLastIndex++;
 						}
 					}
 					currentIndex++;

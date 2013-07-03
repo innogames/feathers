@@ -19,7 +19,6 @@ package feathers.core {
 	import flash.geom.Rectangle;
 
 	import starling.core.RenderSupport;
-
 	import starling.display.DisplayObject;
 	import starling.display.Quad;
 	import starling.display.Sprite;
@@ -59,11 +58,8 @@ package feathers.core {
 
 		/**
 		 * @private
-		 * Meant to be constant, but the ValidationQueue needs access to
-		 * Starling in its constructor, so it needs to be instantiated after
-		 * Starling is initialized.
 		 */
-		protected static var VALIDATION_QUEUE: ValidationQueue = new ValidationQueue();
+		protected static const VALIDATION_QUEUE:ValidationQueue = new ValidationQueue();
 
 		/**
 		 * Flag to indicate that showHitArea property changed.
@@ -355,6 +351,15 @@ package feathers.core {
 		protected var actualWidth: Number = 0;
 
 		/**
+		 * @private
+		 * The <code>actualWidth</code> value that accounts for
+		 * <code>scaleX</code>. Not intended to be used for layout since layout
+		 * uses unscaled values. This is the value exposed externally through
+		 * the <code>width</code> getter.
+		 */
+		protected var scaledActualWidth:Number = 0;
+
+		/**
 		 * The width of the component, in pixels. This could be a value that was
 		 * set explicitly, or the component will automatically resize if no
 		 * explicit width value is provided. Each component has a different
@@ -372,8 +377,9 @@ package feathers.core {
 		 *
 		 * @see feathers.core.IFeathersControl#validate()
 		 */
-		override public function get width(): Number {
-			return this.actualWidth;
+		override public function get width():Number
+		{
+			return this.scaledActualWidth;
 		}
 
 		/**
@@ -388,8 +394,9 @@ package feathers.core {
 				return;
 			}
 			this.explicitWidth = value;
-			if (valueIsNaN) {
-				this.actualWidth = 0;
+			if(valueIsNaN)
+			{
+				this.actualWidth = this.scaledActualWidth = 0;
 				this.invalidate(INVALIDATION_FLAG_SIZE);
 			} else {
 				this.setSizeInternal(value, this.actualHeight, true);
@@ -412,6 +419,15 @@ package feathers.core {
 		protected var actualHeight: Number = 0;
 
 		/**
+		 * @private
+		 * The <code>actualHeight</code> value that accounts for
+		 * <code>scaleY</code>. Not intended to be used for layout since layout
+		 * uses unscaled values. This is the value exposed externally through
+		 * the <code>height</code> getter.
+		 */
+		protected var scaledActualHeight:Number = 0;
+
+		/**
 		 * The height of the component, in pixels. This could be a value that
 		 * was set explicitly, or the component will automatically resize if no
 		 * explicit height value is provided. Each component has a different
@@ -429,8 +445,9 @@ package feathers.core {
 		 *
 		 * @see feathers.core.IFeathersControl#validate()
 		 */
-		override public function get height(): Number {
-			return this.actualHeight;
+		override public function get height():Number
+		{
+			return this.scaledActualHeight;
 		}
 
 		/**
@@ -445,8 +462,9 @@ package feathers.core {
 				return;
 			}
 			this.explicitHeight = value;
-			if (valueIsNaN) {
-				this.actualHeight = 0;
+			if(valueIsNaN)
+			{
+				this.actualHeight = this.scaledActualHeight = 0;
 				this.invalidate(INVALIDATION_FLAG_SIZE);
 			} else {
 				this.setSizeInternal(this.actualWidth, value, true);
@@ -624,7 +642,25 @@ package feathers.core {
 		/**
 		 * @private
 		 */
-		protected var _includeInLayout: Boolean = true;
+		override public function set scaleX(value:Number):void
+		{
+			super.scaleX = value;
+			this.setSizeInternal(this.actualWidth, this.actualHeight, false);
+		}
+
+		/**
+		 * @private
+		 */
+		override public function set scaleY(value:Number):void
+		{
+			super.scaleY = value;
+			this.setSizeInternal(this.actualWidth, this.actualHeight, false);
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _includeInLayout:Boolean = true;
 
 		/**
 		 * @inheritDoc
@@ -1283,13 +1319,31 @@ package feathers.core {
 		protected function setSizeInternal(width: Number, height: Number, canInvalidate: Boolean): Boolean {
 			if (!isNaN(this.explicitWidth)) {
 				width = this.explicitWidth;
-			} else {
-				width = Math.min(this._maxWidth, Math.max(this._minWidth, width));
+			}
+			else
+			{
+				if(width < this._minWidth)
+				{
+					width = this._minWidth;
+				}
+				else if(width > this._maxWidth)
+				{
+					width = this._maxWidth;
+				}
 			}
 			if (!isNaN(this.explicitHeight)) {
 				height = this.explicitHeight;
-			} else {
-				height = Math.min(this._maxHeight, Math.max(this._minHeight, height));
+			}
+			else
+			{
+				if(height < this._minHeight)
+				{
+					height = this._minHeight;
+				}
+				else if(height > this._maxHeight)
+				{
+					height = this._maxHeight;
+				}
 			}
 			if (isNaN(width)) {
 				throw new ArgumentError(ILLEGAL_WIDTH_ERROR);
@@ -1300,24 +1354,46 @@ package feathers.core {
 			var resized: Boolean = false;
 			if (this.actualWidth != width) {
 				this.actualWidth = width;
-				this._hitArea.width = Math.max(width, this._minTouchWidth);
-				this._hitArea.x = (this.actualWidth - this._hitArea.width) / 2;
-				if (this._hitArea.x != this._hitArea.x) {
+				if(width < this._minTouchWidth)
+				{
+					this._hitArea.width = this._minTouchWidth;
+				}
+				else
+				{
+					this._hitArea.width = width;
+				}
+				var hitAreaX:Number = (this.actualWidth - this._hitArea.width) / 2;
+				this._hitArea.x = hitAreaX;
+				if(hitAreaX != hitAreaX) //faster than isNaN
+				{
 					this._hitArea.x = 0;
 				}
 				resized = true;
 			}
 			if (this.actualHeight != height) {
 				this.actualHeight = height;
-				this._hitArea.height = Math.max(height, this._minTouchHeight);
-				this._hitArea.y = (this.actualHeight - this._hitArea.height) / 2;
-				if (this._hitArea.y != this._hitArea.y) {
+				if(height < this._minTouchHeight)
+				{
+					this._hitArea.height = this._minTouchHeight;
+				}
+				else
+				{
+					this._hitArea.height = height;
+				}
+				var hitAreaY:Number = (this.actualHeight - this._hitArea.height) / 2;
+				this._hitArea.y = hitAreaY;
+				if(hitAreaY != hitAreaY) //faster than isNaN
+				{
 					this._hitArea.y = 0;
 				}
 				resized = true;
 			}
-			if (resized) {
-				if (canInvalidate) {
+			this.scaledActualWidth = this.actualWidth * this.scaleX;
+			this.scaledActualHeight = this.actualHeight * this.scaleY;
+			if(resized)
+			{
+				if(canInvalidate)
+				{
 					this.invalidate(INVALIDATION_FLAG_SIZE);
 				}
 				this.dispatchEventWith(FeathersEventType.RESIZE);

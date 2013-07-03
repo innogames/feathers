@@ -64,6 +64,16 @@ package feathers.controls
 	 * will not go into effect until this component's status is upgraded from
 	 * beta to stable.</p>
 	 *
+	 * <p>The following example sets the text in a text area, selects the text,
+	 * and listens for when the text value changes:</p>
+	 *
+	 * <listing version="3.0">
+	 * var textArea:TextArea = new TextArea();
+	 * textArea.text = "Hello\nWorld"; //it's multiline!
+	 * textArea.selectRange( 0, textArea.text.length );
+	 * textArea.addEventListener( Event.CHANGE, input_changeHandler );
+	 * this.addChild( textArea );</listing>
+	 *
 	 * @see http://wiki.starling-framework.org/feathers/text-area
 	 * @see feathers.controls.TextInput
 	 * @see http://wiki.starling-framework.org/feathers/text-editors
@@ -203,7 +213,14 @@ package feathers.controls
 		 * <code>Event.CHANGE</code> when the value of the <code>text</code>
 		 * property changes for any reason.
 		 *
+		 * <p>In the following example, the text area's text is updated:</p>
+		 *
+		 * <listing version="3.0">
+		 * textArea.text = "Hello World";</listing>
+		 *
 		 * @see #event:change
+		 *
+		 * @default ""
 		 */
 		public function get text():String
 		{
@@ -236,6 +253,14 @@ package feathers.controls
 
 		/**
 		 * The maximum number of characters that may be entered.
+		 *
+		 * <p>In the following example, the text area's maximum characters is
+		 * specified:</p>
+		 *
+		 * <listing version="3.0">
+		 * textArea.maxChars = 10;</listing>
+		 *
+		 * @default 0
 		 */
 		public function get maxChars():int
 		{
@@ -262,6 +287,12 @@ package feathers.controls
 
 		/**
 		 * Limits the set of characters that may be entered.
+		 *
+		 * <p>In the following example, the text area's allowed characters are
+		 * restricted:</p>
+		 *
+		 * <listing version="3.0">
+		 * textArea.restrict = "0-9;</listing>
 		 */
 		public function get restrict():String
 		{
@@ -289,6 +320,13 @@ package feathers.controls
 		/**
 		 * Determines if the text area is editable. If the text area is not
 		 * editable, it will still appear enabled.
+		 *
+		 * <p>In the following example, the text area is not editable:</p>
+		 *
+		 * <listing version="3.0">
+		 * textArea.isEditable = false;</listing>
+		 *
+		 * @default true
 		 */
 		public function get isEditable():Boolean
 		{
@@ -316,6 +354,12 @@ package feathers.controls
 		/**
 		 * A display object displayed behind the text area's content when it
 		 * has focus.
+		 *
+		 * <p>In the following example, the text area's focused background skin is
+		 * specified:</p>
+		 *
+		 * <listing version="3.0">
+		 * textArea.backgroundFocusedSkin = new Image( texture );</listing>
 		 */
 		public function get backgroundFocusedSkin():DisplayObject
 		{
@@ -365,6 +409,15 @@ package feathers.controls
 		 * <p>The factory should have the following function signature:</p>
 		 * <pre>function():ITextEditorViewPort</pre>
 		 *
+		 * <p>In the following example, a custom text editor factory is passed
+		 * to the text area:</p>
+		 *
+		 * <listing version="3.0">
+		 * input.textEditorFactory = function():ITextEditorViewPort
+		 * {
+		 *     return new TextFieldTextEditorViewPort();
+		 * };</listing>
+		 *
 		 * @see feathers.controls.text.ITextEditorViewPort
 		 * @see feathers.controls.text.TextFieldTextEditorViewPort
 		 */
@@ -406,6 +459,14 @@ package feathers.controls
 		 * <p>Setting properties in a <code>textEditorFactory</code> function
 		 * instead of using <code>textEditorProperties</code> will result in
 		 * better performance.</p>
+		 *
+		 * <p>In the following example, the text input's text editor properties
+		 * are specified (this example assumes that the text editor is a
+		 * <code>TextFieldTextEditorViewPort</code>):</p>
+		 *
+		 * <listing version="3.0">
+		 * input.textEditorProperties.textFormat = new TextFormat( "Source Sans Pro", 16, 0x333333);
+		 * input.textEditorProperties.embedFonts = true;</listing>
 		 *
 		 * @see #textEditorFactory
 		 * @see feathers.controls.text.ITextEditorViewPort
@@ -501,11 +562,11 @@ package feathers.controls
 			}
 			if(startIndex < 0)
 			{
-				throw new RangeError("Expected start index >= 0. Received " + startIndex + ".");
+				throw new RangeError("Expected start index greater than or equal to 0. Received " + startIndex + ".");
 			}
 			if(endIndex > this._text.length)
 			{
-				throw new RangeError("Expected start index > " + this._text.length + ". Received " + endIndex + ".");
+				throw new RangeError("Expected start index less than " + this._text.length + ". Received " + endIndex + ".");
 			}
 
 			if(this.textEditorViewPort)

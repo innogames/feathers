@@ -20,6 +20,7 @@ package feathers.controls
 
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
+	import flash.utils.getTimer;
 
 	import starling.display.DisplayObject;
 	import starling.events.Event;
@@ -46,6 +47,26 @@ package feathers.controls
 	 * @eventType starling.events.Event.CHANGE
 	 */
 	[Event(name="change",type="starling.events.Event")]
+
+	/**
+	 * Dispatched when the button is pressed for a long time. The property
+	 * <code>isLongPressEnabled</code> must be set to <code>true</code> before
+	 * this event will be dispatched.
+	 *
+	 * <p>The following example enables long presses:</p>
+	 *
+	 * <listing version="3.0">
+	 * button.isLongPressEnabled = true;
+	 * button.addEventListener( FeathersEventType.LONG_PRESS, function( event:Event ):void
+	 * {
+	 *     // long press
+	 * });</listing>
+	 *
+	 * @eventType feathers.events.FeathersEventType.LONG_PRESS
+	 * @see #isLongPressEnabled
+	 * @see #longPressDuration
+	 */
+	[Event(name="longPress",type="starling.events.Event")]
 
 	/**
 	 * A push (or optionally, toggle) button control.
@@ -538,6 +559,16 @@ package feathers.controls
 		 * button.label = "Click Me";
 		 * button.defaultIcon = new Image( texture );
 		 * button.iconPosition = Button.ICON_POSITION_RIGHT;</listing>
+		 *
+		 * @default Button.ICON_POSITION_LEFT
+		 *
+		 * @see #ICON_POSITION_TOP
+		 * @see #ICON_POSITION_RIGHT
+		 * @see #ICON_POSITION_BOTTOM
+		 * @see #ICON_POSITION_LEFT
+		 * @see #ICON_POSITION_RIGHT_BASELINE
+		 * @see #ICON_POSITION_LEFT_BASELINE
+		 * @see #ICON_POSITION_MANUAL
 		 */
 		public function get iconPosition():String
 		{
@@ -614,6 +645,12 @@ package feathers.controls
 		 *
 		 * <listing version="3.0">
 		 * button.horizontalAlign = Button.HORIZONTAL_ALIGN_LEFT;</listing>
+		 *
+		 * @default Button.HORIZONTAL_ALIGN_CENTER
+		 *
+		 * @see #HORIZONTAL_ALIGN_LEFT
+		 * @see #HORIZONTAL_ALIGN_CENTER
+		 * @see #HORIZONTAL_ALIGN_RIGHT
 		 */
 		public function get horizontalAlign():String
 		{
@@ -647,6 +684,12 @@ package feathers.controls
 		 *
 		 * <listing version="3.0">
 		 * button.verticalAlign = Button.VERTICAL_ALIGN_TOP;</listing>
+		 *
+		 * @default Button.VERTICAL_ALIGN_MIDDLE
+		 *
+		 * @see #VERTICAL_ALIGN_TOP
+		 * @see #VERTICAL_ALIGN_MIDDLE
+		 * @see #VERTICAL_ALIGN_RIGHT
 		 */
 		public function get verticalAlign():String
 		{
@@ -1478,7 +1521,9 @@ package feathers.controls
 		 * <code>TextFieldTextRenderer</code>.
 		 *
 		 * <p>The following example gives the button default label properties to
-		 * use for all states when no specific label properties are available:</p>
+		 * use for all states when no specific label properties are available
+		 * (this example assumes that the label text renderer is a
+		 * <code>BitmapFontTextRenderer</code>):</p>
 		 *
 		 * <listing version="3.0">
 		 * button.defaultLabelProperties.textFormat = new BitmapFontTextFormat( bitmapFont );
@@ -2397,6 +2442,83 @@ package feathers.controls
 				this.flatten();
 			}
 		}
+
+		/**
+		 * @private
+		 * Used for determining the duration of a long press.
+		 */
+		protected var _touchBeginTime:int;
+
+		/**
+		 * @private
+		 */
+		protected var _longPressDuration:Number = 0.5;
+
+		/**
+		 * The duration, in seconds, of a long press.
+		 *
+		 * <p>The following example changes the long press duration to one full second:</p>
+		 *
+		 * <listing version="3.0">
+		 * button.longPressDuration = 1.0;</listing>
+		 *
+		 * @default 0.5
+		 *
+		 * @see #event:longPress
+		 * @see #isLongPressEnabled
+		 */
+		public function get longPressDuration():Number
+		{
+			return this._longPressDuration;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set longPressDuration(value:Number):void
+		{
+			this._longPressDuration = value;
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _isLongPressEnabled:Boolean = false;
+
+		/**
+		 * Determines if <code>FeathersEventType.LONG_PRESS</code> will be
+		 * dispatched.
+		 *
+		 * <p>The following example enables long presses:</p>
+		 *
+		 * <listing version="3.0">
+		 * button.isLongPressEnabled = true;
+		 * button.addEventListener( FeathersEventType.LONG_PRESS, function( event:Event ):void
+		 * {
+		 *     // long press
+		 * });</listing>
+		 *
+		 * @default false
+		 *
+		 * @see #event:longPress
+		 * @see #longPressDuration
+		 */
+		public function get isLongPressEnabled():Boolean
+		{
+			return this._isLongPressEnabled;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set isLongPressEnabled(value:Boolean):void
+		{
+			this._isLongPressEnabled = value;
+			if(!value)
+			{
+				this.removeEventListener(Event.ENTER_FRAME, longPress_enterFrameHandler);
+			}
+		}
 		
 		/**
 		 * @private
@@ -2960,6 +3082,7 @@ package feathers.controls
 		protected function button_removedFromStageHandler(event:Event):void
 		{
 			this._touchPointID = -1;
+			this.removeEventListener(Event.ENTER_FRAME, longPress_enterFrameHandler);
 			this.currentState = this._isEnabled ? STATE_UP : STATE_DISABLED;
 		}
 		
@@ -2998,6 +3121,7 @@ package feathers.controls
 				else if(touch.phase == TouchPhase.ENDED)
 				{
 					this._touchPointID = -1;
+					this.removeEventListener(Event.ENTER_FRAME, longPress_enterFrameHandler);
 					if(isInBounds)
 					{
 						if(this._isHoverSupported)
@@ -3028,6 +3152,11 @@ package feathers.controls
 				{
 					this.currentState = STATE_DOWN;
 					this._touchPointID = touch.id;
+					if(this._isLongPressEnabled)
+					{
+						this._touchBeginTime = getTimer();
+						this.addEventListener(Event.ENTER_FRAME, longPress_enterFrameHandler);
+					}
 					return;
 				}
 				touch = event.getTouch(this, TouchPhase.HOVER);
@@ -3078,6 +3207,19 @@ package feathers.controls
 			}
 		}	
 
+
+		/**
+		 * @private
+		 */
+		protected function longPress_enterFrameHandler(event:Event):void
+		{
+			const accumulatedTime:int = (getTimer() - this._touchBeginTime) / 1000;
+			if(accumulatedTime >= this._longPressDuration)
+			{
+				this.removeEventListener(Event.ENTER_FRAME, longPress_enterFrameHandler);
+				this.dispatchEventWith(FeathersEventType.LONG_PRESS);
+			}
+		}
 
 		/**
 		 * @private

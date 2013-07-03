@@ -25,9 +25,31 @@ package feathers.controls
 
 	[DefaultProperty("mxmlContent")]
 	/**
-	 * A generic container that supports layout and scrolling.
+	 * A generic container that supports layout, scrolling, and a background
+	 * skin. For a lighter container, see <code>LayoutGroup</code>, which
+	 * focuses specifically on layout without scrolling.
+	 *
+	 * <p>The following example creates a scroll container with a horizontal
+	 * layout and adds two buttons to it:</p>
+	 *
+	 * <listing version="3.0">
+	 * var container:ScrollContainer = new ScrollContainer();
+	 * var layout:HorizontalLayout = new HorizontalLayout();
+	 * layout.gap = 20;
+	 * layout.padding = 20;
+	 * container.layout = layout;
+	 * this.addChild( container );
+	 *
+	 * var yesButton:Button = new Button();
+	 * yesButton.label = "Yes";
+	 * container.addChild( yesButton );
+	 *
+	 * var noButton:Button = new Button();
+	 * noButton.label = "No";
+	 * container.addChild( noButton );</listing>
 	 *
 	 * @see http://wiki.starling-framework.org/feathers/scroll-container
+	 * @see feathers.controls.LayoutGroup
 	 */
 	public class ScrollContainer extends Scroller
 	{
@@ -132,6 +154,11 @@ package feathers.controls
 			this.displayListBypassEnabled = oldDisplayListBypassEnabled;
 		}
 
+		/**
+		 * A flag that indicates if the display list functions like <code>addChild()</code>
+		 * and <code>removeChild()</code> will be passed to the internal view
+		 * port.
+		 */
 		protected var displayListBypassEnabled:Boolean = true;
 
 		/**
@@ -147,6 +174,14 @@ package feathers.controls
 		/**
 		 * Controls the way that the container's children are positioned and
 		 * sized.
+		 *
+		 * <p>The following example tells the container to use a horizontal layout:</p>
+		 *
+		 * <listing version="3.0">
+		 * var layout:HorizontalLayout = new HorizontalLayout();
+		 * layout.gap = 20;
+		 * layout.padding = 20;
+		 * container.layout = layout;</listing>
 		 */
 		public function get layout():ILayout
 		{
@@ -196,9 +231,11 @@ package feathers.controls
 			}
 			if(this._mxmlContent && this._mxmlContentIsReady)
 			{
-				for each(var child:IFeathersControl in this._mxmlContent)
+				const childCount:int = this._mxmlContent.length;
+				for(var i:int = 0; i < childCount; i++)
 				{
-					this.removeChild(DisplayObject(child), true);
+					var child:DisplayObject = DisplayObject(this._mxmlContent[i]);
+					this.removeChild(child, true);
 				}
 			}
 			this._mxmlContent = value;
@@ -367,7 +404,7 @@ package feathers.controls
 		 * automatically detected by the container. For instance, Feathers
 		 * components dispatch <code>FeathersEventType.RESIZE</code> when their
 		 * width and height values change, but standard Starling display objects
-		 * like Sprites and Images do not.
+		 * like <code>Sprite</code> and <code>Image</code> do not.
 		 */
 		public function readjustLayout():void
 		{
