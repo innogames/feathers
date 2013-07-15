@@ -7,18 +7,17 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.core {
 
+	import flash.errors.IllegalOperationError;
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+	
 	import feathers.controls.text.BitmapFontTextRenderer;
 	import feathers.controls.text.StageTextTextEditor;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.ILayoutData;
 	import feathers.layout.ILayoutDisplayObject;
-
-	import flash.errors.IllegalOperationError;
-	import flash.geom.Matrix;
-	import flash.geom.Point;
-	import flash.geom.Rectangle;
-
-	import starling.core.RenderSupport;
+	
 	import starling.display.DisplayObject;
 	import starling.display.Quad;
 	import starling.display.Sprite;
@@ -1041,6 +1040,20 @@ package feathers.core {
 			}
 			this._focusPaddingLeft = value;
 			this.invalidate(INVALIDATION_FLAG_FOCUS);
+		}
+		
+		/**
+		 * The left edge of the control
+		 */
+		public function get rightEdgePosition(): int {
+			return this.x + this.width;
+		}
+		
+		/**
+		 * The bottom edge of the control
+		 */
+		public function get bottomEdgePosition(): int {
+			return this.y + this.height;
 		}
 
 		/**
