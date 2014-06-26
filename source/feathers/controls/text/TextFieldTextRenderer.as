@@ -1365,5 +1365,9 @@ package feathers.controls.text
 			this.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
 			this.refreshSnapshot();
 		}
+
+		public function get textfield(): TextField {
+			return textField;
+		}
 	}
 }

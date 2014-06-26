@@ -1281,6 +1281,20 @@ package feathers.core
 			this._focusPaddingLeft = value;
 			this.invalidate(INVALIDATION_FLAG_FOCUS);
 		}
+		
+		/**
+		 * The left edge of the control
+		 */
+		public function get rightEdgePosition(): int {
+			return this.x + this.width;
+		}
+		
+		/**
+		 * The bottom edge of the control
+		 */
+		public function get bottomEdgePosition(): int {
+			return this.y + this.height;
+		}
 
 		/**
 		 * @private
