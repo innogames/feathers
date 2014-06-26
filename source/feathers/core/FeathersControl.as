@@ -241,8 +241,7 @@ package feathers.core
 				throw new Error(ABSTRACT_CLASS_ERROR);
 			}
 			this.addEventListener(Event.ADDED_TO_STAGE, feathersControl_addedToStageHandler);
-			this.addEventListener(Event.REMOVED_FROM_STAGE, feathersControl_removedFromStageHandler);
-			this.addEventListener(Event.FLATTEN, feathersControl_flattenHandler);
+		
 		}
 
 		/**
@@ -462,7 +461,7 @@ package feathers.core
 		 * explicit width value is provided. Each component has a different
 		 * automatic sizing behavior, but it's usually based on the component's
 		 * skin or content, including text or subcomponents.
-		 * 
+		 *
 		 * <p><strong>Note:</strong> Values of the <code>width</code> and
 		 * <code>height</code> properties may not be accurate until after
 		 * validation. If you are seeing <code>width</code> or <code>height</code>
@@ -482,7 +481,7 @@ package feathers.core
 		 *
 		 * <listing version="3.0">
 		 * control.width = NaN;</listing>
-		 * 
+		 *
 		 * @see feathers.core.IFeathersControl#validate()
 		 */
 		override public function get width():Number
@@ -546,7 +545,7 @@ package feathers.core
 		 * explicit height value is provided. Each component has a different
 		 * automatic sizing behavior, but it's usually based on the component's
 		 * skin or content, including text or subcomponents.
-		 * 
+		 *
 		 * <p><strong>Note:</strong> Values of the <code>width</code> and
 		 * <code>height</code> properties may not be accurate until after
 		 * validation. If you are seeing <code>width</code> or <code>height</code>
@@ -566,7 +565,7 @@ package feathers.core
 		 *
 		 * <listing version="3.0">
 		 * control.height = NaN;</listing>
-		 * 
+		 *
 		 * @see feathers.core.IFeathersControl#validate()
 		 */
 		override public function get height():Number
@@ -1437,13 +1436,13 @@ package feathers.core
 		 * control to the screen. The validation system exists to ensure that
 		 * multiple properties can be set together without redrawing multiple
 		 * times in between each property change.
-		 * 
+		 *
 		 * <p>If you cannot wait until later for the validation to happen, you
 		 * can call <code>validate()</code> to redraw immediately. As an example,
 		 * you might want to validate immediately if you need to access the
 		 * correct <code>width</code> or <code>height</code> values of the UI
 		 * control, since these values are calculated during validation.</p>
-		 * 
+		 *
 		 * @see feathers.core.FeathersControl#validate()
 		 */
 		public function invalidate(flag:String = INVALIDATION_FLAG_ALL):void
@@ -1513,7 +1512,7 @@ package feathers.core
 		 * parent has access to the stage, the component may not initialize
 		 * until after its parent's <code>Event.ADDED_TO_STAGE</code> has been
 		 * dispatched to all listeners.</p>
-		 * 
+		 *
 		 * @see #invalidate()
 		 * @see #initialize()
 		 * @see feathers.events.FeathersEventType#INITIALIZE
@@ -1892,6 +1891,10 @@ package feathers.core
 		 */
 		protected function feathersControl_addedToStageHandler(event:Event):void
 		{
+			this.removeEventListener(Event.ADDED_TO_STAGE, feathersControl_addedToStageHandler);
+			this.addEventListener(Event.REMOVED_FROM_STAGE, feathersControl_removedFromStageHandler);
+			this.addEventListener(Event.FLATTEN, feathersControl_flattenHandler);
+			
 			this._depth = getDisplayObjectDepthFromStage(this);
 			this._validationQueue = ValidationQueue.forStarling(Starling.current);
 
@@ -1915,6 +1918,10 @@ package feathers.core
 		 */
 		protected function feathersControl_removedFromStageHandler(event:Event):void
 		{
+			this.addEventListener(Event.ADDED_TO_STAGE, feathersControl_addedToStageHandler);
+			this.removeEventListener(Event.REMOVED_FROM_STAGE, feathersControl_removedFromStageHandler);
+			this.removeEventListener(Event.FLATTEN, feathersControl_flattenHandler);
+			
 			this._depth = -1;
 			this._validationQueue = null;
 		}
