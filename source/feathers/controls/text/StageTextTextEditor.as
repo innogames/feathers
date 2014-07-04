@@ -1006,7 +1006,6 @@ package feathers.controls.text
 				return;
 			}
 			Starling.current.nativeStage.focus = Starling.current.nativeStage;
-			this.dispatchEventWith(FeathersEventType.FOCUS_OUT);
 		}
 
 		/**

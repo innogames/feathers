@@ -769,7 +769,6 @@ package feathers.controls.text
 				return;
 			}
 			Starling.current.nativeStage.focus = Starling.current.nativeStage;
-			this.dispatchEventWith(FeathersEventType.FOCUS_OUT);
 		}
 
 		/**
@@ -955,13 +954,15 @@ package feathers.controls.text
 			textField.embedFonts = this._embedFonts;
 			textField.type = this._isEditable ? TextFieldType.INPUT : TextFieldType.DYNAMIC;
 			textField.selectable = this._isEnabled;
+			var isFormatDifferent:Boolean = false;
 			if(this._textFormat)
 			{
+				isFormatDifferent = textField.defaultTextFormat != this._textFormat;
 				textField.defaultTextFormat = this._textFormat;
 			}
 			if(this._isHTML)
 			{
-				if(textField.htmlText != this._text)
+				if(isFormatDifferent || textField.htmlText != this._text)
 				{
 					if(textField == this.textField && this._pendingSelectionStartIndex < 0)
 					{
@@ -973,7 +974,7 @@ package feathers.controls.text
 			}
 			else
 			{
-				if(textField.text != this._text)
+				if(isFormatDifferent || textField.text != this._text)
 				{
 					if(textField == this.textField && this._pendingSelectionStartIndex < 0)
 					{
