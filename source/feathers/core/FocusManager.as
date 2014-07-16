@@ -213,6 +213,7 @@ package feathers.core
 				this._topLevelContainer.addEventListener(TouchEvent.TOUCH, topLevelContainer_touchHandler);
 				Starling.current.nativeStage.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, stage_keyFocusChangeHandler, false, 0, true);
 				Starling.current.nativeStage.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, stage_mouseFocusChangeHandler, false, 0, true);
+				
 				this.focus = this._savedFocus;
 				this._savedFocus = null;
 			}
@@ -264,7 +265,7 @@ package feathers.core
 				this._focus.dispatchEventWith(FeathersEventType.FOCUS_OUT);
 				this._focus = null;
 			}
-			if(!value || !value.isFocusEnabled)
+			if(!value || !value.isFocusEnabled || value.stage == null)
 			{
 				this._focus = null;
 				return;
