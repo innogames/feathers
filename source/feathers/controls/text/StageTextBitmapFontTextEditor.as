@@ -1184,7 +1184,18 @@ package feathers.controls.text
 			{
 				if(this.textLabel)
 				{
-					this.textLabel.text = _text;
+					if(this.displayAsPassword)
+					{
+						this.textLabel.text = "";
+						for(var i:int = 0; i < _text.length; i++)
+						{
+							this.textLabel.text += "*";
+						}
+					}
+					else
+					{
+						this.textLabel.text = _text;
+					}
 					this.textLabel.visible = !this._stageTextHasFocus;
 				}
 				this.stageText.visible = false;
