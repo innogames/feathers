@@ -469,8 +469,8 @@ package feathers.controls.text
 				var charID:int = this._text.charCodeAt(i);
 				if(charID == CHARACTER_ID_LINE_FEED || charID == CHARACTER_ID_CARRIAGE_RETURN) //new line \n or \r
 				{
-					currentX = Math.max(0, currentX - customLetterSpacing);
-					maxX = Math.max(maxX, currentX);
+					currentX = maxOf2(0, currentX - customLetterSpacing);
+					maxX = maxOf2(maxX, currentX);
 					previousCharID = NaN;
 					currentX = 0;
 					currentY += lineHeight;
@@ -514,7 +514,7 @@ package feathers.controls.text
 
 					if(wordCountForLine > 0 && (currentX + offsetX) > maxLineWidth)
 					{
-						maxX = Math.max(maxX, startXOfPreviousWord - widthOfWhitespaceAfterWord);
+						maxX = maxOf2(maxX, startXOfPreviousWord - widthOfWhitespaceAfterWord);
 						previousCharID = NaN;
 						currentX -= startXOfPreviousWord;
 						currentY += lineHeight;
@@ -528,12 +528,18 @@ package feathers.controls.text
 				previousCharID = charID;
 				word += String.fromCharCode(charID);
 			}
-			currentX = Math.max(0, currentX - customLetterSpacing);
-			maxX = Math.max(maxX, currentX);
+			currentX = maxOf2(0, currentX - customLetterSpacing);
+			maxX = maxOf2(maxX, currentX);
 
 			result.x = maxX;
 			result.y = currentY + font.lineHeight * scale;
 			return result;
+		}
+		
+		[Inline]
+		final private function maxOf2(a:Number, b:Number):Number
+		{
+			return a > b ? a : b;
 		}
 
 		/**
@@ -631,13 +637,13 @@ package feathers.controls.text
 				var charID:int = textToDraw.charCodeAt(i);
 				if(charID == CHARACTER_ID_LINE_FEED || charID == CHARACTER_ID_CARRIAGE_RETURN) //new line \n or \r
 				{
-					currentX = Math.max(0, currentX - customLetterSpacing);
+					currentX = maxOf2(0, currentX - customLetterSpacing);
 					if(this._wordWrap || isAligned)
 					{
 						this.alignBuffer(maxLineWidth, currentX, 0);
 						this.addBufferToBatch(0);
 					}
-					maxX = Math.max(maxX, currentX);
+					maxX = maxOf2(maxX, currentX);
 					previousCharID = NaN;
 					currentX = 0;
 					currentY += lineHeight;
@@ -698,7 +704,7 @@ package feathers.controls.text
 							this.addBufferToBatch(wordLength);
 						}
 						this.moveBufferedCharacters(-startXOfPreviousWord, lineHeight, 0);
-						maxX = Math.max(maxX, startXOfPreviousWord - widthOfWhitespaceAfterWord);
+						maxX = maxOf2(maxX, startXOfPreviousWord - widthOfWhitespaceAfterWord);
 						previousCharID = NaN;
 						currentX -= startXOfPreviousWord;
 						currentY += lineHeight;
@@ -727,13 +733,13 @@ package feathers.controls.text
 				currentX += offsetX + customLetterSpacing;
 				previousCharID = charID;
 			}
-			currentX = Math.max(0, currentX - customLetterSpacing);
+			currentX = maxOf2(0, currentX - customLetterSpacing);
 			if(this._wordWrap || isAligned)
 			{
 				this.alignBuffer(maxLineWidth, currentX, 0);
 				this.addBufferToBatch(0);
 			}
-			maxX = Math.max(maxX, currentX);
+			maxX = maxOf2(maxX, currentX);
 
 			if(isAligned && !hasExplicitWidth)
 			{
