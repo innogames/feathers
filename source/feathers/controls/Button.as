@@ -352,7 +352,6 @@ package feathers.controls
 		{
 			this.isQuickHitAreaEnabled = true;
 			this.addEventListener(TouchEvent.TOUCH, button_touchHandler);
-			this.addEventListener(Event.REMOVED_FROM_STAGE, button_removedFromStageHandler);
 		}
 
 		/**
@@ -3277,7 +3276,16 @@ package feathers.controls
 		{
 			this.resetTouchState();
 		}
-		
+
+		/**
+		 * @inheritDoc
+		 */
+		override protected function onRemovedFromStage():void
+		{
+			super.onRemovedFromStage();
+			button_removedFromStageHandler(null);
+		}
+
 		/**
 		 * @private
 		 */

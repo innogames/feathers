@@ -186,7 +186,9 @@ package feathers.core
 		public function FeathersControl()
 		{
 			super();
-			this.addEventListener(Event.ADDED_TO_STAGE, feathersControl_addedToStageHandler);
+			//this.addEventListener(Event.ADDED_TO_STAGE, feathersControl_addedToStageHandler);
+			//this.addEventListener(Event.REMOVED_FROM_STAGE, feathersControl_removedFromStageHandler);
+			//this.addEventListener(Event.FLATTEN, feathersControl_flattenHandler);
 		
 		}
 
@@ -1832,6 +1834,27 @@ package feathers.core
 			this.validate();
 		}
 
+
+		override protected function onFlatten():void
+		{
+			super.onFlatten();
+			feathersControl_flattenHandler(null);
+		}
+
+		override protected function onAddedToStage():void
+		{
+			super.onAddedToStage();
+			feathersControl_addedToStageHandler(null);
+		}
+
+
+		override protected function onRemovedFromStage():void
+		{
+			super.onRemovedFromStage();
+			feathersControl_removedFromStageHandler(null);
+
+		}
+
 		/**
 		 * @private
 		 * Initialize the control, if it hasn't been initialized yet. Then,
@@ -1840,10 +1863,6 @@ package feathers.core
 		 */
 		protected function feathersControl_addedToStageHandler(event:Event):void
 		{
-			this.removeEventListener(Event.ADDED_TO_STAGE, feathersControl_addedToStageHandler);
-			this.addEventListener(Event.REMOVED_FROM_STAGE, feathersControl_removedFromStageHandler);
-			this.addEventListener(Event.FLATTEN, feathersControl_flattenHandler);
-			
 			this._depth = getDisplayObjectDepthFromStage(this);
 			this._validationQueue = ValidationQueue.forStarling(Starling.current);
 
@@ -1867,10 +1886,6 @@ package feathers.core
 		 */
 		protected function feathersControl_removedFromStageHandler(event:Event):void
 		{
-			this.addEventListener(Event.ADDED_TO_STAGE, feathersControl_addedToStageHandler);
-			this.removeEventListener(Event.REMOVED_FROM_STAGE, feathersControl_removedFromStageHandler);
-			this.removeEventListener(Event.FLATTEN, feathersControl_flattenHandler);
-			
 			this._depth = -1;
 			this._validationQueue = null;
 		}

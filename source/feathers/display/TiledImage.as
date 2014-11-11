@@ -55,8 +55,6 @@ package feathers.display
 			this._batch.touchable = false;
 			this.addChild(this._batch);
 
-			this.addEventListener(Event.FLATTEN, flattenHandler);
-			this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 		}
 
 		private var _propertiesChanged:Boolean = true;
@@ -565,5 +563,18 @@ package feathers.display
 			}
 		}
 
+
+		override protected function onFlatten():void
+		{
+			super.onFlatten();
+			flattenHandler(null);
+		}
+
+
+		override protected function onAddedToStage():void
+		{
+			super.onAddedToStage();
+			addedToStageHandler(null);
+		}
 	}
 }

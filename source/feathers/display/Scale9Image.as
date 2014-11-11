@@ -65,8 +65,8 @@ package feathers.display
 			this._batch.touchable = false;
 			this.addChild(this._batch);
 
-			this.addEventListener(Event.FLATTEN, flattenHandler);
-			this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
+			//this.addEventListener(Event.FLATTEN, flattenHandler);
+			//this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 		}
 
 		/**
@@ -656,6 +656,23 @@ package feathers.display
 			{
 				this._validationQueue.addControl(this, false);
 			}
+		}
+
+
+		override protected function onAddedToStage():void
+		{
+			super.onAddedToStage();
+			this._depth = getDisplayObjectDepthFromStage(this);
+			this._validationQueue = ValidationQueue.forStarling(Starling.current);
+			if(this._isInvalid)
+			{
+				this._validationQueue.addControl(this, false);
+			}
+		}
+
+		override protected function onFlatten():void
+		{
+			this.validate();
 		}
 	}
 }
