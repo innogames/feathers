@@ -1399,7 +1399,6 @@ package feathers.controls.text
 			{
 				//avoid the need to call dispose(). we'll create a new snapshot
 				//when the renderer is added to stage again.
-				trace("text editor texture disposed");
 				this.textLabel.dispose();
 				this.removeChild(this.textLabel, true);
 				this.textLabel = null;
