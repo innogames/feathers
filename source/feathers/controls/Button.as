@@ -8,8 +8,6 @@ accordance with the terms of the accompanying license agreement.
 package feathers.controls
 {
 	import flash.geom.Point;
-	import starling.utils.HAlign;
-	import starling.utils.VAlign;
 	
 	import feathers.core.FeathersControl;
 	import feathers.core.IFeathersControl;
@@ -543,7 +541,7 @@ package feathers.controls
 		 * button.isSelected = true;</listing>
 		 *
 		 * @default false
-		 *
+		 * 
 		 * @see #isToggle
 		 */
 		public function get isSelected():Boolean
@@ -619,7 +617,7 @@ package feathers.controls
 		 * The space, in pixels, between the icon and the label. Applies to
 		 * either horizontal or vertical spacing, depending on the value of
 		 * <code>iconPosition</code>.
-		 *
+		 * 
 		 * <p>If <code>gap</code> is set to <code>Number.POSITIVE_INFINITY</code>,
 		 * the label and icon will be positioned as far apart as possible. In
 		 * other words, they will be positioned at the edges of the button,
@@ -634,7 +632,7 @@ package feathers.controls
 		 * button.gap = 50;</listing>
 		 *
 		 * @default 0
-		 *
+		 * 
 		 * @see #iconPosition
 		 */
 		public function get gap():Number
@@ -1250,7 +1248,7 @@ package feathers.controls
 		 * button.defaultSelectedSkin = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultSkin
 		 * @see #selectedUpSkin
 		 * @see #selectedDownSkin
@@ -1285,7 +1283,7 @@ package feathers.controls
 		 * button.upSkin = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultSkin
 		 * @see #selectedUpSkin
 		 */
@@ -1317,7 +1315,7 @@ package feathers.controls
 		 * button.downSkin = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultSkin
 		 * @see #selectedDownSkin
 		 */
@@ -1381,7 +1379,7 @@ package feathers.controls
 		 * button.disabledSkin = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultSkin
 		 * @see #selectedDisabledSkin
 		 */
@@ -1415,7 +1413,7 @@ package feathers.controls
 		 * button.selectedUpSkin = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultSkin
 		 * @see #defaultSelectedSkin
 		 */
@@ -1449,7 +1447,7 @@ package feathers.controls
 		 * button.selectedDownSkin = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultSkin
 		 * @see #defaultSelectedSkin
 		 */
@@ -2244,7 +2242,7 @@ package feathers.controls
 		 * button.defaultSelectedIcon = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultIcon
 		 * @see #selectedUpIcon
 		 * @see #selectedDownIcon
@@ -2279,7 +2277,7 @@ package feathers.controls
 		 * button.upIcon = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultIcon
 		 * @see #selectedUpIcon
 		 */
@@ -2311,7 +2309,7 @@ package feathers.controls
 		 * button.downIcon = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultIcon
 		 * @see #selectedDownIcon
 		 */
@@ -2375,7 +2373,7 @@ package feathers.controls
 		 * button.disabledIcon = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultIcon
 		 * @see #selectedDisabledIcon
 		 */
@@ -2409,7 +2407,7 @@ package feathers.controls
 		 * button.selectedUpIcon = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultIcon
 		 * @see #defaultSelectedIcon
 		 */
@@ -2443,7 +2441,7 @@ package feathers.controls
 		 * button.selectedDownIcon = new Image( texture );</listing>
 		 *
 		 * @default null
-		 *
+		 * 
 		 * @see #defaultIcon
 		 * @see #defaultSelectedIcon
 		 */
@@ -2965,19 +2963,8 @@ package feathers.controls
 			{
 				return;
 			}
-			var scale:Number = currentSkin.scaleX;
-			if (scale != 1)
-			{
-				this.currentSkin.alignPivot();
-				this.currentSkin.x = this.currentSkin.pivotX;
-				this.currentSkin.y = this.currentSkin.pivotY;
-			}
-			else
-			{
-				this.currentSkin.alignPivot(HAlign.LEFT, VAlign.TOP);
-				this.currentSkin.x = 0;
-				this.currentSkin.y = 0;
-			}
+			this.currentSkin.x = 0;
+			this.currentSkin.y = 0;
 			if(this.currentSkin.width != this.actualWidth)
 			{
 				this.currentSkin.width = this.actualWidth;
@@ -3440,11 +3427,11 @@ package feathers.controls
 		 * it´s not added to this "container"
 		 * @param item : Object
 		 * @see #dispose()
-		 */
+		 */		
 		private function disposeNotOnStageDisplayObject(item: DisplayObject): void {
 			if (item && !contains(item)) {
 				item.dispose();
 			}
 		}
-	}
+	} 	
 }
