@@ -166,10 +166,6 @@ package feathers.core
 			} finally {
 				this._isValidating = false;
 			}
-			var temp:Vector.<IValidating> = this._queue;
-			this._queue = this._delayedQueue;
-			this._delayedQueue = temp;
-			this._isValidating = false;
 		}
 
 		/**
