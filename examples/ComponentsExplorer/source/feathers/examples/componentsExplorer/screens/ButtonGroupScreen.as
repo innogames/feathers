@@ -5,7 +5,6 @@ package feathers.examples.componentsExplorer.screens
 	import feathers.controls.Header;
 	import feathers.controls.PanelScreen;
 	import feathers.data.ListCollection;
-	import feathers.events.FeathersEventType;
 	import feathers.layout.AnchorLayout;
 	import feathers.layout.AnchorLayoutData;
 	import feathers.system.DeviceCapabilities;
@@ -20,14 +19,18 @@ package feathers.examples.componentsExplorer.screens
 	{
 		public function ButtonGroupScreen()
 		{
-			this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
+			super();
 		}
 
-		private var _backButton:Button;
 		private var _buttonGroup:ButtonGroup;
 
-		protected function initializeHandler(event:Event):void
+		override protected function initialize():void
 		{
+			//never forget to call super.initialize()
+			super.initialize();
+
+			this.title = "Button Group";
+
 			this.layout = new AnchorLayout();
 
 			this._buttonGroup = new ButtonGroup();
@@ -38,28 +41,39 @@ package feathers.examples.componentsExplorer.screens
 				{ label: "Three", triggered: button_triggeredHandler },
 				{ label: "Four", triggered: button_triggeredHandler },
 			]);
-			const buttonGroupLayoutData:AnchorLayoutData = new AnchorLayoutData();
+			var buttonGroupLayoutData:AnchorLayoutData = new AnchorLayoutData();
 			buttonGroupLayoutData.horizontalCenter = 0;
 			buttonGroupLayoutData.verticalCenter = 0;
 			this._buttonGroup.layoutData = buttonGroupLayoutData;
 			this.addChild(this._buttonGroup);
 
-			this.headerProperties.title = "Button Group";
+			this.headerFactory = this.customHeaderFactory;
 
+			//this screen doesn't use a back button on tablets because the main
+			//app's uses a split layout
 			if(!DeviceCapabilities.isTablet(Starling.current.nativeStage))
 			{
-				this._backButton = new Button();
-				this._backButton.styleNameList.add(Button.ALTERNATE_NAME_BACK_BUTTON);
-				this._backButton.label = "Back";
-				this._backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
-
-				this.headerProperties.leftItems = new <DisplayObject>
-				[
-					this._backButton
-				];
-
 				this.backButtonHandler = this.onBackButton;
 			}
+		}
+
+		private function customHeaderFactory():Header
+		{
+			var header:Header = new Header();
+			//this screen doesn't use a back button on tablets because the main
+			//app's uses a split layout
+			if(!DeviceCapabilities.isTablet(Starling.current.nativeStage))
+			{
+				var backButton:Button = new Button();
+				backButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_BACK_BUTTON);
+				backButton.label = "Back";
+				backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
+				header.leftItems = new <DisplayObject>
+				[
+					backButton
+				];
+			}
+			return header;
 		}
 
 		private function onBackButton():void
@@ -74,7 +88,7 @@ package feathers.examples.componentsExplorer.screens
 
 		private function button_triggeredHandler(event:Event):void
 		{
-			const button:Button = Button(event.currentTarget);
+			var button:Button = Button(event.currentTarget);
 			trace(button.label + " triggered.");
 		}
 	}

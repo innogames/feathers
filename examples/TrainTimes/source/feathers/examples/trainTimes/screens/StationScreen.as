@@ -11,11 +11,8 @@ package feathers.examples.trainTimes.screens
 	import flash.ui.Keyboard;
 
 	import starling.animation.Transitions;
-
 	import starling.animation.Tween;
-
 	import starling.core.Starling;
-
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 
@@ -23,7 +20,7 @@ package feathers.examples.trainTimes.screens
 
 	public class StationScreen extends Screen
 	{
-		public static const CHILD_NAME_STATION_LIST:String = "stationList";
+		public static const CHILD_STYLE_NAME_STATION_LIST:String = "stationList";
 
 		public function StationScreen()
 		{
@@ -44,7 +41,7 @@ package feathers.examples.trainTimes.screens
 		override protected function initialize():void
 		{
 			this._stationList = new List();
-			this._stationList.styleNameList.add(CHILD_NAME_STATION_LIST);
+			this._stationList.styleNameList.add(CHILD_STYLE_NAME_STATION_LIST);
 			this._stationList.dataProvider = new ListCollection(
 			[
 				new StationData("Ten Stone Road"),
@@ -108,7 +105,7 @@ package feathers.examples.trainTimes.screens
 		private function onBackButton():void
 		{
 			this.selectedDepartureStation.isDepartingFromHere = false;
-			const index:int = this._stationList.dataProvider.getItemIndex(this.selectedDepartureStation);
+			var index:int = this._stationList.dataProvider.getItemIndex(this.selectedDepartureStation);
 			this._stationList.dataProvider.updateItemAt(index);
 			this._stationList.selectedItem = this.selectedDepartureStation;
 			this.selectedDepartureStation = null;

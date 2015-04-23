@@ -2,9 +2,9 @@ package feathers.examples.componentsExplorer.screens
 {
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
+	import feathers.controls.Header;
 	import feathers.controls.PanelScreen;
 	import feathers.data.ListCollection;
-	import feathers.events.FeathersEventType;
 	import feathers.layout.AnchorLayout;
 	import feathers.layout.AnchorLayoutData;
 	import feathers.system.DeviceCapabilities;
@@ -17,41 +17,56 @@ package feathers.examples.componentsExplorer.screens
 	{
 		public function AlertScreen()
 		{
-			this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
+			super();
 		}
 
-		private var _backButton:Button;
-		private var _alertButton:Button;
+		private var _showAlertButton:Button;
 
-		protected function initializeHandler(event:Event):void
+		override protected function initialize():void
 		{
+			//never forget to call super.initialize()
+			super.initialize();
+
+			this.title = "Alert";
+
 			this.layout = new AnchorLayout();
 
-			this._alertButton = new Button();
-			this._alertButton.label = "Show Alert";
-			this._alertButton.addEventListener(Event.TRIGGERED, alertButton_triggeredHandler);
-			const buttonGroupLayoutData:AnchorLayoutData = new AnchorLayoutData();
+			this._showAlertButton = new Button();
+			this._showAlertButton.label = "Show Alert";
+			this._showAlertButton.addEventListener(Event.TRIGGERED, showAlertButton_triggeredHandler);
+			var buttonGroupLayoutData:AnchorLayoutData = new AnchorLayoutData();
 			buttonGroupLayoutData.horizontalCenter = 0;
 			buttonGroupLayoutData.verticalCenter = 0;
-			this._alertButton.layoutData = buttonGroupLayoutData;
-			this.addChild(this._alertButton);
+			this._showAlertButton.layoutData = buttonGroupLayoutData;
+			this.addChild(this._showAlertButton);
 
-			this.headerProperties.title = "Alert";
+			this.headerFactory = this.customHeaderFactory;
 
+			//this screen doesn't use a back button on tablets because the main
+			//app's uses a split layout
 			if(!DeviceCapabilities.isTablet(Starling.current.nativeStage))
 			{
-				this._backButton = new Button();
-				this._backButton.styleNameList.add(Button.ALTERNATE_NAME_BACK_BUTTON);
-				this._backButton.label = "Back";
-				this._backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
-
-				this.headerProperties.leftItems = new <DisplayObject>
-				[
-					this._backButton
-				];
-
 				this.backButtonHandler = this.onBackButton;
 			}
+		}
+
+		private function customHeaderFactory():Header
+		{
+			var header:Header = new Header();
+			//this screen doesn't use a back button on tablets because the main
+			//app's uses a split layout
+			if(!DeviceCapabilities.isTablet(Starling.current.nativeStage))
+			{
+				var backButton:Button = new Button();
+				backButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_BACK_BUTTON);
+				backButton.label = "Back";
+				backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
+				header.leftItems = new <DisplayObject>
+				[
+					backButton
+				];
+			}
+			return header;
 		}
 
 		private function onBackButton():void
@@ -64,12 +79,26 @@ package feathers.examples.componentsExplorer.screens
 			this.onBackButton();
 		}
 
-		private function alertButton_triggeredHandler(event:Event):void
+		private function showAlertButton_triggeredHandler(event:Event):void
 		{
-			Alert.show("I just wanted you to know that I have a very important message to share with you.", "Alert", new ListCollection(
+			var alert:Alert = Alert.show("I just wanted you to know that I have a very important message to share with you.", "Alert", new ListCollection(
 			[
-				{ label: "OK" }
+				{ label: "OK" },
+				{ label: "Cancel" }
 			]));
+			alert.addEventListener(Event.CLOSE, alert_closeHandler);
+		}
+
+		private function alert_closeHandler(event:Event, data:Object):void
+		{
+			if(data)
+			{
+				trace("alert closed with button:", data.label);
+			}
+			else
+			{
+				trace("alert closed without button");
+			}
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2012 Josh Tynjala
+ Copyright 2012-2015 Joshua Tynjala
 
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
@@ -24,7 +24,12 @@
  */
 package feathers.themes
 {
-	import starling.display.DisplayObjectContainer;
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
+
+	import starling.events.Event;
+	import starling.textures.Texture;
+	import starling.textures.TextureAtlas;
 
 	/**
 	 * The "Aeon" theme for desktop Feathers apps.
@@ -32,29 +37,61 @@ package feathers.themes
 	 * <p>This version of the theme embeds its assets. To load assets at
 	 * runtime, see <code>AeonDesktopThemeWithAssetManager</code> instead.</p>
 	 *
-	 * @see http://wiki.starling-framework.org/feathers/theme-assets
+	 * @see http://feathersui.com/help/theme-assets.html
 	 */
-	public class AeonDesktopTheme extends AeonDesktopThemeWithAssetManager
+	public class AeonDesktopTheme extends BaseAeonDesktopTheme
 	{
-		[Embed(source="/../assets/images/aeon.png")]
-		public static const aeon:Class;
+		/**
+		 * @private
+		 */
+		[Embed(source="/../assets/images/aeon_desktop.png")]
+		protected static const ATLAS_BITMAP:Class;
 
-		[Embed(source="/../assets/images/aeon.xml",mimeType="application/octet-stream")]
-		public static const aeon_xml:Class;
+		/**
+		 * @private
+		 */
+		[Embed(source="/../assets/images/aeon_desktop.xml",mimeType="application/octet-stream")]
+		protected static const ATLAS_XML:Class;
 
-		public function AeonDesktopTheme(container:DisplayObjectContainer = null)
+		/**
+		 * Constructor.
+		 */
+		public function AeonDesktopTheme()
 		{
-			super(null, null, container);
+			super();
+			this.initialize();
+			this.dispatchEventWith(Event.COMPLETE);
 		}
 
-		override protected function get atlasImageClass():Class
+		/**
+		 * @private
+		 */
+		override protected function initialize():void
 		{
-			return aeon;
+			this.initializeTextureAtlas();
+			super.initialize();
 		}
 
-		override protected function get atlasXMLClass():Class
+		/**
+		 * @private
+		 */
+		protected function initializeTextureAtlas():void
 		{
-			return aeon_xml;
+			var atlasBitmapData:BitmapData = Bitmap(new ATLAS_BITMAP()).bitmapData;
+			var atlasTexture:Texture = Texture.fromBitmapData(atlasBitmapData, false, false, 1);
+			atlasTexture.root.onRestore = this.atlasTexture_onRestore;
+			atlasBitmapData.dispose();
+			this.atlas = new TextureAtlas(atlasTexture, XML(new ATLAS_XML()));
+		}
+
+		/**
+		 * @private
+		 */
+		protected function atlasTexture_onRestore():void
+		{
+			var atlasBitmapData:BitmapData = Bitmap(new ATLAS_BITMAP()).bitmapData;
+			this.atlas.texture.root.uploadBitmapData(atlasBitmapData);
+			atlasBitmapData.dispose();
 		}
 	}
 }

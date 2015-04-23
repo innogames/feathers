@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -14,6 +14,11 @@ package feathers.controls.popups
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	import starling.events.EventDispatcher;
+
+	/**
+	 * @inheritDoc
+	 */
+	[Event(name="open",type="starling.events.Event")]
 
 	/**
 	 * @inheritDoc
@@ -117,7 +122,8 @@ package feathers.controls.popups
 
 			this.content = content;
 			this.callout = Callout.show(content, source, this.direction, this.isModal, this.calloutFactory);
-			this.callout.addEventListener(Event.CLOSE, callout_closeHandler);
+			this.callout.addEventListener(Event.REMOVED_FROM_STAGE, callout_removedFromStageHandler);
+			this.dispatchEventWith(Event.OPEN);
 		}
 
 		/**
@@ -147,14 +153,14 @@ package feathers.controls.popups
 		{
 			this.content = null;
 			this.callout.content = null;
-			this.callout.removeEventListener(Event.CLOSE, callout_closeHandler);
+			this.callout.removeEventListener(Event.REMOVED_FROM_STAGE, callout_removedFromStageHandler);
 			this.callout = null;
 		}
 
 		/**
 		 * @private
 		 */
-		protected function callout_closeHandler(event:Event):void
+		protected function callout_removedFromStageHandler(event:Event):void
 		{
 			this.cleanup();
 			this.dispatchEventWith(Event.CLOSE);

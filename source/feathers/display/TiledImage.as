@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -15,6 +15,7 @@ package feathers.display
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
+	import starling.core.RenderSupport;
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.display.Image;
@@ -216,7 +217,7 @@ package feathers.display
 		 *
 		 * @default starling.textures.TextureSmoothing.BILINEAR
 		 *
-		 * @see starling.textures.TextureSmoothing
+		 * @see http://doc.starling-framework.org/core/starling/textures/TextureSmoothing.html starling.textures.TextureSmoothing
 		 */
 		public function get smoothing():String
 		{
@@ -315,7 +316,8 @@ package feathers.display
 		private var _textureScale:Number = 1;
 
 		/**
-		 * The amount to scale the texture. Useful for DPI changes.
+		 * Scales the texture dimensions during measurement. Useful for UI that
+		 * should scale based on screen density or resolution.
 		 *
 		 * <p>In the following example, the texture scale is changed:</p>
 		 *
@@ -452,10 +454,13 @@ package feathers.display
 		/**
 		 * @private
 		 */
-		override public function flatten():void
+		override public function render(support:RenderSupport, parentAlpha:Number):void
 		{
-			this.validate();
-			super.flatten();
+			if(this._isInvalid)
+			{
+				this.validate();
+			}
+			super.render(support, parentAlpha);
 		}
 
 		/**
@@ -463,15 +468,18 @@ package feathers.display
 		 */
 		public function validate():void
 		{
-			if(!this._validationQueue || !this.stage || !this._isInvalid)
+			if(!this._isInvalid)
 			{
 				return;
 			}
 			if(this._isValidating)
 			{
-				//we were already validating, and something else told us to
-				//validate. that's bad.
-				this._validationQueue.addControl(this, true);
+				if(this._validationQueue)
+				{
+					//we were already validating, and something else told us to
+					//validate. that's bad.
+					this._validationQueue.addControl(this, true);
+				}
 				return;
 			}
 			this._isValidating = true;
@@ -485,11 +493,11 @@ package feathers.display
 				this._batch.batchable = !this._useSeparateBatch;
 				this._batch.reset();
 				this._image.scaleX = this._image.scaleY = this._textureScale;
-				const scaledTextureWidth:Number = this._originalImageWidth * this._textureScale;
-				const scaledTextureHeight:Number = this._originalImageHeight * this._textureScale;
-				const xImageCount:int = Math.ceil(this._width / scaledTextureWidth);
-				const yImageCount:int = Math.ceil(this._height / scaledTextureHeight);
-				const imageCount:int = xImageCount * yImageCount;
+				var scaledTextureWidth:Number = this._originalImageWidth * this._textureScale;
+				var scaledTextureHeight:Number = this._originalImageHeight * this._textureScale;
+				var xImageCount:int = Math.ceil(this._width / scaledTextureWidth);
+				var yImageCount:int = Math.ceil(this._height / scaledTextureHeight);
+				var imageCount:int = xImageCount * yImageCount;
 				var xPosition:Number = 0;
 				var yPosition:Number = 0;
 				var nextXPosition:Number = xPosition + scaledTextureWidth;

@@ -1,12 +1,12 @@
 package feathers.examples.componentsExplorer.screens
 {
 	import feathers.controls.Button;
+	import feathers.controls.Header;
 	import feathers.controls.List;
 	import feathers.controls.PanelScreen;
 	import feathers.controls.PickerList;
 	import feathers.controls.ToggleSwitch;
 	import feathers.data.ListCollection;
-	import feathers.events.FeathersEventType;
 	import feathers.examples.componentsExplorer.data.GroupedListSettings;
 	import feathers.layout.AnchorLayout;
 	import feathers.layout.AnchorLayoutData;
@@ -20,20 +20,37 @@ package feathers.examples.componentsExplorer.screens
 	{
 		public function GroupedListSettingsScreen()
 		{
-			this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
+			super();
 		}
 
 		public var settings:GroupedListSettings;
 
 		private var _list:List;
-		private var _backButton:Button;
 
 		private var _stylePicker:PickerList;
 		private var _isSelectableToggle:ToggleSwitch;
 		private var _hasElasticEdgesToggle:ToggleSwitch;
 
-		protected function initializeHandler(event:Event):void
+		override public function dispose():void
 		{
+			//icon and accessory display objects in the list's data provider
+			//won't be automatically disposed because feathers cannot know if
+			//they need to be used again elsewhere or not. we need to dispose
+			//them manually.
+			this._list.dataProvider.dispose(disposeItemAccessory);
+
+			//never forget to call super.dispose() because you don't want to
+			//create a memory leak!
+			super.dispose();
+		}
+
+		override protected function initialize():void
+		{
+			//never forget to call super.initialize()
+			super.initialize();
+
+			this.title = "Grouped List Settings";
+
 			this.layout = new AnchorLayout();
 
 			this._stylePicker = new PickerList();
@@ -68,18 +85,27 @@ package feathers.examples.componentsExplorer.screens
 			this._list.autoHideBackground = true;
 			this.addChild(this._list);
 
-			this._backButton = new Button();
-			this._backButton.styleNameList.add(Button.ALTERNATE_NAME_BACK_BUTTON);
-			this._backButton.label = "Back";
-			this._backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
-
-			this.headerProperties.title = "Grouped List Settings";
-			this.headerProperties.leftItems = new <DisplayObject>
-			[
-				this._backButton
-			];
+			this.headerFactory = this.customHeaderFactory;
 
 			this.backButtonHandler = this.onBackButton;
+		}
+
+		private function customHeaderFactory():Header
+		{
+			var header:Header = new Header();
+			var doneButton:Button = new Button();
+			doneButton.label = "Done";
+			doneButton.addEventListener(Event.TRIGGERED, doneButton_triggeredHandler);
+			header.rightItems = new <DisplayObject>
+			[
+				doneButton
+			];
+			return header;
+		}
+
+		private function disposeItemAccessory(item:Object):void
+		{
+			DisplayObject(item.accessory).dispose();
 		}
 
 		private function onBackButton():void
@@ -87,7 +113,7 @@ package feathers.examples.componentsExplorer.screens
 			this.dispatchEventWith(Event.COMPLETE);
 		}
 
-		private function backButton_triggeredHandler(event:Event):void
+		private function doneButton_triggeredHandler(event:Event):void
 		{
 			this.onBackButton();
 		}

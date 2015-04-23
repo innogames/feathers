@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -162,6 +162,9 @@ package feathers.core
 
 			this._popUps.push(popUp);
 			this._root.addChild(popUp);
+			//this listener needs to be added after the pop-up is added to the
+			//root because the pop-up may not have been removed from its old
+			//parent yet, which will trigger the listener if it is added first.
 			popUp.addEventListener(Event.REMOVED_FROM_STAGE, popUp_removedFromStageHandler);
 
 			if(this._popUps.length == 1)
@@ -169,9 +172,9 @@ package feathers.core
 				this._root.stage.addEventListener(ResizeEvent.RESIZE, stage_resizeHandler);
 			}
 
-			if(FocusManager.isEnabled && popUp is DisplayObjectContainer)
+			if(isModal && FocusManager.isEnabledForStage(this._root.stage) && popUp is DisplayObjectContainer)
 			{
-				this._popUpToFocusManager[popUp] = new FocusManager(DisplayObjectContainer(popUp));
+				this._popUpToFocusManager[popUp] = FocusManager.pushFocusManager(DisplayObjectContainer(popUp));
 			}
 
 			if(isCentered)
@@ -223,7 +226,7 @@ package feathers.core
 					//we haven't encountered an overlay yet, so it is top-level
 					return true;
 				}
-				var overlay:DisplayObject = this._popUpToOverlay[otherPopUp];
+				var overlay:DisplayObject = this._popUpToOverlay[otherPopUp] as DisplayObject;
 				if(overlay)
 				{
 					//this is the first overlay, and we haven't found the pop-up
@@ -282,7 +285,7 @@ package feathers.core
 				overlay.removeFromParent(true);
 				delete _popUpToOverlay[popUp];
 			}
-			var focusManager:IFocusManager = this._popUpToFocusManager[popUp];
+			var focusManager:IFocusManager = this._popUpToFocusManager[popUp] as IFocusManager;
 			if(focusManager)
 			{
 				delete this._popUpToFocusManager[popUp];

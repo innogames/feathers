@@ -1,16 +1,18 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls
 {
+	import feathers.controls.supportClasses.BaseScreenNavigator;
 	import feathers.core.FeathersControl;
 	import feathers.core.IValidating;
 	import feathers.events.ExclusiveTouch;
 	import feathers.events.FeathersEventType;
+	import feathers.skins.IStyleProvider;
 	import feathers.system.DeviceCapabilities;
 	import feathers.utils.display.getDisplayObjectDepthFromStage;
 	import feathers.utils.math.roundToNearest;
@@ -27,6 +29,7 @@ package feathers.controls
 	import starling.display.DisplayObject;
 	import starling.display.DisplayObjectContainer;
 	import starling.display.Sprite;
+	import starling.display.Stage;
 	import starling.events.Event;
 	import starling.events.EventDispatcher;
 	import starling.events.ResizeEvent;
@@ -54,7 +57,7 @@ package feathers.controls
 	 * </table>
 	 *
 	 * @eventType feathers.events.FeathersEventType.BEGIN_INTERACTION
-	 * @see feathers.events.FeathersEventType.END_INTERACTION
+	 * @see #event:endInteraction feathers.events.FeathersEventType.END_INTERACTION
 	 */
 	[Event(name="beginInteraction",type="starling.events.Event")]
 
@@ -79,12 +82,13 @@ package feathers.controls
 	 * </table>
 	 *
 	 * @eventType feathers.events.FeathersEventType.END_INTERACTION
-	 * @see feathers.events.FeathersEventType.BEGIN_INTERACTION
+	 * @see #event:beginInteraction feathers.events.FeathersEventType.BEGIN_INTERACTION
 	 */
 	[Event(name="endInteraction",type="starling.events.Event")]
 
 	/**
-	 * Dispatched when the a drawer has completed opening.
+	 * Dispatched when a drawer has completed opening. The <code>data</code>
+	 * property of the event indicates which drawer is open.
 	 *
 	 * <p>The properties of the event object have the following values:</p>
 	 * <table class="innertable">
@@ -94,7 +98,7 @@ package feathers.controls
 	 *   event listener that handles the event. For example, if you use
 	 *   <code>myButton.addEventListener()</code> to register an event listener,
 	 *   myButton is the value of the <code>currentTarget</code>.</td></tr>
-	 * <tr><td><code>data</code></td><td>null</td></tr>
+	 * <tr><td><code>data</code></td><td>The drawer that was opened.</td></tr>
 	 * <tr><td><code>target</code></td><td>The Object that dispatched the event;
 	 *   it is not always the Object listening for the event. Use the
 	 *   <code>currentTarget</code> property to always access the Object
@@ -102,12 +106,13 @@ package feathers.controls
 	 * </table>
 	 *
 	 * @eventType starling.events.Event.OPEN
-	 * @see starling.events.Event.CLOSE
+	 * @see #event:close starling.events.Event.CLOSE
 	 */
 	[Event(name="open",type="starling.events.Event")]
 
 	/**
-	 * Dispatched when the a drawer has completed closing.
+	 * Dispatched when a drawer has completed closing. The <code>data</code>
+	 * property of the event indicates which drawer was closed.
 	 *
 	 * <p>The properties of the event object have the following values:</p>
 	 * <table class="innertable">
@@ -117,7 +122,7 @@ package feathers.controls
 	 *   event listener that handles the event. For example, if you use
 	 *   <code>myButton.addEventListener()</code> to register an event listener,
 	 *   myButton is the value of the <code>currentTarget</code>.</td></tr>
-	 * <tr><td><code>data</code></td><td>null</td></tr>
+	 * <tr><td><code>data</code></td><td>The drawer that was closed.</td></tr>
 	 * <tr><td><code>target</code></td><td>The Object that dispatched the event;
 	 *   it is not always the Object listening for the event. Use the
 	 *   <code>currentTarget</code> property to always access the Object
@@ -125,7 +130,7 @@ package feathers.controls
 	 * </table>
 	 *
 	 * @eventType starling.events.Event.CLOSE
-	 * @see starling.events.Event.OPEN
+	 * @see #event:open starling.events.Event.OPEN
 	 */
 	[Event(name="close",type="starling.events.Event")]
 
@@ -144,25 +149,35 @@ package feathers.controls
 	 * left of the main content:</p>
 	 *
 	 * <listing version="3.0">
-	 * var navigator:ScreenNavigator = new ScreenNavigator();
+	 * var navigator:StackScreenNavigator = new StackScreenNavigator();
 	 * var list:List = new List();
 	 * // the navigator's screens, the list's data provider, and additional
 	 * // properties should be set here.
+	 * 
 	 * var drawers:Drawers = new Drawers();
 	 * drawers.content = navigator;
 	 * drawers.leftDrawer = menu;
 	 * drawers.leftDrawerToggleEventType = Event.OPEN;
 	 * this.addChild( drawers );</listing>
 	 *
-	 * <p>In the example above, a screen in the <code>ScreenNavigator</code>
+	 * <p>In the example above, a screen in the <code>StackScreenNavigator</code>
 	 * component dispatches an event of type <code>Event.OPEN</code> when it
 	 * wants to display the slide out the <code>List</code> that is used as
 	 * the left drawer.</p>
 	 *
-	 * @see http://wiki.starling-framework.org/feathers/drawers
+	 * @see ../../../help/drawers.html How to use the Feathers Drawers component
 	 */
 	public class Drawers extends FeathersControl
 	{
+		/**
+		 * The default <code>IStyleProvider</code> for all <code>Drawers</code>
+		 * components.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
+		 */
+		public static var globalStyleProvider:IStyleProvider;
+
 		/**
 		 * The drawer will be docked in portrait orientation, but it must be
 		 * opened and closed explicitly in landscape orientation.
@@ -304,6 +319,7 @@ package feathers.controls
 		 */
 		public function Drawers(content:DisplayObject = null)
 		{
+			super();
 			this.content = content;
 			this.addEventListener(Event.ADDED_TO_STAGE, drawers_addedToStageHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, drawers_removedFromStageHandler);
@@ -322,6 +338,14 @@ package feathers.controls
 		 * @see #contentEventDispatcherFunction
 		 */
 		protected var contentEventDispatcher:EventDispatcher;
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return Drawers.globalStyleProvider;
+		}
 
 		/**
 		 * @private
@@ -373,10 +397,7 @@ package feathers.controls
 				{
 					this._content.removeEventListener(this._contentEventDispatcherChangeEventType, content_eventDispatcherChangeHandler);
 				}
-				if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT)
-				{
-					this._content.removeEventListener(FeathersEventType.RESIZE, content_resizeHandler);
-				}
+				this._content.removeEventListener(FeathersEventType.RESIZE, content_resizeHandler);
 				if(this._content.parent == this)
 				{
 					this.removeChild(this._content, false);
@@ -385,7 +406,7 @@ package feathers.controls
 			this._content = value;
 			if(this._content)
 			{
-				if(this._content is ScreenNavigator)
+				if(this._content is BaseScreenNavigator)
 				{
 					this.contentEventDispatcherField = SCREEN_NAVIGATOR_CONTENT_EVENT_DISPATCHER_FIELD;
 					this.contentEventDispatcherChangeEventType = Event.CHANGE;
@@ -394,7 +415,7 @@ package feathers.controls
 				{
 					this._content.addEventListener(this._contentEventDispatcherChangeEventType, content_eventDispatcherChangeHandler);
 				}
-				if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT)
+				if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT || !this.stage)
 				{
 					this._content.addEventListener(FeathersEventType.RESIZE, content_resizeHandler);
 				}
@@ -653,7 +674,7 @@ package feathers.controls
 		 */
 		public function get isTopDrawerDocked():Boolean
 		{
-			if(!this._topDrawer || !this.stage)
+			if(!this._topDrawer)
 			{
 				return false;
 			}
@@ -665,7 +686,13 @@ package feathers.controls
 			{
 				return false;
 			}
-			if(this.stage.stageWidth > this.stage.stageHeight)
+			var stage:Stage = this.stage;
+			if(!stage)
+			{
+				//fall back to the current stage, but it may be wrong...
+				stage = Starling.current.stage;
+			}
+			if(stage.stageWidth > stage.stageHeight)
 			{
 				return this._topDrawerDockMode == DOCK_MODE_LANDSCAPE;
 			}
@@ -862,7 +889,7 @@ package feathers.controls
 		 */
 		public function get isRightDrawerDocked():Boolean
 		{
-			if(!this._rightDrawer || !this.stage)
+			if(!this._rightDrawer)
 			{
 				return false;
 			}
@@ -874,7 +901,13 @@ package feathers.controls
 			{
 				return false;
 			}
-			if(this.stage.stageWidth > this.stage.stageHeight)
+			var stage:Stage = this.stage;
+			if(!stage)
+			{
+				//fall back to the current stage, but it may be wrong...
+				stage = Starling.current.stage;
+			}
+			if(stage.stageWidth > stage.stageHeight)
 			{
 				return this._rightDrawerDockMode == DOCK_MODE_LANDSCAPE;
 			}
@@ -1071,7 +1104,7 @@ package feathers.controls
 		 */
 		public function get isBottomDrawerDocked():Boolean
 		{
-			if(!this._bottomDrawer || !this.stage)
+			if(!this._bottomDrawer)
 			{
 				return false;
 			}
@@ -1083,7 +1116,13 @@ package feathers.controls
 			{
 				return false;
 			}
-			if(this.stage.stageWidth > this.stage.stageHeight)
+			var stage:Stage = this.stage;
+			if(!stage)
+			{
+				//fall back to the current stage, but it may be wrong...
+				stage = Starling.current.stage;
+			}
+			if(stage.stageWidth > stage.stageHeight)
 			{
 				return this._bottomDrawerDockMode == DOCK_MODE_LANDSCAPE;
 			}
@@ -1280,7 +1319,7 @@ package feathers.controls
 		 */
 		public function get isLeftDrawerDocked():Boolean
 		{
-			if(!this._leftDrawer || !this.stage)
+			if(!this._leftDrawer)
 			{
 				return false;
 			}
@@ -1292,7 +1331,13 @@ package feathers.controls
 			{
 				return false;
 			}
-			if(this.stage.stageWidth > this.stage.stageHeight)
+			var stage:Stage = this.stage;
+			if(!stage)
+			{
+				//fall back to the current stage, but it may be wrong...
+				stage = Starling.current.stage;
+			}
+			if(stage.stageWidth > stage.stageHeight)
 			{
 				return this._leftDrawerDockMode == DOCK_MODE_LANDSCAPE;
 			}
@@ -1527,8 +1572,9 @@ package feathers.controls
 		 * <code>contentEventDispatcherField</code> or
 		 * <code>contentEventDispatcherFunction</code>.
 		 *
-		 * <p>For a <code>ScreenNavigator</code> component, this value is
-		 * automatically set to <code>Event.CHANGE</code>.</p>
+		 * <p>For <code>StackScreenNavigator</code> and
+		 * <code>ScreenNavigator</code> components, this value is automatically
+		 * set to <code>Event.CHANGE</code>.</p>
 		 *
 		 * <p>In the following example, the drawers container will update its
 		 * content event dispatcher when the content dispatches an event of type
@@ -1576,9 +1622,10 @@ package feathers.controls
 		 * A property of the <code>content</code> that references an event
 		 * dispatcher that dispatches events to toggle drawers open and closed.
 		 *
-		 * <p>For a <code>ScreenNavigator</code> component, this value is
-		 * automatically set to <code>"activeScreen"</code> to listen for events
-		 * from the currently active/visible screen.</p>
+		 * <p>For <code>StackScreenNavigator</code> and
+		 * <code>ScreenNavigator</code> components, this value is automatically
+		 * set to <code>"activeScreen"</code> to listen for events from the
+		 * currently active/visible screen.</p>
 		 *
 		 * <p>In the following example, the content event dispatcher field is
 		 * customized:</p>
@@ -1715,7 +1762,7 @@ package feathers.controls
 		 *
 		 * @default starling.animation.Transitions.EASE_OUT
 		 *
-		 * @see starling.animation.Transitions
+		 * @see http://doc.starling-framework.org/core/starling/animation/Transitions.html starling.animation.Transitions
 		 * @see #openOrCloseDuration
 		 */
 		public function get openOrCloseEase():Object
@@ -1899,7 +1946,12 @@ package feathers.controls
 		 */
 		public function toggleTopDrawer(duration:Number = NaN):void
 		{
-			if(!this._topDrawer || this.isToggleTopDrawerPending || this.isTopDrawerDocked)
+			if(!this._topDrawer || this.isTopDrawerDocked)
+			{
+				return;
+			}
+			this.pendingToggleDuration = duration;
+			if(this.isToggleTopDrawerPending)
 			{
 				return;
 			}
@@ -1907,7 +1959,6 @@ package feathers.controls
 			this.isToggleRightDrawerPending = false;
 			this.isToggleBottomDrawerPending = false;
 			this.isToggleLeftDrawerPending = false;
-			this.pendingToggleDuration = duration;
 			this.invalidate(INVALIDATION_FLAG_SELECTED);
 		}
 
@@ -1927,7 +1978,12 @@ package feathers.controls
 		 */
 		public function toggleRightDrawer(duration:Number = NaN):void
 		{
-			if(!this._rightDrawer || this.isToggleRightDrawerPending || this.isRightDrawerDocked)
+			if(!this._rightDrawer || this.isRightDrawerDocked)
+			{
+				return;
+			}
+			this.pendingToggleDuration = duration;
+			if(this.isToggleRightDrawerPending)
 			{
 				return;
 			}
@@ -1935,7 +1991,6 @@ package feathers.controls
 			this.isToggleRightDrawerPending = true;
 			this.isToggleBottomDrawerPending = false;
 			this.isToggleLeftDrawerPending = false;
-			this.pendingToggleDuration = duration;
 			this.invalidate(INVALIDATION_FLAG_SELECTED);
 		}
 
@@ -1955,7 +2010,12 @@ package feathers.controls
 		 */
 		public function toggleBottomDrawer(duration:Number = NaN):void
 		{
-			if(!this._bottomDrawer || this.isToggleBottomDrawerPending || this.isBottomDrawerDocked)
+			if(!this._bottomDrawer || this.isBottomDrawerDocked)
+			{
+				return;
+			}
+			this.pendingToggleDuration = duration;
+			if(this.isToggleBottomDrawerPending)
 			{
 				return;
 			}
@@ -1963,7 +2023,6 @@ package feathers.controls
 			this.isToggleRightDrawerPending = false;
 			this.isToggleBottomDrawerPending = true;
 			this.isToggleLeftDrawerPending = false;
-			this.pendingToggleDuration = duration;
 			this.invalidate(INVALIDATION_FLAG_SELECTED);
 		}
 
@@ -1983,7 +2042,12 @@ package feathers.controls
 		 */
 		public function toggleLeftDrawer(duration:Number = NaN):void
 		{
-			if(!this._leftDrawer || this.isToggleLeftDrawerPending || this.isLeftDrawerDocked)
+			if(!this._leftDrawer || this.isLeftDrawerDocked)
+			{
+				return;
+			}
+			this.pendingToggleDuration = duration;
+			if(this.isToggleLeftDrawerPending)
 			{
 				return;
 			}
@@ -1991,7 +2055,6 @@ package feathers.controls
 			this.isToggleRightDrawerPending = false;
 			this.isToggleBottomDrawerPending = false;
 			this.isToggleLeftDrawerPending = true;
-			this.pendingToggleDuration = duration;
 			this.invalidate(INVALIDATION_FLAG_SELECTED);
 		}
 
@@ -2039,14 +2102,14 @@ package feathers.controls
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			const needsWidth:Boolean = isNaN(this.explicitWidth);
-			const needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth !== this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight !== this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
 			}
 
-			if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT &&
+			if((this._autoSizeMode == AUTO_SIZE_MODE_CONTENT || !this.stage) &&
 				this._content is IValidating)
 			{
 				IValidating(this._content).validate();
@@ -2075,7 +2138,7 @@ package feathers.controls
 			var newWidth:Number = this.explicitWidth;
 			if(needsWidth)
 			{
-				if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT)
+				if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT || !this.stage)
 				{
 					newWidth = this._content ? this._content.width : 0;
 					if(isLeftDrawerDocked)
@@ -2096,7 +2159,7 @@ package feathers.controls
 			var newHeight:Number = this.explicitHeight;
 			if(needsHeight)
 			{
-				if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT)
+				if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT || !this.stage)
 				{
 					newHeight = this._content ? this._content.height : 0;
 					if(isTopDrawerDocked)
@@ -2405,7 +2468,13 @@ package feathers.controls
 			}
 			this._topDrawer.visible = true;
 			var targetPosition:Number = this._isTopDrawerOpen ? this._topDrawer.height : 0;
-			this._openOrCloseTween = new Tween(this._content, this._openOrCloseDuration, this._openOrCloseEase);
+			var duration:Number = this.pendingToggleDuration;
+			if(duration !== duration) //isNaN
+			{
+				duration = this._openOrCloseDuration;
+			}
+			this.pendingToggleDuration = NaN;
+			this._openOrCloseTween = new Tween(this._content, duration, this._openOrCloseEase);
 			this._openOrCloseTween.animate("y", targetPosition);
 			this._openOrCloseTween.onUpdate = topDrawerOpenOrCloseTween_onUpdate;
 			this._openOrCloseTween.onComplete = topDrawerOpenOrCloseTween_onComplete;
@@ -2450,7 +2519,13 @@ package feathers.controls
 			{
 				targetPosition += this._leftDrawer.width;
 			}
-			this._openOrCloseTween = new Tween(this._content, this._openOrCloseDuration, this._openOrCloseEase);
+			var duration:Number = this.pendingToggleDuration;
+			if(duration !== duration) //isNaN
+			{
+				duration = this._openOrCloseDuration;
+			}
+			this.pendingToggleDuration = NaN;
+			this._openOrCloseTween = new Tween(this._content, duration, this._openOrCloseEase);
 			this._openOrCloseTween.animate("x", targetPosition);
 			this._openOrCloseTween.onUpdate = rightDrawerOpenOrCloseTween_onUpdate;
 			this._openOrCloseTween.onComplete = rightDrawerOpenOrCloseTween_onComplete;
@@ -2495,7 +2570,13 @@ package feathers.controls
 			{
 				targetPosition += this._topDrawer.height;
 			}
-			this._openOrCloseTween = new Tween(this._content, this._openOrCloseDuration, this._openOrCloseEase);
+			var duration:Number = this.pendingToggleDuration;
+			if(duration !== duration) //isNaN
+			{
+				duration = this._openOrCloseDuration;
+			}
+			this.pendingToggleDuration = NaN;
+			this._openOrCloseTween = new Tween(this._content, duration, this._openOrCloseEase);
 			this._openOrCloseTween.animate("y", targetPosition);
 			this._openOrCloseTween.onUpdate = bottomDrawerOpenOrCloseTween_onUpdate;
 			this._openOrCloseTween.onComplete = bottomDrawerOpenOrCloseTween_onComplete;
@@ -2532,7 +2613,12 @@ package feathers.controls
 			}
 			this._leftDrawer.visible = true;
 			var targetPosition:Number = this._isLeftDrawerOpen ? this._leftDrawer.width : 0;
-			var duration:Number = !isNaN(this.pendingToggleDuration) ? this.pendingToggleDuration : this._openOrCloseDuration;
+			var duration:Number = this.pendingToggleDuration;
+			if(duration !== duration) //isNaN
+			{
+				duration = this._openOrCloseDuration;
+			}
+			this.pendingToggleDuration = NaN;
 			this._openOrCloseTween = new Tween(this._content, duration, this._openOrCloseEase);
 			this._openOrCloseTween.animate("x", targetPosition);
 			this._openOrCloseTween.onUpdate = leftDrawerOpenOrCloseTween_onUpdate;
@@ -2852,8 +2938,8 @@ package feathers.controls
 			touch.getLocation(this, HELPER_POINT);
 			this._currentTouchX = HELPER_POINT.x;
 			this._currentTouchY = HELPER_POINT.y;
-			const now:int = getTimer();
-			const timeOffset:int = now - this._previousTouchTime;
+			var now:int = getTimer();
+			var timeOffset:int = now - this._previousTouchTime;
 			if(timeOffset > 0)
 			{
 				//we're keeping previous velocity updates to improve accuracy
@@ -3406,11 +3492,11 @@ package feathers.controls
 			}
 			if(isTopDrawerOpen)
 			{
-				this.dispatchEventWith(Event.OPEN);
+				this.dispatchEventWith(Event.OPEN, false, this._topDrawer);
 			}
 			else
 			{
-				this.dispatchEventWith(Event.CLOSE);
+				this.dispatchEventWith(Event.CLOSE, false, this._topDrawer);
 			}
 		}
 
@@ -3433,11 +3519,11 @@ package feathers.controls
 			}
 			if(isRightDrawerOpen)
 			{
-				this.dispatchEventWith(Event.OPEN);
+				this.dispatchEventWith(Event.OPEN, false, this._rightDrawer);
 			}
 			else
 			{
-				this.dispatchEventWith(Event.CLOSE);
+				this.dispatchEventWith(Event.CLOSE, false, this._rightDrawer);
 			}
 		}
 
@@ -3460,11 +3546,11 @@ package feathers.controls
 			}
 			if(isBottomDrawerOpen)
 			{
-				this.dispatchEventWith(Event.OPEN);
+				this.dispatchEventWith(Event.OPEN, false, this._bottomDrawer);
 			}
 			else
 			{
-				this.dispatchEventWith(Event.CLOSE);
+				this.dispatchEventWith(Event.CLOSE, false, this._bottomDrawer);
 			}
 		}
 
@@ -3487,11 +3573,11 @@ package feathers.controls
 			}
 			if(isLeftDrawerOpen)
 			{
-				this.dispatchEventWith(Event.OPEN);
+				this.dispatchEventWith(Event.OPEN, false, this._leftDrawer);
 			}
 			else
 			{
-				this.dispatchEventWith(Event.CLOSE);
+				this.dispatchEventWith(Event.CLOSE, false, this._leftDrawer);
 			}
 		}
 

@@ -3,20 +3,16 @@ package feathers.examples.componentsExplorer.screens
 	import feathers.controls.Button;
 	import feathers.controls.Check;
 	import feathers.controls.Header;
-	import feathers.controls.Panel;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.PanelScreen;
 	import feathers.controls.Radio;
-	import feathers.controls.Screen;
-	import feathers.controls.ScrollContainer;
 	import feathers.controls.ToggleSwitch;
 	import feathers.core.ToggleGroup;
-	import feathers.events.FeathersEventType;
-	import feathers.layout.HorizontalLayout;
-	import feathers.layout.VerticalLayout;
+	import feathers.layout.ILayout;
+	import feathers.skins.IStyleProvider;
 	import feathers.system.DeviceCapabilities;
 
 	import starling.core.Starling;
-
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 
@@ -24,15 +20,16 @@ package feathers.examples.componentsExplorer.screens
 
 	public class ToggleScreen extends PanelScreen
 	{
+		public static var globalStyleProvider:IStyleProvider;
+
 		public function ToggleScreen()
 		{
 			super();
-			this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
 		}
 
-		private var _toggleSwitchContainer:ScrollContainer;
-		private var _checkContainer:ScrollContainer;
-		private var _radioContainer:ScrollContainer;
+		private var _toggleSwitchContainer:LayoutGroup;
+		private var _checkContainer:LayoutGroup;
+		private var _radioContainer:LayoutGroup;
 		private var _toggleSwitch:ToggleSwitch;
 		private var _check1:Check;
 		private var _check2:Check;
@@ -41,25 +38,37 @@ package feathers.examples.componentsExplorer.screens
 		private var _radio2:Radio;
 		private var _radio3:Radio;
 		private var _radioGroup:ToggleGroup;
-		private var _backButton:Button;
-		
-		protected function initializeHandler(event:Event):void
+
+		override protected function get defaultStyleProvider():IStyleProvider
 		{
-			const layout:VerticalLayout = new VerticalLayout();
-			layout.horizontalAlign = VerticalLayout.HORIZONTAL_ALIGN_CENTER;
-			layout.verticalAlign = VerticalLayout.VERTICAL_ALIGN_MIDDLE;
-			layout.gap = 44 * this.dpiScale;
-			this.layout = layout;
+			return ToggleScreen.globalStyleProvider;
+		}
 
-			const containerLayout:HorizontalLayout = new HorizontalLayout();
-			containerLayout.horizontalAlign = HorizontalLayout.HORIZONTAL_ALIGN_CENTER;
-			containerLayout.verticalAlign = HorizontalLayout.VERTICAL_ALIGN_MIDDLE;
-			containerLayout.gap = 20 * this.dpiScale;
+		protected var _innerLayout:ILayout;
 
-			this._toggleSwitchContainer = new ScrollContainer();
-			this._toggleSwitchContainer.layout = containerLayout;
-			this._toggleSwitchContainer.horizontalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
-			this._toggleSwitchContainer.verticalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
+		public function get innerLayout():ILayout
+		{
+			return this._innerLayout;
+		}
+
+		public function set innerLayout(value:ILayout):void
+		{
+			if(this._innerLayout == value)
+			{
+				return;
+			}
+			this._innerLayout = value;
+			this.invalidate(INVALIDATION_FLAG_LAYOUT);
+		}
+
+		override protected function initialize():void
+		{
+			//never forget to call super.initialize()
+			super.initialize();
+
+			this.title = "Toggles";
+
+			this._toggleSwitchContainer = new LayoutGroup();
 			this.addChild(this._toggleSwitchContainer);
 
 			this._toggleSwitch = new ToggleSwitch();
@@ -67,10 +76,7 @@ package feathers.examples.componentsExplorer.screens
 			this._toggleSwitch.addEventListener(Event.CHANGE, toggleSwitch_changeHandler);
 			this._toggleSwitchContainer.addChild(this._toggleSwitch);
 
-			this._checkContainer = new ScrollContainer();
-			this._checkContainer.layout = containerLayout;
-			this._checkContainer.horizontalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
-			this._checkContainer.verticalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
+			this._checkContainer = new LayoutGroup();
 			this.addChild(this._checkContainer);
 
 			this._check1 = new Check();
@@ -91,10 +97,7 @@ package feathers.examples.componentsExplorer.screens
 			this._radioGroup = new ToggleGroup();
 			this._radioGroup.addEventListener(Event.CHANGE, radioGroup_changeHandler);
 
-			this._radioContainer = new ScrollContainer();
-			this._radioContainer.layout = containerLayout;
-			this._radioContainer.horizontalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
-			this._radioContainer.verticalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
+			this._radioContainer = new LayoutGroup();
 			this.addChild(this._radioContainer);
 
 			this._radio1 = new Radio();
@@ -112,22 +115,47 @@ package feathers.examples.componentsExplorer.screens
 			this._radioGroup.addItem(this._radio3);
 			this._radioContainer.addChild(this._radio3);
 
-			this.headerProperties.title = "Toggles";
+			this.headerFactory = this.customHeaderFactory;
 
+			//this screen doesn't use a back button on tablets because the main
+			//app's uses a split layout
 			if(!DeviceCapabilities.isTablet(Starling.current.nativeStage))
 			{
-				this._backButton = new Button();
-				this._backButton.styleNameList.add(Button.ALTERNATE_NAME_BACK_BUTTON);
-				this._backButton.label = "Back";
-				this._backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
-
-				this.headerProperties.leftItems = new <DisplayObject>
-				[
-					this._backButton
-				];
-
 				this.backButtonHandler = this.onBackButton;
 			}
+		}
+
+		private function customHeaderFactory():Header
+		{
+			var header:Header = new Header();
+			//this screen doesn't use a back button on tablets because the main
+			//app's uses a split layout
+			if(!DeviceCapabilities.isTablet(Starling.current.nativeStage))
+			{
+				var backButton:Button = new Button();
+				backButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_BACK_BUTTON);
+				backButton.label = "Back";
+				backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
+				header.leftItems = new <DisplayObject>
+				[
+					backButton
+				];
+			}
+			return header;
+		}
+
+		override protected function draw():void
+		{
+			var layoutInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_LAYOUT);
+
+			if(layoutInvalid)
+			{
+				this._toggleSwitchContainer.layout = this._innerLayout;
+				this._checkContainer.layout = this._innerLayout;
+				this._radioContainer.layout = this._innerLayout;
+			}
+
+			super.draw();
 		}
 
 		private function onBackButton():void

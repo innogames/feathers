@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2012 Josh Tynjala
+ Copyright 2012-2015 Joshua Tynjala
 
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
@@ -24,7 +24,13 @@
  */
 package feathers.themes
 {
-	import starling.display.DisplayObjectContainer;
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
+
+	import starling.text.BitmapFont;
+	import starling.text.TextField;
+	import starling.textures.Texture;
+	import starling.textures.TextureAtlas;
 
 	/**
 	 * The "Minimal" theme for mobile Feathers apps.
@@ -32,37 +38,76 @@ package feathers.themes
 	 * <p>This version of the theme embeds its assets. To load assets at
 	 * runtime, see <code>MinimalMobileThemeWithAssetManager</code> instead.</p>
 	 *
-	 * @see http://wiki.starling-framework.org/feathers/theme-assets
+	 * @see http://feathersui.com/help/theme-assets.html
 	 */
-	public class MinimalMobileTheme extends MinimalMobileThemeWithAssetManager
+	public class MinimalMobileTheme extends BaseMinimalMobileTheme
 	{
-		[Embed(source="/../assets/images/minimal.xml",mimeType="application/octet-stream")]
-		public static const minimal_xml:Class;
+		/**
+		 * @private
+		 */
+		[Embed(source="/../assets/images/minimal_mobile.xml",mimeType="application/octet-stream")]
+		protected static const ATLAS_XML:Class;
 
-		[Embed(source="/../assets/images/minimal.png")]
-		public static const minimal:Class;
+		/**
+		 * @private
+		 */
+		[Embed(source="/../assets/images/minimal_mobile.png")]
+		protected static const ATLAS_BITMAP:Class;
 
+		/**
+		 * @private
+		 */
 		[Embed(source="/../assets/fonts/pf_ronda_seven.fnt",mimeType="application/octet-stream")]
-		public static const font_xml:Class;
+		protected static const FONT_XML:Class;
 
-		public function MinimalMobileTheme(container:DisplayObjectContainer = null, scaleToDPI:Boolean = true)
+		/**
+		 * Constructor.
+		 */
+		public function MinimalMobileTheme(scaleToDPI:Boolean = true)
 		{
-			super(null, null, container, scaleToDPI);
+			super(scaleToDPI);
+			this.initialize();
 		}
 
-		override protected function get atlasImageClass():Class
+		/**
+		 * @private
+		 */
+		override protected function initialize():void
 		{
-			return minimal;
+			this.initializeTextureAtlas();
+			this.initializeBitmapFont();
+			super.initialize();
 		}
 
-		override protected function get atlasXMLClass():Class
+		/**
+		 * @private
+		 */
+		protected function initializeTextureAtlas():void
 		{
-			return minimal_xml;
+			var atlasBitmapData:BitmapData = Bitmap(new ATLAS_BITMAP()).bitmapData;
+			var atlasTexture:Texture = Texture.fromBitmapData(atlasBitmapData, false);
+			atlasTexture.root.onRestore = this.atlasTexture_onRestore;
+			atlasBitmapData.dispose();
+			this.atlas = new TextureAtlas(atlasTexture, XML(new ATLAS_XML()));
 		}
 
-		override protected function get fontXMLClass():Class
+		/**
+		 * @private
+		 */
+		protected function initializeBitmapFont():void
 		{
-			return font_xml;
+			var bitmapFont:BitmapFont = new BitmapFont(this.atlas.getTexture(FONT_TEXTURE_NAME), XML(new FONT_XML()));
+			TextField.registerBitmapFont(bitmapFont, FONT_NAME);
+		}
+
+		/**
+		 * @private
+		 */
+		protected function atlasTexture_onRestore():void
+		{
+			var atlasBitmapData:BitmapData = Bitmap(new ATLAS_BITMAP()).bitmapData;
+			this.atlas.texture.root.uploadBitmapData(atlasBitmapData);
+			atlasBitmapData.dispose();
 		}
 	}
 }

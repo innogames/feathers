@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -20,30 +20,34 @@ package feathers.core
 	 * initializer functions to set properties, call methods, or otherwise
 	 * modify them. Useful for initializing skins and styles on UI controls.
 	 *
+	 * <p><strong>Note:</strong> This class is no longer recommended as a base
+	 * class for themes. See <a href="../../../help/custom-themes.html">Custom
+	 * Feathers themes</a> for complete details.</p>
+	 *
 	 * <p>In the example below, the <code>buttonInitializer()</code> function
 	 * will be called when a <code>Button</code> is added to the display list,
-	 * and no values are specified in its <code>nameList</code> that match other
-	 * initializers:</p>
+	 * and no values are specified in its <code>styleNameList</code> that match
+	 * other initializers:</p>
 	 *
 	 * <listing version="3.0">
 	 * setInitializerForClass(Button, buttonInitializer);</listing>
 	 *
-	 * <p>You can specify a value in the button's <code>nameList</code> to call
-	 * a different initializer for a button. You might do this to apply
+	 * <p>You can specify a value in the button's <code>styleNameList</code> to
+	 * call a different initializer for a button. You might do this to apply
 	 * different skins for some buttons:</p>
 	 *
 	 * <listing version="3.0">
 	 * var button:Button = new Button();
 	 * button.label = "Click Me";
-	 * button.styleNameList.add( Button.ALTERNATE_NAME_CALL_TO_ACTION );
+	 * button.styleNameList.add( Button.ALTERNATE_STYLE_NAME_CALL_TO_ACTION );
 	 * this.addChild( button );</listing>
 	 *
 	 * <p>The <code>callToActionButtonInitializer()</code> function will be called
-	 * when a <code>Button</code> with the <code>Button.ALTERNATE_NAME_CALL_TO_ACTION</code>
-	 * value is added to its <code>nameList</code>:</p>
+	 * when a <code>Button</code> with the <code>Button.ALTERNATE_STYLE_NAME_CALL_TO_ACTION</code>
+	 * value is added to its <code>styleNameList</code>:</p>
 	 *
 	 * <listing version="3.0">
-	 * setInitializerForClass( Button, callToActionButtonInitializer, Button.ALTERNATE_NAME_CALL_TO_ACTION );</listing>
+	 * setInitializerForClass( Button, callToActionButtonInitializer, Button.ALTERNATE_STYLE_NAME_CALL_TO_ACTION );</listing>
 	 *
 	 * <p>Initializers are not called for subclasses. If a <code>Check</code> is
 	 * added to the display list (<code>Check</code> extends
@@ -259,7 +263,7 @@ package feathers.core
 				return false;
 			}
 
-			const objectCount:int = this._excludedObjects.length;
+			var objectCount:int = this._excludedObjects.length;
 			for(var i:int = 0; i < objectCount; i++)
 			{
 				var object:DisplayObject = this._excludedObjects[i];
@@ -302,7 +306,7 @@ package feathers.core
 		 */
 		public function setInitializerForClassAndSubclasses(type:Class, initializer:Function):void
 		{
-			const index:int = this._initializerSuperTypes.indexOf(type);
+			var index:int = this._initializerSuperTypes.indexOf(type);
 			if(index < 0)
 			{
 				this._initializerSuperTypes.push(type);
@@ -319,7 +323,7 @@ package feathers.core
 			{
 				return this._initializerNoNameTypeMap[type] as Function;
 			}
-			const nameTable:Object = this._initializerNameTypeMap[type];
+			var nameTable:Object = this._initializerNameTypeMap[type];
 			if(!nameTable)
 			{
 				return null;
@@ -347,7 +351,7 @@ package feathers.core
 				return;
 			}
 
-			const nameTable:Object = this._initializerNameTypeMap[type];
+			var nameTable:Object = this._initializerNameTypeMap[type];
 			if(!nameTable)
 			{
 				return;
@@ -363,7 +367,7 @@ package feathers.core
 		public function clearInitializerForClassAndSubclasses(type:Class):void
 		{
 			delete this._initializerSuperTypeMap[type];
-			const index:int = this._initializerSuperTypes.indexOf(type);
+			var index:int = this._initializerSuperTypes.indexOf(type);
 			if(index >= 0)
 			{
 				this._initializerSuperTypes.splice(index, 1);
@@ -420,7 +424,7 @@ package feathers.core
 		 */
 		protected function processAllInitializers(target:DisplayObject):void
 		{
-			const superTypeCount:int = this._initializerSuperTypes.length;
+			var superTypeCount:int = this._initializerSuperTypes.length;
 			for(var i:int = 0; i < superTypeCount; i++)
 			{
 				var type:Class = this._initializerSuperTypes[i];
@@ -446,11 +450,11 @@ package feathers.core
 				if(nameTable)
 				{
 					var uiControl:IFeathersControl = IFeathersControl(target);
-					var nameList:TokenList = uiControl.nameList;
-					var nameCount:int = nameList.length;
+					var styleNameList:TokenList = uiControl.styleNameList;
+					var nameCount:int = styleNameList.length;
 					for(var i:int = 0; i < nameCount; i++)
 					{
-						var name:String = nameList.item(i);
+						var name:String = styleNameList.item(i);
 						initializer = nameTable[name] as Function;
 						if(initializer != null)
 						{

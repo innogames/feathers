@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2012 Josh Tynjala
+ Copyright 2012-2015 Joshua Tynjala
 
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
@@ -24,7 +24,12 @@
  */
 package feathers.themes
 {
-	import starling.display.DisplayObjectContainer;
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
+
+	import starling.events.Event;
+	import starling.textures.Texture;
+	import starling.textures.TextureAtlas;
 
 	/**
 	 * The "Metal Works" theme for mobile Feathers apps.
@@ -32,29 +37,61 @@ package feathers.themes
 	 * <p>This version of the theme embeds its assets. To load assets at
 	 * runtime, see <code>MetalWorksMobileThemeWithAssetManager</code> instead.</p>
 	 *
-	 * @see http://wiki.starling-framework.org/feathers/theme-assets
+	 * @see http://feathersui.com/help/theme-assets.html
 	 */
-	public class MetalWorksMobileTheme extends MetalWorksMobileThemeWithAssetManager
+	public class MetalWorksMobileTheme extends BaseMetalWorksMobileTheme
 	{
-		[Embed(source="/../assets/images/metalworks.xml",mimeType="application/octet-stream")]
-		public static const metalworks_xml:Class;
+		/**
+		 * @private
+		 */
+		[Embed(source="/../assets/images/metalworks_mobile.xml",mimeType="application/octet-stream")]
+		protected static const ATLAS_XML:Class;
 
-		[Embed(source="/../assets/images/metalworks.png")]
-		public static const metalworks:Class;
+		/**
+		 * @private
+		 */
+		[Embed(source="/../assets/images/metalworks_mobile.png")]
+		protected static const ATLAS_BITMAP:Class;
 
-		public function MetalWorksMobileTheme(container:DisplayObjectContainer = null, scaleToDPI:Boolean = true)
+		/**
+		 * Constructor.
+		 */
+		public function MetalWorksMobileTheme(scaleToDPI:Boolean = true)
 		{
-			super(null, null, container, scaleToDPI);
+			super(scaleToDPI);
+			this.initialize();
+			this.dispatchEventWith(Event.COMPLETE);
 		}
 
-		override protected function get atlasImageClass():Class
+		/**
+		 * @private
+		 */
+		override protected function initialize():void
 		{
-			return metalworks;
+			this.initializeTextureAtlas();
+			super.initialize();
 		}
 
-		override protected function get atlasXMLClass():Class
+		/**
+		 * @private
+		 */
+		protected function initializeTextureAtlas():void
 		{
-			return metalworks_xml;
+			var atlasBitmapData:BitmapData = Bitmap(new ATLAS_BITMAP()).bitmapData;
+			var atlasTexture:Texture = Texture.fromBitmapData(atlasBitmapData, false);
+			atlasTexture.root.onRestore = this.atlasTexture_onRestore;
+			atlasBitmapData.dispose();
+			this.atlas = new TextureAtlas(atlasTexture, XML(new ATLAS_XML()));
+		}
+
+		/**
+		 * @private
+		 */
+		protected function atlasTexture_onRestore():void
+		{
+			var atlasBitmapData:BitmapData = Bitmap(new ATLAS_BITMAP()).bitmapData;
+			this.atlas.texture.root.uploadBitmapData(atlasBitmapData);
+			atlasBitmapData.dispose();
 		}
 	}
 }

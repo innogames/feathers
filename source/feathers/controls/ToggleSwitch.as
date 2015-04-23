@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -12,6 +12,7 @@ package feathers.controls
 	import feathers.core.ITextRenderer;
 	import feathers.core.IToggle;
 	import feathers.core.PropertyProxy;
+	import feathers.skins.IStyleProvider;
 	import feathers.system.DeviceCapabilities;
 
 	import flash.geom.Point;
@@ -27,6 +28,7 @@ package feathers.controls
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
+	import starling.utils.SystemUtil;
 
 	/**
 	 * @copy feathers.core.IToggle#event:change
@@ -46,8 +48,8 @@ package feathers.controls
 	 * toggle.addEventListener( Event.CHANGE, toggle_changeHandler );
 	 * this.addChild( toggle );</listing>
 	 *
-	 * @see http://wiki.starling-framework.org/feathers/toggle-switch
-	 * @see Check
+	 * @see ../../../help/toggle-switch.html How to use the Feathers ToggleSwitch component
+	 * @see feathers.controls.Check
 	 */
 	public class ToggleSwitch extends FeathersControl implements IToggle, IFocusDisplayObject
 	{
@@ -124,39 +126,108 @@ package feathers.controls
 		public static const TRACK_LAYOUT_MODE_ON_OFF:String = "onOff";
 
 		/**
-		 * The default value added to the <code>nameList</code> of the off label.
+		 * The default value added to the <code>styleNameList</code> of the off label.
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		public static const DEFAULT_CHILD_NAME_OFF_LABEL:String = "feathers-toggle-switch-off-label";
+		public static const DEFAULT_CHILD_STYLE_NAME_OFF_LABEL:String = "feathers-toggle-switch-off-label";
 
 		/**
-		 * The default value added to the <code>nameList</code> of the on label.
+		 * DEPRECATED: Replaced by <code>ToggleSwitch.DEFAULT_CHILD_STYLE_NAME_OFF_LABEL</code>.
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see ToggleSwitch#DEFAULT_CHILD_STYLE_NAME_OFF_LABEL
 		 */
-		public static const DEFAULT_CHILD_NAME_ON_LABEL:String = "feathers-toggle-switch-on-label";
+		public static const DEFAULT_CHILD_NAME_OFF_LABEL:String = DEFAULT_CHILD_STYLE_NAME_OFF_LABEL;
 
 		/**
-		 * The default value added to the <code>nameList</code> of the off track.
+		 * The default value added to the <code>styleNameList</code> of the on label.
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		public static const DEFAULT_CHILD_NAME_OFF_TRACK:String = "feathers-toggle-switch-off-track";
+		public static const DEFAULT_CHILD_STYLE_NAME_ON_LABEL:String = "feathers-toggle-switch-on-label";
 
 		/**
-		 * The default value added to the <code>nameList</code> of the on track.
+		 * DEPRECATED: Replaced by <code>ToggleSwitch.DEFAULT_CHILD_STYLE_NAME_ON_LABEL</code>.
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see ToggleSwitch#DEFAULT_CHILD_STYLE_NAME_ON_LABEL
 		 */
-		public static const DEFAULT_CHILD_NAME_ON_TRACK:String = "feathers-toggle-switch-on-track";
+		public static const DEFAULT_CHILD_NAME_ON_LABEL:String = DEFAULT_CHILD_STYLE_NAME_ON_LABEL;
 
 		/**
-		 * The default value added to the <code>nameList</code> of the thumb.
+		 * The default value added to the <code>styleNameList</code> of the off track.
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		public static const DEFAULT_CHILD_NAME_THUMB:String = "feathers-toggle-switch-thumb";
+		public static const DEFAULT_CHILD_STYLE_NAME_OFF_TRACK:String = "feathers-toggle-switch-off-track";
+
+		/**
+		 * DEPRECATED: Replaced by <code>ToggleSwitch.DEFAULT_CHILD_STYLE_NAME_OFF_TRACK</code>.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see ToggleSwitch#DEFAULT_CHILD_STYLE_NAME_OFF_TRACK
+		 */
+		public static const DEFAULT_CHILD_NAME_OFF_TRACK:String = DEFAULT_CHILD_STYLE_NAME_OFF_TRACK;
+
+		/**
+		 * The default value added to the <code>styleNameList</code> of the on track.
+		 *
+		 * @see feathers.core.FeathersControl#styleNameList
+		 */
+		public static const DEFAULT_CHILD_STYLE_NAME_ON_TRACK:String = "feathers-toggle-switch-on-track";
+
+		/**
+		 * DEPRECATED: Replaced by <code>ToggleSwitch.DEFAULT_CHILD_STYLE_NAME_ON_TRACK</code>.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see ToggleSwitch#DEFAULT_CHILD_STYLE_NAME_ON_TRACK
+		 */
+		public static const DEFAULT_CHILD_NAME_ON_TRACK:String = DEFAULT_CHILD_STYLE_NAME_ON_TRACK;
+
+		/**
+		 * The default value added to the <code>styleNameList</code> of the thumb.
+		 *
+		 * @see feathers.core.FeathersControl#styleNameList
+		 */
+		public static const DEFAULT_CHILD_STYLE_NAME_THUMB:String = "feathers-toggle-switch-thumb";
+
+		/**
+		 * DEPRECATED: Replaced by <code>ToggleSwitch.DEFAULT_CHILD_STYLE_NAME_THUMB</code>.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see ToggleSwitch#DEFAULT_CHILD_STYLE_NAME_THUMB
+		 */
+		public static const DEFAULT_CHILD_NAME_THUMB:String = DEFAULT_CHILD_STYLE_NAME_THUMB;
+
+		/**
+		 * The default <code>IStyleProvider</code> for all <code>ToggleSwitch</code>
+		 * components.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
+		 */
+		public static var globalStyleProvider:IStyleProvider;
 
 		/**
 		 * @private
@@ -193,66 +264,185 @@ package feathers.controls
 		}
 
 		/**
-		 * The value added to the <code>nameList</code> of the off label. This
-		 * variable is <code>protected</code> so that sub-classes can customize
-		 * the on label name in their constructors instead of using the default
-		 * name defined by <code>DEFAULT_CHILD_NAME_ON_LABEL</code>.
+		 * The value added to the <code>styleNameList</code> of the off label
+		 * text renderer. This variable is <code>protected</code> so that
+		 * sub-classes can customize the on label text renderer style name in
+		 * their constructors instead of using the default style name defined by
+		 * <code>DEFAULT_CHILD_STYLE_NAME_ON_LABEL</code>.
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		protected var onLabelName:String = DEFAULT_CHILD_NAME_ON_LABEL;
+		protected var onLabelStyleName:String = DEFAULT_CHILD_STYLE_NAME_ON_LABEL;
 
 		/**
-		 * The value added to the <code>nameList</code> of the on label. This
-		 * variable is <code>protected</code> so that sub-classes can customize
-		 * the off label name in their constructors instead of using the default
-		 * name defined by <code>DEFAULT_CHILD_NAME_OFF_LABEL</code>.
+		 * DEPRECATED: Replaced by <code>onLabelStyleName</code>.
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see #onLabelStyleName
 		 */
-		protected var offLabelName:String = DEFAULT_CHILD_NAME_OFF_LABEL;
+		protected function get onLabelName():String
+		{
+			return this.onLabelStyleName;
+		}
 
 		/**
-		 * The value added to the <code>nameList</code> of the on track. This
-		 * variable is <code>protected</code> so that sub-classes can customize
-		 * the on track name in their constructors instead of using the default
-		 * name defined by <code>DEFAULT_CHILD_NAME_ON_TRACK</code>.
-		 *
-		 * <p>To customize the on track name without subclassing, see
-		 * <code>customOnTrackName</code>.</p>
-		 *
-		 * @see #customOnTrackName
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @private
 		 */
-		protected var onTrackName:String = DEFAULT_CHILD_NAME_ON_TRACK;
+		protected function set onLabelName(value:String):void
+		{
+			this.onLabelStyleName = value;
+		}
 
 		/**
-		 * The value added to the <code>nameList</code> of the off track. This
-		 * variable is <code>protected</code> so that sub-classes can customize
-		 * the off track name in their constructors instead of using the default
-		 * name defined by <code>DEFAULT_CHILD_NAME_OFF_TRACK</code>.
+		 * The value added to the <code>styleNameList</code> of the off label
+		 * text renderer. This variable is <code>protected</code> so that
+		 * sub-classes can customize the off label text renderer style name in
+		 * their constructors instead of using the default style name defined by
+		 * <code>DEFAULT_CHILD_STYLE_NAME_OFF_LABEL</code>.
 		 *
-		 * <p>To customize the off track name without subclassing, see
-		 * <code>customOffTrackName</code>.</p>
-		 *
-		 * @see #customOffTrackName
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		protected var offTrackName:String = DEFAULT_CHILD_NAME_OFF_TRACK;
+		protected var offLabelStyleName:String = DEFAULT_CHILD_STYLE_NAME_OFF_LABEL;
 
 		/**
-		 * The value added to the <code>nameList</code> of the thumb. This
-		 * variable is <code>protected</code> so that sub-classes can customize
-		 * the thumb name in their constructors instead of using the default
-		 * name defined by <code>DEFAULT_CHILD_NAME_THUMB</code>.
+		 * DEPRECATED: Replaced by <code>offLabelStyleName</code>.
 		 *
-		 * <p>To customize the thumb name without subclassing, see
-		 * <code>customThumbName</code>.</p>
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
 		 *
-		 * @see #customThumbName
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see #offLabelStyleName
 		 */
-		protected var thumbName:String = DEFAULT_CHILD_NAME_THUMB;
+		protected function get offLabelName():String
+		{
+			return this.offLabelStyleName;
+		}
+
+		/**
+		 * @private
+		 */
+		protected function set offLabelName(value:String):void
+		{
+			this.offLabelStyleName = value;
+		}
+
+		/**
+		 * The value added to the <code>styleNameList</code> of the on track.
+		 * This variable is <code>protected</code> so that sub-classes can
+		 * customize the on track style name in their constructors instead of
+		 * using the default style name defined by
+		 * <code>DEFAULT_CHILD_STYLE_NAME_ON_TRACK</code>.
+		 *
+		 * <p>To customize the on track style name without subclassing, see
+		 * <code>customOnTrackStyleName</code>.</p>
+		 *
+		 * @see #customOnTrackStyleName
+		 * @see feathers.core.FeathersControl#styleNameList
+		 */
+		protected var onTrackStyleName:String = DEFAULT_CHILD_STYLE_NAME_ON_TRACK;
+
+		/**
+		 * DEPRECATED: Replaced by <code>onTrackStyleName</code>.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see #onTrackStyleName
+		 */
+		protected function get onTrackName():String
+		{
+			return this.onTrackStyleName;
+		}
+
+		/**
+		 * @private
+		 */
+		protected function set onTrackName(value:String):void
+		{
+			this.onTrackStyleName = value;
+		}
+
+		/**
+		 * The value added to the <code>styleNameList</code> of the off track.
+		 * This variable is <code>protected</code> so that sub-classes can
+		 * customize the off track style name in their constructors instead of
+		 * using the default style name defined by
+		 * <code>DEFAULT_CHILD_STYLE_NAME_OFF_TRACK</code>.
+		 *
+		 * <p>To customize the off track style name without subclassing, see
+		 * <code>customOffTrackStyleName</code>.</p>
+		 *
+		 * @see #customOffTrackStyleName
+		 * @see feathers.core.FeathersControl#styleNameList
+		 */
+		protected var offTrackStyleName:String = DEFAULT_CHILD_STYLE_NAME_OFF_TRACK;
+
+		/**
+		 * DEPRECATED: Replaced by <code>offTrackStyleName</code>.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see #offTrackStyleName
+		 */
+		protected function get offTrackName():String
+		{
+			return this.offTrackStyleName;
+		}
+
+		/**
+		 * @private
+		 */
+		protected function set offTrackName(value:String):void
+		{
+			this.offTrackStyleName = value;
+		}
+
+		/**
+		 * The value added to the <code>styleNameList</code> of the thumb. This
+		 * variable is <code>protected</code> so that sub-classes can customize
+		 * the thumb style name in their constructors instead of using the
+		 * default stylename defined by <code>DEFAULT_CHILD_STYLE_NAME_THUMB</code>.
+		 *
+		 * <p>To customize the thumb style name without subclassing, see
+		 * <code>customThumbStyleName</code>.</p>
+		 *
+		 * @see #customThumbStyleName
+		 * @see feathers.core.FeathersControl#styleNameList
+		 */
+		protected var thumbStyleName:String = DEFAULT_CHILD_STYLE_NAME_THUMB;
+
+		/**
+		 * DEPRECATED: Replaced by <code>tabStyleName</code>.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see #tabStyleName
+		 */
+		protected function get thumbName():String
+		{
+			return this.thumbStyleName;
+		}
+
+		/**
+		 * @private
+		 */
+		protected function set thumbName(value:String):void
+		{
+			this.thumbStyleName = value;
+		}
 
 		/**
 		 * The thumb sub-component.
@@ -303,6 +493,14 @@ package feathers.controls
 		/**
 		 * @private
 		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return ToggleSwitch.globalStyleProvider;
+		}
+
+		/**
+		 * @private
+		 */
 		protected var _paddingRight:Number = 0;
 
 		/**
@@ -346,12 +544,9 @@ package feathers.controls
 		 *
 		 * <p>In the following example, the toggle switch's left padding is
 		 * set to 20 pixels:</p>
-		 *
+		 * 
 		 * <listing version="3.0">
-		 *
-		 *
-		 * <listing version="3.0">
-		 * toggle.customOnTrackName = "my-custom-on-track";</listing>.paddingLeft = 20;</listing>
+		 * toggle.paddingLeft = 20;</listing>
 		 *
 		 * @default 0
 		 */
@@ -956,6 +1151,8 @@ package feathers.controls
 		 * toggle.isSelected = true;</listing>
 		 *
 		 * @default false
+		 *
+		 * @see #setSelectionWithAnimation()
 		 */
 		public function get isSelected():Boolean
 		{
@@ -967,18 +1164,55 @@ package feathers.controls
 		 */
 		public function set isSelected(value:Boolean):void
 		{
-			//normally, we'd check to see if selected actually changed or not
-			//but the animation is triggered by the draw cycle, so we always
-			//need to invalidate. notice that the event isn't dispatched
-			//unless the value changes.
-			const oldSelected:Boolean = this._isSelected;
-			this._isSelected = value;
-			this._isSelectionChangedByUser = false;
-			this.invalidate(INVALIDATION_FLAG_SELECTED);
-			if(this._isSelected != oldSelected)
+			this._animateSelectionChange = false;
+			if(this._isSelected == value)
 			{
-				this.dispatchEventWith(Event.CHANGE);
+				return;
 			}
+			this._isSelected = value;
+			this.invalidate(INVALIDATION_FLAG_SELECTED);
+			this.dispatchEventWith(Event.CHANGE);
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _toggleThumbSelection:Boolean = false;
+
+		/**
+		 * Determines if the <code>isSelected</code> property of the thumb
+		 * is updated to match the <code>isSelected</code> property of the
+		 * toggle switch, if the class used to create the thumb implements the
+		 * <code>IToggle</code> interface. Useful for skinning to provide a
+		 * different appearance for the thumb based on whether the toggle switch
+		 * is selected or not.
+		 *
+		 * <p>In the following example, the thumb selection is toggled:</p>
+		 *
+		 * <listing version="3.0">
+		 * toggle.toggleThumbSelection = true;</listing>
+		 *
+		 * @default false
+		 *
+		 * @see feathers.core.IToggle
+		 * @see feathers.controls.ToggleButton
+		 */
+		public function get toggleThumbSelection():Boolean
+		{
+			return this._toggleThumbSelection;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set toggleThumbSelection(value:Boolean):void
+		{
+			if(this._toggleThumbSelection == value)
+			{
+				return;
+			}
+			this._toggleThumbSelection = value;
+			this.invalidate(INVALIDATION_FLAG_SELECTED);
 		}
 
 		/**
@@ -1027,7 +1261,7 @@ package feathers.controls
 		 *
 		 * @default starling.animation.Transitions.EASE_OUT
 		 *
-		 * @see starling.animation.Transitions
+		 * @see http://doc.starling-framework.org/core/starling/animation/Transitions.html starling.animation.Transitions
 		 */
 		public function get toggleEase():Object
 		{
@@ -1146,7 +1380,7 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected var _isSelectionChangedByUser:Boolean = false;
+		protected var _animateSelectionChange:Boolean = false;
 
 		/**
 		 * @private
@@ -1201,41 +1435,63 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected var _customOnTrackName:String;
+		protected var _customOnTrackStyleName:String;
 
 		/**
-		 * A name to add to the toggle switch's on track sub-component. Typically
-		 * used by a theme to provide different skins to different toggle switches.
+		 * A style name to add to the toggle switch's on track sub-component.
+		 * Typically used by a theme to provide different styles to different
+		 * toggle switches.
 		 *
-		 * <p>In the following example, a custom on track name is passed to
+		 * <p>In the following example, a custom on track style name is passed to
 		 * the toggle switch:</p>
 		 *
 		 * <listing version="3.0">
-		 * toggle.customOnTrackName = "my-custom-on-track";</listing>
+		 * toggle.customOnTrackStyleName = "my-custom-on-track";</listing>
 		 *
-		 * <p>In your theme, you can target this item renderer name to provide
-		 * different skins than the default style:</p>
-		 *
-		 * <listing version="3.0">
-		 * setInitializerForClass( Button, customOnTrackInitializer, "my-custom-on-track");</listing>
-		 *
-		 * <p>In your theme, you can target this sub-component name to provide
-		 * different skins than the default style:</p>
+		 * <p>In your theme, you can target this sub-component style name to
+		 * provide different styles than the default:</p>
 		 *
 		 * <listing version="3.0">
-		 * setInitializerForClass( Button, customOnTrackInitializer, "my-custom-on-track");</listing>
+		 * getStyleProviderForClass( Button ).setFunctionForStyleName( "my-custom-on-track", setCustomOnTrackStyles );</listing>
 		 *
 		 * @default null
 		 *
-		 * @see #DEFAULT_CHILD_NAME_ON_TRACK
-		 * @see feathers.core.FeathersControl#nameList
-		 * @see feathers.core.DisplayListWatcher
+		 * @see #DEFAULT_CHILD_STYLE_NAME_ON_TRACK
+		 * @see feathers.core.FeathersControl#styleNameList
 		 * @see #onTrackFactory
 		 * @see #onTrackProperties
 		 */
+		public function get customOnTrackStyleName():String
+		{
+			return this._customOnTrackStyleName;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set customOnTrackStyleName(value:String):void
+		{
+			if(this._customOnTrackStyleName == value)
+			{
+				return;
+			}
+			this._customOnTrackStyleName = value;
+			this.invalidate(INVALIDATION_FLAG_ON_TRACK_FACTORY);
+		}
+
+		/**
+		 * DEPRECATED: Replaced by <code>customOnTrackStyleName</code>.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see #customOnTrackStyleName
+		 */
 		public function get customOnTrackName():String
 		{
-			return this._customOnTrackName;
+			return this.customOnTrackStyleName;
 		}
 
 		/**
@@ -1243,12 +1499,7 @@ package feathers.controls
 		 */
 		public function set customOnTrackName(value:String):void
 		{
-			if(this._customOnTrackName == value)
-			{
-				return;
-			}
-			this._customOnTrackName = value;
-			this.invalidate(INVALIDATION_FLAG_ON_TRACK_FACTORY);
+			this.customOnTrackStyleName = value;
 		}
 
 		/**
@@ -1306,7 +1557,7 @@ package feathers.controls
 			}
 			if(!(value is PropertyProxy))
 			{
-				const newValue:PropertyProxy = new PropertyProxy();
+				var newValue:PropertyProxy = new PropertyProxy();
 				for(var propertyName:String in value)
 				{
 					newValue[propertyName] = value[propertyName];
@@ -1378,35 +1629,63 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected var _customOffTrackName:String;
+		protected var _customOffTrackStyleName:String;
 
 		/**
-		 * A name to add to the toggle switch's off track sub-component. Typically
-		 * used by a theme to provide different skins to different toggle switches.
+		 * A style name to add to the toggle switch's off track sub-component.
+		 * Typically used by a theme to provide different styles to different
+		 * toggle switches.
 		 *
-		 * <p>In the following example, a custom off track name is passed to the
-		 * toggle switch:</p>
-		 *
-		 * <listing version="3.0">
-		 * toggle.customOnTrackName = "my-custom-off-track";</listing>
-		 *
-		 * <p>In your theme, you can target this sub-component name to provide
-		 * different skins than the default style:</p>
+		 * <p>In the following example, a custom off track style name is passed
+		 * to the toggle switch:</p>
 		 *
 		 * <listing version="3.0">
-		 * setInitializerForClass( Button, customOffTrackInitializer, "my-custom-off-track");</listing>
+		 * toggle.customOffTrackStyleName = "my-custom-off-track";</listing>
+		 *
+		 * <p>In your theme, you can target this sub-component style name to
+		 * provide different styles than the default:</p>
+		 *
+		 * <listing version="3.0">
+		 * getStyleProviderForClass( Button ).setFunctionForStyleName( "my-custom-off-track", setCustomOffTrackStyles );</listing>
 		 *
 		 * @default null
 		 *
-		 * @see #DEFAULT_CHILD_NAME_OFF_TRACK
-		 * @see feathers.core.FeathersControl#nameList
-		 * @see feathers.core.DisplayListWatcher
+		 * @see #DEFAULT_CHILD_STYLE_NAME_OFF_TRACK
+		 * @see feathers.core.FeathersControl#styleNameList
 		 * @see #offTrackFactory
 		 * @see #offTrackProperties
 		 */
+		public function get customOffTrackStyleName():String
+		{
+			return this._customOffTrackStyleName;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set customOffTrackStyleName(value:String):void
+		{
+			if(this._customOffTrackStyleName == value)
+			{
+				return;
+			}
+			this._customOffTrackStyleName = value;
+			this.invalidate(INVALIDATION_FLAG_OFF_TRACK_FACTORY);
+		}
+
+		/**
+		 * DEPRECATED: Replaced by <code>customOffTrackStyleName</code>.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see #customOffTrackStyleName
+		 */
 		public function get customOffTrackName():String
 		{
-			return this._customOffTrackName;
+			return this.customOffTrackStyleName;
 		}
 
 		/**
@@ -1414,12 +1693,7 @@ package feathers.controls
 		 */
 		public function set customOffTrackName(value:String):void
 		{
-			if(this._customOffTrackName == value)
-			{
-				return;
-			}
-			this._customOffTrackName = value;
-			this.invalidate(INVALIDATION_FLAG_OFF_TRACK_FACTORY);
+			this.customOffTrackStyleName = value;
 		}
 
 		/**
@@ -1477,7 +1751,7 @@ package feathers.controls
 			}
 			if(!(value is PropertyProxy))
 			{
-				const newValue:PropertyProxy = new PropertyProxy();
+				var newValue:PropertyProxy = new PropertyProxy();
 				for(var propertyName:String in value)
 				{
 					newValue[propertyName] = value[propertyName];
@@ -1547,35 +1821,63 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected var _customThumbName:String;
+		protected var _customThumbStyleName:String;
 
 		/**
-		 * A name to add to the toggle switch's thumb sub-component. Typically
-		 * used by a theme to provide different skins to different toggle switches.
+		 * A style name to add to the toggle switch's thumb sub-component.
+		 * Typically used by a theme to provide different styles to different
+		 * toggle switches.
 		 *
-		 * <p>In the following example, a custom thumb name is passed to the
-		 * toggle switch:</p>
-		 *
-		 * <listing version="3.0">
-		 * toggle.customThumbName = "my-custom-thumb";</listing>
-		 *
-		 * <p>In your theme, you can target this sub-component name to provide
-		 * different skins than the default style:</p>
+		 * <p>In the following example, a custom thumb style name is passed to
+		 * the toggle switch:</p>
 		 *
 		 * <listing version="3.0">
-		 * setInitializerForClass( Button, customThumbInitializer, "my-custom-thumb");</listing>
+		 * toggle.customThumbStyleName = "my-custom-thumb";</listing>
+		 *
+		 * <p>In your theme, you can target this sub-component style name to
+		 * provide different styles than the default:</p>
+		 *
+		 * <listing version="3.0">
+		 * getStyleProviderForClass( Button ).setFunctionForStyleName( "my-custom-thumb", setCustomThumbStyles );</listing>
 		 *
 		 * @default null
 		 *
-		 * @see #DEFAULT_CHILD_NAME_THUMB
-		 * @see feathers.core.FeathersControl#nameList
-		 * @see feathers.core.DisplayListWatcher
+		 * @see #DEFAULT_CHILD_STYLE_NAME_THUMB
+		 * @see feathers.core.FeathersControl#styleNameList
 		 * @see #thumbFactory
 		 * @see #thumbProperties
 		 */
+		public function get customThumbStyleName():String
+		{
+			return this._customThumbStyleName;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set customThumbStyleName(value:String):void
+		{
+			if(this._customThumbStyleName == value)
+			{
+				return;
+			}
+			this._customThumbStyleName = value;
+			this.invalidate(INVALIDATION_FLAG_THUMB_FACTORY);
+		}
+
+		/**
+		 * DEPRECATED: Replaced by <code>customThumbStyleName</code>.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see #customThumbStyleName
+		 */
 		public function get customThumbName():String
 		{
-			return this._customThumbName;
+			return this.customThumbStyleName;
 		}
 
 		/**
@@ -1583,12 +1885,7 @@ package feathers.controls
 		 */
 		public function set customThumbName(value:String):void
 		{
-			if(this._customThumbName == value)
-			{
-				return;
-			}
-			this._customThumbName = value;
-			this.invalidate(INVALIDATION_FLAG_THUMB_FACTORY);
+			this.customThumbStyleName = value;
 		}
 
 		/**
@@ -1646,7 +1943,7 @@ package feathers.controls
 			}
 			if(!(value is PropertyProxy))
 			{
-				const newValue:PropertyProxy = new PropertyProxy();
+				var newValue:PropertyProxy = new PropertyProxy();
 				for(var propertyName:String in value)
 				{
 					newValue[propertyName] = value[propertyName];
@@ -1666,20 +1963,36 @@ package feathers.controls
 		}
 
 		/**
+		 * Changes the <code>isSelected</code> property, but animates the thumb
+		 * to the new position, as if the user tapped the toggle switch.
+		 *
+		 * @see #isSelected
+		 */
+		public function setSelectionWithAnimation(isSelected:Boolean):void
+		{
+			if(this._isSelected == isSelected)
+			{
+				return;
+			}
+			this.isSelected = isSelected;
+			this._animateSelectionChange = true;
+		}
+
+		/**
 		 * @private
 		 */
 		override protected function draw():void
 		{
-			const selectionInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SELECTED);
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var selectionInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SELECTED);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
 			var sizeInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SIZE);
-			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
-			const focusInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_FOCUS);
-			const layoutInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_LAYOUT);
-			const textRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_RENDERER);
-			const thumbFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_THUMB_FACTORY);
-			const onTrackFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_ON_TRACK_FACTORY);
-			const offTrackFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_OFF_TRACK_FACTORY);
+			var stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			var focusInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_FOCUS);
+			var layoutInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_LAYOUT);
+			var textRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_RENDERER);
+			var thumbFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_THUMB_FACTORY);
+			var onTrackFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_ON_TRACK_FACTORY);
+			var offTrackFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_OFF_TRACK_FACTORY);
 
 			if(thumbFactoryInvalid)
 			{
@@ -1701,7 +2014,7 @@ package feathers.controls
 				this.createLabels();
 			}
 
-			if(stylesInvalid)
+			if(textRendererInvalid || stylesInvalid || stateInvalid)
 			{
 				this.refreshOnLabelStyles();
 				this.refreshOffLabelStyles();
@@ -1731,6 +2044,11 @@ package feathers.controls
 			if((offTrackFactoryInvalid || layoutInvalid || stateInvalid) && this.offTrack)
 			{
 				this.offTrack.isEnabled = this._isEnabled;
+			}
+			if(textRendererInvalid || stateInvalid)
+			{
+				this.onTextRenderer.isEnabled = this._isEnabled;
+				this.offTextRenderer.isEnabled = this._isEnabled;
 			}
 
 			sizeInvalid = this.autoSizeIfNeeded() || sizeInvalid;
@@ -1766,7 +2084,8 @@ package feathers.controls
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			if(isNaN(this.onTrackSkinOriginalWidth) || isNaN(this.onTrackSkinOriginalHeight))
+			if(this.onTrackSkinOriginalWidth !== this.onTrackSkinOriginalWidth || //isNaN
+				this.onTrackSkinOriginalHeight !== this.onTrackSkinOriginalHeight) //isNaN
 			{
 				this.onTrack.validate();
 				this.onTrackSkinOriginalWidth = this.onTrack.width;
@@ -1774,7 +2093,8 @@ package feathers.controls
 			}
 			if(this.offTrack)
 			{
-				if(isNaN(this.offTrackSkinOriginalWidth) || isNaN(this.offTrackSkinOriginalHeight))
+				if(this.offTrackSkinOriginalWidth !== this.offTrackSkinOriginalWidth || //isNaN
+					this.offTrackSkinOriginalHeight !== this.offTrackSkinOriginalHeight) //isNaN
 				{
 					this.offTrack.validate();
 					this.offTrackSkinOriginalWidth = this.offTrack.width;
@@ -1782,8 +2102,8 @@ package feathers.controls
 				}
 			}
 
-			const needsWidth:Boolean = isNaN(this.explicitWidth);
-			const needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth !== this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight !== this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
@@ -1825,7 +2145,7 @@ package feathers.controls
 		 *
 		 * @see #thumb
 		 * @see #thumbFactory
-		 * @see #customThumbName
+		 * @see #customThumbStyleName
 		 */
 		protected function createThumb():void
 		{
@@ -1835,10 +2155,10 @@ package feathers.controls
 				this.thumb = null;
 			}
 
-			const factory:Function = this._thumbFactory != null ? this._thumbFactory : defaultThumbFactory;
-			const thumbName:String = this._customThumbName != null ? this._customThumbName : this.thumbName;
+			var factory:Function = this._thumbFactory != null ? this._thumbFactory : defaultThumbFactory;
+			var thumbStyleName:String = this._customThumbStyleName != null ? this._customThumbStyleName : this.thumbStyleName;
 			this.thumb = Button(factory());
-			this.thumb.styleNameList.add(thumbName);
+			this.thumb.styleNameList.add(thumbStyleName);
 			this.thumb.keepDownStateOnRollOut = true;
 			this.thumb.addEventListener(TouchEvent.TOUCH, thumb_touchHandler);
 			this.addChild(this.thumb);
@@ -1853,7 +2173,7 @@ package feathers.controls
 		 *
 		 * @see #onTrack
 		 * @see #onTrackFactory
-		 * @see #customOnTrackName
+		 * @see #customOnTrackStyleName
 		 */
 		protected function createOnTrack():void
 		{
@@ -1863,10 +2183,10 @@ package feathers.controls
 				this.onTrack = null;
 			}
 
-			const factory:Function = this._onTrackFactory != null ? this._onTrackFactory : defaultOnTrackFactory;
-			const onTrackName:String = this._customOnTrackName != null ? this._customOnTrackName : this.onTrackName;
+			var factory:Function = this._onTrackFactory != null ? this._onTrackFactory : defaultOnTrackFactory;
+			var onTrackStyleName:String = this._customOnTrackStyleName != null ? this._customOnTrackStyleName : this.onTrackStyleName;
 			this.onTrack = Button(factory());
-			this.onTrack.styleNameList.add(onTrackName);
+			this.onTrack.styleNameList.add(onTrackStyleName);
 			this.onTrack.keepDownStateOnRollOut = true;
 			this.addChildAt(this.onTrack, 0);
 		}
@@ -1881,7 +2201,7 @@ package feathers.controls
 		 *
 		 * @see #offTrack
 		 * @see #offTrackFactory
-		 * @see #customOffTrackName
+		 * @see #customOffTrackStyleName
 		 */
 		protected function createOffTrack():void
 		{
@@ -1892,10 +2212,10 @@ package feathers.controls
 					this.offTrack.removeFromParent(true);
 					this.offTrack = null;
 				}
-				const factory:Function = this._offTrackFactory != null ? this._offTrackFactory : defaultOffTrackFactory;
-				const offTrackName:String = this._customOffTrackName != null ? this._customOffTrackName : this.offTrackName;
+				var factory:Function = this._offTrackFactory != null ? this._offTrackFactory : defaultOffTrackFactory;
+				var offTrackStyleName:String = this._customOffTrackStyleName != null ? this._customOffTrackStyleName : this.offTrackStyleName;
 				this.offTrack = Button(factory());
-				this.offTrack.styleNameList.add(offTrackName);
+				this.offTrack.styleNameList.add(offTrackStyleName);
 				this.offTrack.keepDownStateOnRollOut = true;
 				this.addChildAt(this.offTrack, 1);
 			}
@@ -1922,7 +2242,7 @@ package feathers.controls
 				this.onTextRenderer = null;
 			}
 
-			const index:int = this.getChildIndex(this.thumb);
+			var index:int = this.getChildIndex(this.thumb);
 			var offLabelFactory:Function = this._offLabelFactory;
 			if(offLabelFactory == null)
 			{
@@ -1960,7 +2280,7 @@ package feathers.controls
 			this.thumb.validate();
 			this.thumb.y = (this.actualHeight - this.thumb.height) / 2;
 
-			const maxLabelWidth:Number = Math.max(0, this.actualWidth - this.thumb.width - this._paddingLeft - this._paddingRight);
+			var maxLabelWidth:Number = Math.max(0, this.actualWidth - this.thumb.width - this._paddingLeft - this._paddingRight);
 			var totalLabelHeight:Number = Math.max(this.onTextRenderer.height, this.offTextRenderer.height);
 			var labelHeight:Number;
 			if(this._labelAlign == LABEL_ALIGN_MIDDLE)
@@ -1994,8 +2314,8 @@ package feathers.controls
 		 */
 		protected function layoutTracks():void
 		{
-			const maxLabelWidth:Number = Math.max(0, this.actualWidth - this.thumb.width - this._paddingLeft - this._paddingRight);
-			const thumbOffset:Number = this.thumb.x - this._paddingLeft;
+			var maxLabelWidth:Number = Math.max(0, this.actualWidth - this.thumb.width - this._paddingLeft - this._paddingRight);
+			var thumbOffset:Number = this.thumb.x - this._paddingLeft;
 
 			var onScrollOffset:Number = maxLabelWidth - thumbOffset - (maxLabelWidth - this.onTextRenderer.width) / 2;
 			var currentClipRect:Rectangle = this.onTextRenderer.clipRect;
@@ -2024,6 +2344,18 @@ package feathers.controls
 		 */
 		protected function updateSelection():void
 		{
+			if(this.thumb is IToggle)
+			{
+				var toggleThumb:IToggle = IToggle(this.thumb);
+				if(this._toggleThumbSelection)
+				{
+					toggleThumb.isSelected = this._isSelected;
+				}
+				else
+				{
+					toggleThumb.isSelected = false;
+				}
+			}
 			this.thumb.validate();
 
 			var xPosition:Number = this._paddingLeft;
@@ -2039,7 +2371,7 @@ package feathers.controls
 				this._toggleTween = null;
 			}
 
-			if(this._isSelectionChangedByUser)
+			if(this._animateSelectionChange)
 			{
 				this._toggleTween = new Tween(this.thumb, this._toggleDuration, this._toggleEase);
 				this._toggleTween.animate("x", xPosition);
@@ -2051,7 +2383,7 @@ package feathers.controls
 			{
 				this.thumb.x = xPosition;
 			}
-			this._isSelectionChangedByUser = false;
+			this._animateSelectionChange = false;
 		}
 
 		/**
@@ -2083,14 +2415,11 @@ package feathers.controls
 			this.onTextRenderer.text = this._onText;
 			if(properties)
 			{
-				const displayRenderer:DisplayObject = DisplayObject(this.onTextRenderer);
+				var displayRenderer:DisplayObject = DisplayObject(this.onTextRenderer);
 				for(var propertyName:String in properties)
 				{
-					if(displayRenderer.hasOwnProperty(propertyName))
-					{
-						var propertyValue:Object = properties[propertyName];
-						displayRenderer[propertyName] = propertyValue;
-					}
+					var propertyValue:Object = properties[propertyName];
+					displayRenderer[propertyName] = propertyValue;
 				}
 			}
 			this.onTextRenderer.validate();
@@ -2126,14 +2455,11 @@ package feathers.controls
 			this.offTextRenderer.text = this._offText;
 			if(properties)
 			{
-				const displayRenderer:DisplayObject = DisplayObject(this.offTextRenderer);
+				var displayRenderer:DisplayObject = DisplayObject(this.offTextRenderer);
 				for(var propertyName:String in properties)
 				{
-					if(displayRenderer.hasOwnProperty(propertyName))
-					{
-						var propertyValue:Object = properties[propertyName];
-						displayRenderer[propertyName] = propertyValue;
-					}
+					var propertyValue:Object = properties[propertyName];
+					displayRenderer[propertyName] = propertyValue;
 				}
 			}
 			this.offTextRenderer.validate();
@@ -2147,11 +2473,8 @@ package feathers.controls
 		{
 			for(var propertyName:String in this._thumbProperties)
 			{
-				if(this.thumb.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = this._thumbProperties[propertyName];
-					this.thumb[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = this._thumbProperties[propertyName];
+				this.thumb[propertyName] = propertyValue;
 			}
 			this.thumb.visible = this._showThumb;
 		}
@@ -2163,11 +2486,8 @@ package feathers.controls
 		{
 			for(var propertyName:String in this._onTrackProperties)
 			{
-				if(this.onTrack.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = this._onTrackProperties[propertyName];
-					this.onTrack[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = this._onTrackProperties[propertyName];
+				this.onTrack[propertyName] = propertyValue;
 			}
 		}
 
@@ -2182,11 +2502,8 @@ package feathers.controls
 			}
 			for(var propertyName:String in this._offTrackProperties)
 			{
-				if(this.offTrack.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = this._offTrackProperties[propertyName];
-					this.offTrack[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = this._offTrackProperties[propertyName];
+				this.offTrack[propertyName] = propertyValue;
 			}
 		}
 
@@ -2286,8 +2603,7 @@ package feathers.controls
 			var isInBounds:Boolean = this.contains(this.stage.hitTest(HELPER_POINT, true));
 			if(isInBounds)
 			{
-				this.isSelected = !this._isSelected;
-				this._isSelectionChangedByUser = true;
+				this.setSelectionWithAnimation(!this._isSelected);
 			}
 		}
 
@@ -2310,23 +2626,26 @@ package feathers.controls
 					return;
 				}
 				touch.getLocation(this, HELPER_POINT);
-				const trackScrollableWidth:Number = this.actualWidth - this._paddingLeft - this._paddingRight - this.thumb.width;
+				var trackScrollableWidth:Number = this.actualWidth - this._paddingLeft - this._paddingRight - this.thumb.width;
 				if(touch.phase == TouchPhase.MOVED)
 				{
-					const xOffset:Number = HELPER_POINT.x - this._touchStartX;
-					const xPosition:Number = Math.min(Math.max(this._paddingLeft, this._thumbStartX + xOffset), this._paddingLeft + trackScrollableWidth);
+					var xOffset:Number = HELPER_POINT.x - this._touchStartX;
+					var xPosition:Number = Math.min(Math.max(this._paddingLeft, this._thumbStartX + xOffset), this._paddingLeft + trackScrollableWidth);
 					this.thumb.x = xPosition;
 					this.layoutTracks();
 				}
 				else if(touch.phase == TouchPhase.ENDED)
 				{
-					const inchesMoved:Number = Math.abs(HELPER_POINT.x - this._touchStartX) / DeviceCapabilities.dpi;
-					if(inchesMoved > MINIMUM_DRAG_DISTANCE)
+					var pixelsMoved:Number = Math.abs(HELPER_POINT.x - this._touchStartX);
+					var inchesMoved:Number = pixelsMoved / DeviceCapabilities.dpi;
+					if(inchesMoved > MINIMUM_DRAG_DISTANCE || (SystemUtil.isDesktop && pixelsMoved >= 1))
 					{
 						this._touchPointID = -1;
-						this.isSelected = this.thumb.x > (this._paddingLeft + trackScrollableWidth / 2);
-						this._isSelectionChangedByUser = true;
 						this._ignoreTapHandler = true;
+						this.setSelectionWithAnimation(this.thumb.x > (this._paddingLeft + trackScrollableWidth / 2));
+						//we still need to invalidate, even if there's no change
+						//because the thumb may be in the middle!
+						this.invalidate(INVALIDATION_FLAG_SELECTED);
 					}
 				}
 			}
@@ -2370,7 +2689,7 @@ package feathers.controls
 				return;
 			}
 			this._touchPointID = -1;
-			this.isSelected = !this._isSelected;
+			this.setSelectionWithAnimation(!this._isSelected);
 		}
 
 		/**

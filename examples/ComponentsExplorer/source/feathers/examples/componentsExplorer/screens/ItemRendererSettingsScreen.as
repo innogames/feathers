@@ -2,13 +2,13 @@ package feathers.examples.componentsExplorer.screens
 {
 	import feathers.controls.Button;
 	import feathers.controls.GroupedList;
+	import feathers.controls.Header;
 	import feathers.controls.PanelScreen;
 	import feathers.controls.PickerList;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.BaseDefaultItemRenderer;
 	import feathers.data.HierarchicalCollection;
 	import feathers.data.ListCollection;
-	import feathers.events.FeathersEventType;
 	import feathers.examples.componentsExplorer.data.ItemRendererSettings;
 	import feathers.layout.AnchorLayout;
 	import feathers.layout.AnchorLayoutData;
@@ -25,13 +25,12 @@ package feathers.examples.componentsExplorer.screens
 
 		public function ItemRendererSettingsScreen()
 		{
-			this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
+			super();
 		}
 
 		public var settings:ItemRendererSettings;
 
 		private var _list:GroupedList;
-		private var _backButton:Button;
 		private var _gapPicker:PickerList;
 		private var _hasIconToggle:ToggleSwitch;
 		private var _hasAccessoryToggle:ToggleSwitch;
@@ -44,8 +43,26 @@ package feathers.examples.componentsExplorer.screens
 		private var _horizontalAlignPicker:PickerList;
 		private var _verticalAlignPicker:PickerList;
 
-		protected function initializeHandler(event:Event):void
+		override public function dispose():void
 		{
+			//icon and accessory display objects in the list's data provider
+			//won't be automatically disposed because feathers cannot know if
+			//they need to be used again elsewhere or not. we need to dispose
+			//them manually.
+			this._list.dataProvider.dispose(null, disposeItemAccessory);
+
+			//never forget to call super.dispose() because you don't want to
+			//create a memory leak!
+			super.dispose();
+		}
+
+		override protected function initialize():void
+		{
+			//never forget to call super.initialize()
+			super.initialize();
+
+			this.title = "Item Renderer Settings";
+
 			this.layout = new AnchorLayout();
 
 			this._hasIconToggle = new ToggleSwitch();
@@ -168,7 +185,7 @@ package feathers.examples.componentsExplorer.screens
 			this._verticalAlignPicker.addEventListener(Event.CHANGE, verticalAlignPicker_changeHandler);
 
 			this._list = new GroupedList();
-			this._list.styleNameList.add(GroupedList.ALTERNATE_NAME_INSET_GROUPED_LIST);
+			this._list.styleNameList.add(GroupedList.ALTERNATE_STYLE_NAME_INSET_GROUPED_LIST);
 			this._list.isSelectable = false;
 			this._list.dataProvider = new HierarchicalCollection(
 			[
@@ -207,18 +224,27 @@ package feathers.examples.componentsExplorer.screens
 			this._list.autoHideBackground = true;
 			this.addChild(this._list);
 
-			this._backButton = new Button();
-			this._backButton.styleNameList.add(Button.ALTERNATE_NAME_BACK_BUTTON);
-			this._backButton.label = "Back";
-			this._backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
-
-			this.headerProperties.title = "Item Renderer Settings";
-			this.headerProperties.leftItems = new <DisplayObject>
-			[
-				this._backButton
-			];
+			this.headerFactory = this.customHeaderFactory;
 
 			this.backButtonHandler = this.onBackButton;
+		}
+
+		private function customHeaderFactory():Header
+		{
+			var header:Header = new Header();
+			var doneButton:Button = new Button();
+			doneButton.label = "Done";
+			doneButton.addEventListener(Event.TRIGGERED, doneButton_triggeredHandler);
+			header.rightItems = new <DisplayObject>
+			[
+				doneButton
+			];
+			return header;
+		}
+
+		private function disposeItemAccessory(item:Object):void
+		{
+			DisplayObject(item.accessory).dispose();
 		}
 
 		private function onBackButton():void
@@ -281,7 +307,7 @@ package feathers.examples.componentsExplorer.screens
 			this.settings.verticalAlign = this._verticalAlignPicker.selectedItem as String;
 		}
 
-		private function backButton_triggeredHandler(event:Event):void
+		private function doneButton_triggeredHandler(event:Event):void
 		{
 			this.onBackButton();
 		}

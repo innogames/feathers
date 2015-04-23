@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -115,6 +115,23 @@ package feathers.core
 		 * @private
 		 */
 		function set previousTabFocus(value:IFocusDisplayObject):void;
+
+		/**
+		 * Used for associating focusable display objects that are not direct
+		 * children with an "owner" focusable display object, such as pop-ups.
+		 * A focus manager may use this property to influence the tab order.
+		 *
+		 * <p>In the following example, the focus owner is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * object.focusOwner = otherObject;</listing>
+		 */
+		function get focusOwner():IFocusDisplayObject;
+
+		/**
+		 * @private
+		 */
+		function set focusOwner(value:IFocusDisplayObject):void;
 
 		/**
 		 * If the object has focus, an additional visual indicator may

@@ -15,7 +15,7 @@ package feathers.examples.helloWorld
 	 * <p>Note: This example requires the MetalWorksMobileTheme, which is one of
 	 * the themes included with Feathers.</p>
 	 *
-	 * @see http://wiki.starling-framework.org/feathers/getting-started
+	 * @see http://feathersui.com/help/getting-started.html
 	 */
 	public class Main extends Sprite
 	{
@@ -47,7 +47,7 @@ package feathers.examples.helloWorld
 			//components manually. you should always create a theme immediately
 			//when your app starts up to ensure that all components are
 			//properly skinned.
-			//see http://wiki.starling-framework.org/feathers/themes
+			//see http://feathersui.com/help/themes.html
 			new MetalWorksMobileTheme();
 
 			//create a button and give it some text to display.
@@ -69,8 +69,8 @@ package feathers.examples.helloWorld
 			this.button.validate();
 
 			//center the button
-			this.button.x = (this.stage.stageWidth - this.button.width) / 2;
-			this.button.y = (this.stage.stageHeight - this.button.height) / 2;
+			this.button.x = Math.round((this.stage.stageWidth - this.button.width) / 2);
+			this.button.y = Math.round((this.stage.stageHeight - this.button.height) / 2);
 		}
 
 		/**
@@ -78,7 +78,7 @@ package feathers.examples.helloWorld
 		 */
 		protected function button_triggeredHandler(event:Event):void
 		{
-			const label:Label = new Label();
+			var label:Label = new Label();
 			label.text = "Hi, I'm Feathers!\nHave a nice day.";
 			Callout.show(label, this.button);
 		}

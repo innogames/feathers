@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -211,36 +211,35 @@ package feathers.data
 			{
 				return;
 			}
-			if(!value)
-			{
-				this.removeAll();
-				return;
-			}
 			this._data = value;
 			//we'll automatically detect an array, vector, or xmllist for convenience
 			if(this._data is Array && !(this._dataDescriptor is ArrayListCollectionDataDescriptor))
 			{
-				this.dataDescriptor = new ArrayListCollectionDataDescriptor();
+				this._dataDescriptor = new ArrayListCollectionDataDescriptor();
 			}
 			else if(this._data is Vector.<Number> && !(this._dataDescriptor is VectorNumberListCollectionDataDescriptor))
 			{
-				this.dataDescriptor = new VectorNumberListCollectionDataDescriptor();
+				this._dataDescriptor = new VectorNumberListCollectionDataDescriptor();
 			}
 			else if(this._data is Vector.<int> && !(this._dataDescriptor is VectorIntListCollectionDataDescriptor))
 			{
-				this.dataDescriptor = new VectorIntListCollectionDataDescriptor();
+				this._dataDescriptor = new VectorIntListCollectionDataDescriptor();
 			}
 			else if(this._data is Vector.<uint> && !(this._dataDescriptor is VectorUintListCollectionDataDescriptor))
 			{
-				this.dataDescriptor = new VectorUintListCollectionDataDescriptor();
+				this._dataDescriptor = new VectorUintListCollectionDataDescriptor();
 			}
 			else if(this._data is Vector.<*> && !(this._dataDescriptor is VectorListCollectionDataDescriptor))
 			{
-				this.dataDescriptor = new VectorListCollectionDataDescriptor();
+				this._dataDescriptor = new VectorListCollectionDataDescriptor();
 			}
 			else if(this._data is XMLList && !(this._dataDescriptor is XMLListListCollectionDataDescriptor))
 			{
-				this.dataDescriptor = new XMLListListCollectionDataDescriptor();
+				this._dataDescriptor = new XMLListListCollectionDataDescriptor();
+			}
+			if(this._data === null)
+			{
+				this._dataDescriptor = null;
 			}
 			this.dispatchEventWith(CollectionEventType.RESET);
 			this.dispatchEventWith(Event.CHANGE);
@@ -280,6 +279,10 @@ package feathers.data
 		 */
 		public function get length():int
 		{
+			if(!this._dataDescriptor)
+			{
+				return 0;
+			}
 			return this._dataDescriptor.getLength(this._data);
 		}
 
@@ -327,7 +330,7 @@ package feathers.data
 		 */
 		public function removeItemAt(index:int):Object
 		{
-			const item:Object = this._dataDescriptor.removeItemAt(this._data, index);
+			var item:Object = this._dataDescriptor.removeItemAt(this._data, index);
 			this.dispatchEventWith(Event.CHANGE);
 			this.dispatchEventWith(CollectionEventType.REMOVE_ITEM, false, index);
 			return item;
@@ -338,7 +341,7 @@ package feathers.data
 		 */
 		public function removeItem(item:Object):void
 		{
-			const index:int = this.getItemIndex(item);
+			var index:int = this.getItemIndex(item);
 			if(index >= 0)
 			{
 				this.removeItemAt(index);
@@ -390,7 +393,7 @@ package feathers.data
 		 */
 		public function addAll(collection:ListCollection):void
 		{
-			const otherCollectionLength:int = collection.length;
+			var otherCollectionLength:int = collection.length;
 			for(var i:int = 0; i < otherCollectionLength; i++)
 			{
 				var item:Object = collection.getItemAt(i);
@@ -404,7 +407,7 @@ package feathers.data
 		 */
 		public function addAllAt(collection:ListCollection, index:int):void
 		{
-			const otherCollectionLength:int = collection.length;
+			var otherCollectionLength:int = collection.length;
 			var currentIndex:int = index;
 			for(var i:int = 0; i < otherCollectionLength; i++)
 			{
@@ -444,6 +447,36 @@ package feathers.data
 		public function contains(item:Object):Boolean
 		{
 			return this.getItemIndex(item) >= 0;
+		}
+
+		/**
+		 * Calls a function for each item in the collection that may be used
+		 * to dispose any properties on the item. For example, display objects
+		 * or textures may need to be disposed.
+		 *
+		 * <p>The function is expected to have the following signature:</p>
+		 * <pre>function( item:Object ):void</pre>
+		 *
+		 * <p>In the following example, the items in the collection are disposed:</p>
+		 *
+		 * <listing version="3.0">
+		 * collection.dispose( function( item:Object ):void
+		 * {
+		 *     var accessory:DisplayObject = DisplayObject(item.accessory);
+		 *     accessory.dispose();
+		 * }</listing>
+		 *
+		 * @see http://doc.starling-framework.org/core/starling/display/DisplayObject.html#dispose() starling.display.DisplayObject.dispose()
+		 * @see http://doc.starling-framework.org/core/starling/textures/Texture.html#dispose() starling.textures.Texture.dispose()
+		 */
+		public function dispose(disposeItem:Function):void
+		{
+			var itemCount:int = this.length;
+			for(var i:int = 0; i < itemCount; i++)
+			{
+				var item:Object = this.getItemAt(i);
+				disposeItem(item);
+			}
 		}
 	}
 }

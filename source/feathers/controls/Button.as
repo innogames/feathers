@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -13,16 +13,17 @@ package feathers.controls
 	import feathers.core.IFeathersControl;
 	import feathers.core.IFocusDisplayObject;
 	import feathers.core.ITextRenderer;
-	import feathers.core.IToggle;
 	import feathers.core.IValidating;
 	import feathers.core.PropertyProxy;
 	import feathers.events.FeathersEventType;
+	import feathers.skins.IStyleProvider;
 	import feathers.skins.StateWithToggleValueSelector;
 
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
 	import flash.utils.getTimer;
 
+	import starling.core.RenderSupport;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	import starling.events.KeyboardEvent;
@@ -31,9 +32,10 @@ package feathers.controls
 	import starling.events.TouchPhase;
 
 	/**
-	 * Dispatched when the button is released while the touch is still
-	 * within the button's bounds (a tap or click that should trigger the
-	 * button).
+	 * Dispatched when the the user taps or clicks the button. The touch must
+	 * remain within the bounds of the button on release to register as a tap
+	 * or a click. If focus management is enabled, the button may also be
+	 * triggered by pressing the spacebar while the button has focus.
 	 *
 	 * <p>The properties of the event object have the following values:</p>
 	 * <table class="innertable">
@@ -53,31 +55,6 @@ package feathers.controls
 	 * @eventType starling.events.Event.TRIGGERED
 	 */
 	[Event(name="triggered",type="starling.events.Event")]
-
-	/**
-	 * Dispatched when the button is selected or unselected. A button's
-	 * selection may be changed by the user when <code>isToggle</code> is set to
-	 * <code>true</code>. The selection may be changed programmatically at any
-	 * time, regardless of the value of <code>isToggle</code>.
-	 *
-	 * <p>The properties of the event object have the following values:</p>
-	 * <table class="innertable">
-	 * <tr><th>Property</th><th>Value</th></tr>
-	 * <tr><td><code>bubbles</code></td><td>false</td></tr>
-	 * <tr><td><code>currentTarget</code></td><td>The Object that defines the
-	 *   event listener that handles the event. For example, if you use
-	 *   <code>myButton.addEventListener()</code> to register an event listener,
-	 *   myButton is the value of the <code>currentTarget</code>.</td></tr>
-	 * <tr><td><code>data</code></td><td>null</td></tr>
-	 * <tr><td><code>target</code></td><td>The Object that dispatched the event;
-	 *   it is not always the Object listening for the event. Use the
-	 *   <code>currentTarget</code> property to always access the Object
-	 *   listening for the event.</td></tr>
-	 * </table>
-	 *
-	 * @eventType starling.events.Event.CHANGE
-	 */
-	[Event(name="change",type="starling.events.Event")]
 
 	/**
 	 * Dispatched when the button is pressed for a long time. The property
@@ -115,7 +92,7 @@ package feathers.controls
 	[Event(name="longPress",type="starling.events.Event")]
 
 	/**
-	 * A push (or optionally, toggle) button control.
+	 * A push button control that may be triggered when pressed and released.
 	 *
 	 * <p>The following example creates a button, gives it a label and listens
 	 * for when the button is triggered:</p>
@@ -126,9 +103,9 @@ package feathers.controls
 	 * button.addEventListener( Event.TRIGGERED, button_triggeredHandler );
 	 * this.addChild( button );</listing>
 	 *
-	 * @see http://wiki.starling-framework.org/feathers/button
+	 * @see ../../../help/button.html How to use the Feathers Button component
 	 */
-	public class Button extends FeathersControl implements IToggle, IFocusDisplayObject
+	public class Button extends FeathersControl implements IFocusDisplayObject
 	{
 		/**
 		 * @private
@@ -136,123 +113,197 @@ package feathers.controls
 		private static const HELPER_POINT:Point = new Point();
 
 		/**
-		 * The default value added to the <code>nameList</code> of the label.
+		 * The default value added to the <code>styleNameList</code> of the label.
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		public static const DEFAULT_CHILD_NAME_LABEL:String = "feathers-button-label";
+		public static const DEFAULT_CHILD_STYLE_NAME_LABEL:String = "feathers-button-label";
 
 		/**
-		 * An alternate name to use with Button to allow a theme to give it
-		 * a more prominent, "call-to-action" style. If a theme does not provide
-		 * a skin for the call-to-action button, the theme will automatically
-		 * fall back to using the default button skin.
+		 * DEPRECATED: Replaced by <code>Button.DEFAULT_CHILD_STYLE_NAME_LABEL</code>.
 		 *
-		 * <p>An alternate name should always be added to a component's
-		 * <code>nameList</code> before the component is added to the stage for
-		 * the first time. If it is added later, it will be ignored.</p>
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see Button#DEFAULT_CHILD_STYLE_NAME_LABEL
+		 */
+		public static const DEFAULT_CHILD_NAME_LABEL:String = DEFAULT_CHILD_STYLE_NAME_LABEL;
+
+		/**
+		 * An alternate style name to use with <code>Button</code> to allow a
+		 * theme to give it a more prominent, "call-to-action" style. If a theme
+		 * does not provide a style for a call-to-action button, the theme will
+		 * automatically fall back to using the default button style.
+		 *
+		 * <p>An alternate style name should always be added to a component's
+		 * <code>styleNameList</code> before the component is initialized. If
+		 * the style name is added later, it will be ignored.</p>
 		 *
 		 * <p>In the following example, the call-to-action style is applied to
 		 * a button:</p>
 		 *
 		 * <listing version="3.0">
 		 * var button:Button = new Button();
-		 * button.styleNameList.add( Button.ALTERNATE_NAME_CALL_TO_ACTION_BUTTON );
+		 * button.styleNameList.add( Button.ALTERNATE_STYLE_NAME_CALL_TO_ACTION_BUTTON );
 		 * this.addChild( button );</listing>
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		public static const ALTERNATE_NAME_CALL_TO_ACTION_BUTTON:String = "feathers-call-to-action-button";
+		public static const ALTERNATE_STYLE_NAME_CALL_TO_ACTION_BUTTON:String = "feathers-call-to-action-button";
 
 		/**
-		 * An alternate name to use with Button to allow a theme to give it
-		 * a less prominent, "quiet" style. If a theme does not provide
-		 * a skin for the quiet button, the theme will automatically fall back
-		 * to using the default button skin.
+		 * DEPRECATED: Replaced by <code>Button.ALTERNATE_STYLE_NAME_CALL_TO_ACTION_BUTTON</code>.
 		 *
-		 * <p>An alternate name should always be added to a component's
-		 * <code>nameList</code> before the component is added to the stage for
-		 * the first time. If it is added later, it will be ignored.</p>
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see Button#ALTERNATE_STYLE_NAME_CALL_TO_ACTION_BUTTON
+		 */
+		public static const ALTERNATE_NAME_CALL_TO_ACTION_BUTTON:String = ALTERNATE_STYLE_NAME_CALL_TO_ACTION_BUTTON;
+
+		/**
+		 * An alternate style name to use with <code>Button</code> to allow a
+		 * theme to give it a less prominent, "quiet" style. If a theme does not
+		 * provide a style for a quiet button, the theme will automatically fall
+		 * back to using the default button style.
+		 *
+		 * <p>An alternate style name should always be added to a component's
+		 * <code>styleNameList</code> before the component is initialized. If
+		 * the style name is added later, it will be ignored.</p>
 		 *
 		 * <p>In the following example, the quiet button style is applied to
 		 * a button:</p>
 		 *
 		 * <listing version="3.0">
 		 * var button:Button = new Button();
-		 * button.styleNameList.add( Button.ALTERNATE_NAME_QUIET_BUTTON );
+		 * button.styleNameList.add( Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON );
 		 * this.addChild( button );</listing>
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		public static const ALTERNATE_NAME_QUIET_BUTTON:String = "feathers-quiet-button";
+		public static const ALTERNATE_STYLE_NAME_QUIET_BUTTON:String = "feathers-quiet-button";
 
 		/**
-		 * An alternate name to use with Button to allow a theme to give it
-		 * a highly prominent, "danger" style. An example would be a delete
-		 * button or some other button that has a destructive action that cannot
-		 * be undone if the button is triggered. If a theme does not provide
-		 * a skin for the danger button, the theme will automatically fall back
-		 * to using the default button skin.
+		 * DEPRECATED: Replaced by <code>Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON</code>.
 		 *
-		 * <p>An alternate name should always be added to a component's
-		 * <code>nameList</code> before the component is added to the stage for
-		 * the first time. If it is added later, it will be ignored.</p>
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see Button#ALTERNATE_STYLE_NAME_QUIET_BUTTON
+		 */
+		public static const ALTERNATE_NAME_QUIET_BUTTON:String = ALTERNATE_STYLE_NAME_QUIET_BUTTON;
+
+		/**
+		 * An alternate style name to use with <code>Button</code> to allow a
+		 * theme to give it a highly prominent, "danger" style. An example would
+		 * be a delete button or some other button that has a destructive action
+		 * that cannot be undone if the button is triggered. If a theme does not
+		 * provide a style for the danger button, the theme will automatically
+		 * fall back to using the default button style.
+		 *
+		 * <p>An alternate style name should always be added to a component's
+		 * <code>styleNameList</code> before the component is initialized. If
+		 * the style name is added later, it will be ignored.</p>
 		 *
 		 * <p>In the following example, the danger button style is applied to
 		 * a button:</p>
 		 *
 		 * <listing version="3.0">
 		 * var button:Button = new Button();
-		 * button.styleNameList.add( Button.ALTERNATE_NAME_DANGER_BUTTON );
+		 * button.styleNameList.add( Button.ALTERNATE_STYLE_NAME_DANGER_BUTTON );
 		 * this.addChild( button );</listing>
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		public static const ALTERNATE_NAME_DANGER_BUTTON:String = "feathers-danger-button";
+		public static const ALTERNATE_STYLE_NAME_DANGER_BUTTON:String = "feathers-danger-button";
 
 		/**
-		 * An alternate name to use with Button to allow a theme to give it
-		 * a "back button" style, perhaps with an arrow pointing backward. If a
-		 * theme does not provide a skin for the back button, the theme will
-		 * automatically fall back to using the default button skin.
+		 * DEPRECATED: Replaced by <code>Button.ALTERNATE_STYLE_NAME_DANGER_BUTTON</code>.
 		 *
-		 * <p>An alternate name should always be added to a component's
-		 * <code>nameList</code> before the component is added to the stage for
-		 * the first time. If it is added later, it will be ignored.</p>
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see Button#ALTERNATE_STYLE_NAME_DANGER_BUTTON
+		 */
+		public static const ALTERNATE_NAME_DANGER_BUTTON:String = ALTERNATE_STYLE_NAME_DANGER_BUTTON;
+
+		/**
+		 * An alternate style name to use with <code>Button</code> to allow a
+		 * theme to give it a "back button" style, perhaps with an arrow
+		 * pointing backward. If a theme does not provide a style for a back
+		 * button, the theme will automatically fall back to using the default
+		 * button skin.
+		 *
+		 * <p>An alternate style name should always be added to a component's
+		 * <code>styleNameList</code> before the component is initialized. If
+		 * the style name is added later, it will be ignored.</p>
 		 *
 		 * <p>In the following example, the back button style is applied to
 		 * a button:</p>
 		 *
 		 * <listing version="3.0">
 		 * var button:Button = new Button();
-		 * button.styleNameList.add( Button.ALTERNATE_NAME_BACK_BUTTON );
+		 * button.styleNameList.add( Button.ALTERNATE_STYLE_NAME_BACK_BUTTON );
 		 * this.addChild( button );</listing>
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		public static const ALTERNATE_NAME_BACK_BUTTON:String = "feathers-back-button";
+		public static const ALTERNATE_STYLE_NAME_BACK_BUTTON:String = "feathers-back-button";
 
 		/**
-		 * An alternate name to use with Button to allow a theme to give it
-		 * a "forward" button style, perhaps with an arrow pointing forward. If
-		 * a theme does not provide a skin for the forward button, the theme
-		 * will automatically fall back to using the default button skin.
+		 * DEPRECATED: Replaced by <code>Button.ALTERNATE_STYLE_NAME_BACK_BUTTON</code>.
 		 *
-		 * <p>An alternate name should always be added to a component's
-		 * <code>nameList</code> before the component is added to the stage for
-		 * the first time. If it is added later, it will be ignored.</p>
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see Button#ALTERNATE_STYLE_NAME_BACK_BUTTON
+		 */
+		public static const ALTERNATE_NAME_BACK_BUTTON:String = ALTERNATE_STYLE_NAME_BACK_BUTTON;
+
+		/**
+		 * An alternate style name to use with <code>Button</code> to allow a
+		 * theme to give it a "forward" button style, perhaps with an arrow
+		 * pointing forward. If a theme does not provide a style for a forward
+		 * button, the theme will automatically fall back to using the default
+		 * button style.
+		 *
+		 * <p>An alternate style name should always be added to a component's
+		 * <code>styleNameList</code> before the component is initialized. If
+		 * the style name is added later, it will be ignored.</p>
 		 *
 		 * <p>In the following example, the forward button style is applied to
 		 * a button:</p>
 		 *
 		 * <listing version="3.0">
 		 * var button:Button = new Button();
-		 * button.styleNameList.add( Button.ALTERNATE_NAME_FORWARD_BUTTON );
+		 * button.styleNameList.add( Button.ALTERNATE_STYLE_NAME_FORWARD_BUTTON );
 		 * this.addChild( button );</listing>
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		public static const ALTERNATE_NAME_FORWARD_BUTTON:String = "feathers-forward-button";
+		public static const ALTERNATE_STYLE_NAME_FORWARD_BUTTON:String = "feathers-forward-button";
+
+		/**
+		 * DEPRECATED: Replaced by <code>Button.ALTERNATE_STYLE_NAME_FORWARD_BUTTON</code>.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see Button#ALTERNATE_STYLE_NAME_FORWARD_BUTTON
+		 */
+		public static const ALTERNATE_NAME_FORWARD_BUTTON:String = ALTERNATE_STYLE_NAME_FORWARD_BUTTON;
 		
 		
 		/**
@@ -387,26 +438,60 @@ package feathers.controls
 		 * @see #verticalAlign
 		 */
 		public static const VERTICAL_ALIGN_BOTTOM:String = "bottom";
+
+		/**
+		 * The default <code>IStyleProvider</code> for all <code>Button</code>
+		 * components.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
+		 */
+		public static var globalStyleProvider:IStyleProvider;
 		
 		/**
 		 * Constructor.
 		 */
 		public function Button()
 		{
+			super();
 			this.isQuickHitAreaEnabled = true;
 			this.addEventListener(TouchEvent.TOUCH, button_touchHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, button_removedFromStageHandler);
 		}
 
 		/**
-		 * The value added to the <code>nameList</code> of the label. This
-		 * variable is <code>protected</code> so that sub-classes can customize
-		 * the label name in their constructors instead of using the default
-		 * name defined by <code>DEFAULT_CHILD_NAME_LABEL</code>.
+		 * The value added to the <code>styleNameList</code> of the label text
+		 * renderer. This variable is <code>protected</code> so that sub-classes
+		 * can customize the label text renderer style name in their
+		 * constructors instead of using the default style name defined by
+		 * <code>DEFAULT_CHILD_STYLE_NAME_LABEL</code>.
 		 *
-		 * @see feathers.core.IFeathersControl#nameList
+		 * @see feathers.core.FeathersControl#styleNameList
 		 */
-		protected var labelName:String = DEFAULT_CHILD_NAME_LABEL;
+		protected var labelStyleName:String = DEFAULT_CHILD_STYLE_NAME_LABEL;
+
+		/**
+		 * DEPRECATED: Replaced by <code>labelStyleName</code>.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.1. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.</p>
+		 *
+		 * @see #labelStyleName
+		 */
+		protected function get labelName():String
+		{
+			return this.labelStyleName;
+		}
+
+		/**
+		 * @private
+		 */
+		protected function set labelName(value:String):void
+		{
+			this.labelStyleName = value;
+		}
 		
 		/**
 		 * The text renderer for the button's label.
@@ -442,6 +527,14 @@ package feathers.controls
 		 * <p>For internal use in subclasses.</p>
 		 */
 		protected var touchPointID:int = -1;
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return Button.globalStyleProvider;
+		}
 		
 		/**
 		 * @private
@@ -535,78 +628,40 @@ package feathers.controls
 			this._label = value;
 			this.invalidate(INVALIDATION_FLAG_DATA);
 		}
-		
+
 		/**
 		 * @private
 		 */
-		protected var _isToggle:Boolean = false;
-		
+		protected var _hasLabelTextRenderer:Boolean = true;
+
 		/**
-		 * Determines if the button may be selected or unselected when clicked.
+		 * Determines if the button's label text renderer is created or not.
+		 * Useful for button sub-components that may not display text, like
+		 * slider thumbs and tracks, or similar sub-components on scroll bars.
 		 *
-		 * <p>The following example enables the button to toggle and listens for
-		 * <code>Event.CHANGE</code>:</p>
+		 * <p>The following example removed the label text renderer:</p>
 		 *
 		 * <listing version="3.0">
-		 * button.isToggle = true;
-		 * button.addEventListener( Event.CHANGE, button_changeHandler );</listing>
+		 * button.hasLabelTextRenderer = false;</listing>
 		 *
-		 * @default false
-		 *
-		 * @see #event:change
+		 * @default true
 		 */
-		public function get isToggle():Boolean
+		public function get hasLabelTextRenderer():Boolean
 		{
-			return this._isToggle;
+			return this._hasLabelTextRenderer;
 		}
-		
+
 		/**
 		 * @private
 		 */
-		public function set isToggle(value:Boolean):void
+		public function set hasLabelTextRenderer(value:Boolean):void
 		{
-			this._isToggle = value;
-		}
-		
-		/**
-		 * @private
-		 */
-		protected var _isSelected:Boolean = false;
-		
-		/**
-		 * Indicates if the button is selected or not. The button may be
-		 * selected programmatically, even if <code>isToggle</code> is <code>false</code>,
-		 * but generally, <code>isToggle</code> should be set to <code>true</code>
-		 * to allow the user to select and deselect it.
-		 *
-		 * <p>The following example enables the button to toggle and selects it
-		 * automatically:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.isToggle = true;
-		 * button.isSelected = true;</listing>
-		 *
-		 * @default false
-		 * 
-		 * @see #isToggle
-		 */
-		public function get isSelected():Boolean
-		{
-			return this._isSelected;
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set isSelected(value:Boolean):void
-		{
-			if(this._isSelected == value)
+			if(this._hasLabelTextRenderer == value)
 			{
 				return;
 			}
-			this._isSelected = value;
-			this.invalidate(INVALIDATION_FLAG_SELECTED);
-			this.dispatchEventWith(Event.CHANGE);
+			this._hasLabelTextRenderer = value;
+			this.invalidate(INVALIDATION_FLAG_TEXT_RENDERER);
 		}
 		
 		/**
@@ -798,7 +853,7 @@ package feathers.controls
 		 *
 		 * @see #VERTICAL_ALIGN_TOP
 		 * @see #VERTICAL_ALIGN_MIDDLE
-		 * @see #VERTICAL_ALIGN_RIGHT
+		 * @see #VERTICAL_ALIGN_BOTTOM
 		 */
 		public function get verticalAlign():String
 		{
@@ -1000,6 +1055,9 @@ package feathers.controls
 
 		/**
 		 * Offsets the x position of the label by a certain number of pixels.
+		 * This does not affect the measurement of the button. The button will
+		 * measure itself as if the label were not offset from its original
+		 * position.
 		 *
 		 * <p>The following example offsets the x position of the button's label
 		 * by 20 pixels:</p>
@@ -1036,6 +1094,9 @@ package feathers.controls
 
 		/**
 		 * Offsets the y position of the label by a certain number of pixels.
+		 * This does not affect the measurement of the button. The button will
+		 * measure itself as if the label were not offset from its original
+		 * position.
 		 *
 		 * <p>The following example offsets the y position of the button's label
 		 * by 20 pixels:</p>
@@ -1072,6 +1133,9 @@ package feathers.controls
 
 		/**
 		 * Offsets the x position of the icon by a certain number of pixels.
+		 * This does not affect the measurement of the button. The button will
+		 * measure itself as if the icon were not offset from its original
+		 * position.
 		 *
 		 * <p>The following example offsets the x position of the button's icon
 		 * by 20 pixels:</p>
@@ -1108,6 +1172,9 @@ package feathers.controls
 
 		/**
 		 * Offsets the y position of the icon by a certain number of pixels.
+		 * This does not affect the measurement of the button. The button will
+		 * measure itself as if the icon were not offset from its original
+		 * position.
 		 *
 		 * <p>The following example offsets the y position of the button's icon
 		 * by 20 pixels:</p>
@@ -1188,7 +1255,13 @@ package feathers.controls
 		protected var _stateToSkinFunction:Function;
 
 		/**
-		 * Returns a skin for the current state.
+		 * Returns a skin for the current state. Can be used instead of
+		 * individual skin properties for different states, like
+		 * <code>upSkin</code> or <code>hoverSkin</code>, to reuse the same
+		 * display object for all states. The function should simply change the
+		 * display object's properties. For example, a function could reuse the
+		 * the same <code>starling.display.Image</code> instance among all
+		 * button states, and change its texture for each state.
 		 *
 		 * <p>The following function signature is expected:</p>
 		 * <pre>function(target:Button, state:Object, oldSkin:DisplayObject = null):DisplayObject</pre>
@@ -1219,7 +1292,13 @@ package feathers.controls
 		protected var _stateToIconFunction:Function;
 
 		/**
-		 * Returns an icon for the current state.
+		 * Returns an icon for the current state. Can be used instead of
+		 * individual icon properties for different states, like
+		 * <code>upIcon</code> or <code>hoverIcon</code>, to reuse the same
+		 * display object for all states. the function should simply change the
+		 * display object's properties. For example, a function could reuse the
+		 * the same <code>starling.display.Image</code> instance among all
+		 * button states, and change its texture for each state.
 		 *
 		 * <p>The following function signature is expected:</p>
 		 * <pre>function(target:Button, state:Object, oldIcon:DisplayObject = null):DisplayObject</pre>
@@ -1283,7 +1362,10 @@ package feathers.controls
 		
 		/**
 		 * The skin used when no other skin is defined for the current state.
-		 * Intended for use when multiple states should use the same skin.
+		 * Intended to be used when multiple states should share the same skin.
+		 *
+		 * <p>This property will be ignored if a function is passed to the
+		 * <code>stateToSkinFunction</code> property.</p>
 		 *
 		 * <p>The following example gives the button a default skin to use for
 		 * all states when no specific skin is available:</p>
@@ -1298,11 +1380,6 @@ package feathers.controls
 		 * @see #downSkin
 		 * @see #hoverSkin
 		 * @see #disabledSkin
-		 * @see #defaultSelectedSkin
-		 * @see #selectedUpSkin
-		 * @see #selectedDownSkin
-		 * @see #selectedHoverSkin
-		 * @see #selectedDisabledSkin
 		 */
 		public function get defaultSkin():DisplayObject
 		{
@@ -1323,46 +1400,11 @@ package feathers.controls
 		}
 		
 		/**
-		 * The skin used when no other skin is defined for the current state
-		 * when the button is selected. Has a higher priority than
-		 * <code>defaultSkin</code>, but a lower priority than other selected
-		 * skins.
-		 *
-		 * <p>The following example gives the button a default skin to use for
-		 * all selected states when no specific skin is available:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.defaultSelectedSkin = new Image( texture );</listing>
-		 *
-		 * @default null
-		 * 
-		 * @see #defaultSkin
-		 * @see #selectedUpSkin
-		 * @see #selectedDownSkin
-		 * @see #selectedHoverSkin
-		 * @see #selectedDisabledSkin
-		 */
-		public function get defaultSelectedSkin():DisplayObject
-		{
-			return DisplayObject(this._skinSelector.defaultSelectedValue);
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set defaultSelectedSkin(value:DisplayObject):void
-		{
-			if(this._skinSelector.defaultSelectedValue == value)
-			{
-				return;
-			}
-			this._skinSelector.defaultSelectedValue = value;
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-		
-		/**
 		 * The skin used for the button's up state. If <code>null</code>, then
 		 * <code>defaultSkin</code> is used instead.
+		 *
+		 * <p>This property will be ignored if a function is passed to the
+		 * <code>stateToSkinFunction</code> property.</p>
 		 *
 		 * <p>The following example gives the button a skin for the up state:</p>
 		 *
@@ -1372,7 +1414,6 @@ package feathers.controls
 		 * @default null
 		 * 
 		 * @see #defaultSkin
-		 * @see #selectedUpSkin
 		 */
 		public function get upSkin():DisplayObject
 		{
@@ -1396,6 +1437,9 @@ package feathers.controls
 		 * The skin used for the button's down state. If <code>null</code>, then
 		 * <code>defaultSkin</code> is used instead.
 		 *
+		 * <p>This property will be ignored if a function is passed to the
+		 * <code>stateToSkinFunction</code> property.</p>
+		 *
 		 * <p>The following example gives the button a skin for the down state:</p>
 		 *
 		 * <listing version="3.0">
@@ -1404,7 +1448,6 @@ package feathers.controls
 		 * @default null
 		 * 
 		 * @see #defaultSkin
-		 * @see #selectedDownSkin
 		 */
 		public function get downSkin():DisplayObject
 		{
@@ -1428,6 +1471,9 @@ package feathers.controls
 		 * The skin used for the button's hover state. If <code>null</code>, then
 		 * <code>defaultSkin</code> is used instead.
 		 *
+		 * <p>This property will be ignored if a function is passed to the
+		 * <code>stateToSkinFunction</code> property.</p>
+		 *
 		 * <p>The following example gives the button a skin for the hover state:</p>
 		 *
 		 * <listing version="3.0">
@@ -1436,7 +1482,6 @@ package feathers.controls
 		 * @default null
 		 *
 		 * @see #defaultSkin
-		 * @see #selectedHoverSkin
 		 */
 		public function get hoverSkin():DisplayObject
 		{
@@ -1460,6 +1505,9 @@ package feathers.controls
 		 * The skin used for the button's disabled state. If <code>null</code>,
 		 * then <code>defaultSkin</code> is used instead.
 		 *
+		 * <p>This property will be ignored if a function is passed to the
+		 * <code>stateToSkinFunction</code> property.</p>
+		 *
 		 * <p>The following example gives the button a skin for the disabled state:</p>
 		 *
 		 * <listing version="3.0">
@@ -1468,7 +1516,6 @@ package feathers.controls
 		 * @default null
 		 * 
 		 * @see #defaultSkin
-		 * @see #selectedDisabledSkin
 		 */
 		public function get disabledSkin():DisplayObject
 		{
@@ -1485,142 +1532,6 @@ package feathers.controls
 				return;
 			}
 			this._skinSelector.setValueForState(value, STATE_DISABLED, false);
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-		
-		/**
-		 * The skin used for the button's up state when the button is selected.
-		 * If <code>null</code>, then <code>defaultSelectedSkin</code> is used
-		 * instead. If <code>defaultSelectedSkin</code> is also
-		 * <code>null</code>, then <code>defaultSkin</code> is used.
-		 *
-		 * <p>The following example gives the button a skin for the selected up state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedUpSkin = new Image( texture );</listing>
-		 *
-		 * @default null
-		 * 
-		 * @see #defaultSkin
-		 * @see #defaultSelectedSkin
-		 */
-		public function get selectedUpSkin():DisplayObject
-		{
-			return DisplayObject(this._skinSelector.getValueForState(STATE_UP, true));
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set selectedUpSkin(value:DisplayObject):void
-		{
-			if(this._skinSelector.getValueForState(STATE_UP, true) == value)
-			{
-				return;
-			}
-			this._skinSelector.setValueForState(value, STATE_UP, true);
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-		
-		/**
-		 * The skin used for the button's down state when the button is
-		 * selected. If <code>null</code>, then <code>defaultSelectedSkin</code>
-		 * is used instead. If <code>defaultSelectedSkin</code> is also
-		 * <code>null</code>, then <code>defaultSkin</code> is used.
-		 *
-		 * <p>The following example gives the button a skin for the selected down state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedDownSkin = new Image( texture );</listing>
-		 *
-		 * @default null
-		 * 
-		 * @see #defaultSkin
-		 * @see #defaultSelectedSkin
-		 */
-		public function get selectedDownSkin():DisplayObject
-		{
-			return DisplayObject(this._skinSelector.getValueForState(STATE_DOWN, true));
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set selectedDownSkin(value:DisplayObject):void
-		{
-			if(this._skinSelector.getValueForState(STATE_DOWN, true) == value)
-			{
-				return;
-			}
-			this._skinSelector.setValueForState(value, STATE_DOWN, true);
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-
-		/**
-		 * The skin used for the button's hover state when the button is
-		 * selected. If <code>null</code>, then <code>defaultSelectedSkin</code>
-		 * is used instead. If <code>defaultSelectedSkin</code> is also
-		 * <code>null</code>, then <code>defaultSkin</code> is used.
-		 *
-		 * <p>The following example gives the button a skin for the selected hover state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedHoverSkin = new Image( texture );</listing>
-		 *
-		 * @default null
-		 *
-		 * @see #defaultSkin
-		 * @see #defaultSelectedSkin
-		 */
-		public function get selectedHoverSkin():DisplayObject
-		{
-			return DisplayObject(this._skinSelector.getValueForState(STATE_HOVER, true));
-		}
-
-		/**
-		 * @private
-		 */
-		public function set selectedHoverSkin(value:DisplayObject):void
-		{
-			if(this._skinSelector.getValueForState(STATE_HOVER, true) == value)
-			{
-				return;
-			}
-			this._skinSelector.setValueForState(value, STATE_HOVER, true);
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-
-		/**
-		 * The skin used for the button's disabled state when the button is
-		 * selected. If <code>null</code>, then <code>defaultSelectedSkin</code>
-		 * is used instead. If <code>defaultSelectedSkin</code> is also
-		 * <code>null</code>, then <code>defaultSkin</code> is used.
-		 *
-		 * <p>The following example gives the button a skin for the selected disabled state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedDisabledSkin = new Image( texture );</listing>
-		 *
-		 * @default null
-		 *
-		 * @see #defaultSkin
-		 * @see #defaultSelectedSkin
-		 */
-		public function get selectedDisabledSkin():DisplayObject
-		{
-			return DisplayObject(this._skinSelector.getValueForState(STATE_DISABLED, true));
-		}
-
-		/**
-		 * @private
-		 */
-		public function set selectedDisabledSkin(value:DisplayObject):void
-		{
-			if(this._skinSelector.getValueForState(STATE_DISABLED, true) == value)
-			{
-				return;
-			}
-			this._skinSelector.setValueForState(value, STATE_DISABLED, true);
 			this.invalidate(INVALIDATION_FLAG_STYLES);
 		}
 
@@ -1706,7 +1617,6 @@ package feathers.controls
 		 * @see feathers.core.ITextRenderer
 		 * @see feathers.controls.text.BitmapFontTextRenderer
 		 * @see feathers.controls.text.TextFieldTextRenderer
-		 * @see #defaultSelectedLabelProperties
 		 * @see #stateToLabelPropertiesFunction
 		 */
 		public function get defaultLabelProperties():Object
@@ -1729,7 +1639,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.defaultValue);
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.defaultValue);
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -1764,7 +1674,6 @@ package feathers.controls
 		 * @see feathers.controls.text.BitmapFontTextRenderer
 		 * @see feathers.controls.text.TextFieldTextRenderer
 		 * @see #defaultLabelProperties
-		 * @see #selectedUpLabelProperties
 		 */
 		public function get upLabelProperties():Object
 		{
@@ -1786,7 +1695,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_UP, false));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_UP, false));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -1821,7 +1730,6 @@ package feathers.controls
 		 * @see feathers.controls.text.BitmapFontTextRenderer
 		 * @see feathers.controls.text.TextFieldTextRenderer
 		 * @see #defaultLabelProperties
-		 * @see #selectedDownLabelProperties
 		 */
 		public function get downLabelProperties():Object
 		{
@@ -1843,7 +1751,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DOWN, false));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DOWN, false));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -1878,7 +1786,6 @@ package feathers.controls
 		 * @see feathers.controls.text.BitmapFontTextRenderer
 		 * @see feathers.controls.text.TextFieldTextRenderer
 		 * @see #defaultLabelProperties
-		 * @see #selectedHoverLabelProperties
 		 */
 		public function get hoverLabelProperties():Object
 		{
@@ -1900,7 +1807,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_HOVER, false));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_HOVER, false));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -1935,7 +1842,6 @@ package feathers.controls
 		 * @see feathers.controls.text.BitmapFontTextRenderer
 		 * @see feathers.controls.text.TextFieldTextRenderer
 		 * @see #defaultLabelProperties
-		 * @see #selectedDisabledLabelProperties
 		 */
 		public function get disabledLabelProperties():Object
 		{
@@ -1957,312 +1863,12 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DISABLED, false));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DISABLED, false));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
 			}
 			this._labelPropertiesSelector.setValueForState(value, STATE_DISABLED, false);
-			if(value)
-			{
-				PropertyProxy(value).addOnChangeCallback(childProperties_onChange);
-			}
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-		
-		/**
-		 * The default selected label properties are a set of key/value pairs to
-		 * be passed down ot the button's label text renderer, and it is used
-		 * when the button is selected and no specific properties are defined
-		 * for the button's current state. If <code>null</code>, then
-		 * <code>defaultLabelProperties</code> is used instead. The label
-		 * text renderer is an <code>ITextRenderer</code> instance. The
-		 * available properties depend on which <code>ITextRenderer</code>
-		 * implementation is returned by <code>labelFactory</code>. The most
-		 * common implementations are <code>BitmapFontTextRenderer</code> and
-		 * <code>TextFieldTextRenderer</code>.
-		 *
-		 * <p>The following example gives the button default label properties to
-		 * use for all selected states when no specific label properties are
-		 * available:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.defaultSelectedLabelProperties.textFormat = new BitmapFontTextFormat( bitmapFont );
-		 * button.defaultSelectedLabelProperties.wordWrap = true;</listing>
-		 *
-		 * @default null
-		 *
-		 * @see feathers.core.ITextRenderer
-		 * @see feathers.controls.text.BitmapFontTextRenderer
-		 * @see feathers.controls.text.TextFieldTextRenderer
-		 * @see #defaultLabelProperties
-		 */
-		public function get defaultSelectedLabelProperties():Object
-		{
-			var value:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.defaultSelectedValue);
-			if(!value)
-			{
-				value = new PropertyProxy(childProperties_onChange);
-				this._labelPropertiesSelector.defaultSelectedValue = value;
-			}
-			return value;
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set defaultSelectedLabelProperties(value:Object):void
-		{
-			if(!(value is PropertyProxy))
-			{
-				value = PropertyProxy.fromObject(value);
-			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.defaultSelectedValue);
-			if(oldValue)
-			{
-				oldValue.removeOnChangeCallback(childProperties_onChange);
-			}
-			this._labelPropertiesSelector.defaultSelectedValue = value;
-			if(value)
-			{
-				PropertyProxy(value).addOnChangeCallback(childProperties_onChange);
-			}
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-		
-		/**
-		 * A set of key/value pairs to be passed down ot the button's label
-		 * text renderer when the button is in the up state and is selected. If
-		 * <code>null</code>, then <code>defaultSelectedLabelProperties</code>
-		 * is used instead. If <code>defaultSelectedLabelProperties</code> is also
-		 * <code>null</code>, then <code>defaultLabelProperties</code> is used.
-		 * The label text renderer is an <code>ITextRenderer</code> instance.
-		 * The available properties depend on which <code>ITextRenderer</code>
-		 * implementation is returned by <code>labelFactory</code>. The most
-		 * common implementations are <code>BitmapFontTextRenderer</code> and
-		 * <code>TextFieldTextRenderer</code>.
-		 *
-		 * <p>The following example gives the button label properties for the
-		 * selected up state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedUpLabelProperties.textFormat = new BitmapFontTextFormat( bitmapFont );</listing>
-		 *
-		 * @default null
-		 *
-		 * @see feathers.core.ITextRenderer
-		 * @see feathers.controls.text.BitmapFontTextRenderer
-		 * @see feathers.controls.text.TextFieldTextRenderer
-		 * @see #defaultLabelProperties
-		 * @see #defaultSelectedLabelProperties
-		 * @see #upLabelProperties
-		 */
-		public function get selectedUpLabelProperties():Object
-		{
-			var value:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_UP, true));
-			if(!value)
-			{
-				value = new PropertyProxy(childProperties_onChange);
-				this._labelPropertiesSelector.setValueForState(value, STATE_UP, true);
-			}
-			return value;
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set selectedUpLabelProperties(value:Object):void
-		{
-			if(!(value is PropertyProxy))
-			{
-				value = PropertyProxy.fromObject(value);
-			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_UP, true));
-			if(oldValue)
-			{
-				oldValue.removeOnChangeCallback(childProperties_onChange);
-			}
-			this._labelPropertiesSelector.setValueForState(value, STATE_UP, true);
-			if(value)
-			{
-				PropertyProxy(value).addOnChangeCallback(childProperties_onChange);
-			}
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-		
-		/**
-		 * A set of key/value pairs to be passed down ot the button's label
-		 * text renderer when the button is in the down state and is selected.
-		 * If <code>null</code>, then <code>defaultSelectedLabelProperties</code>
-		 * is used instead. If <code>defaultSelectedLabelProperties</code> is also
-		 * <code>null</code>, then <code>defaultLabelProperties</code> is used.
-		 * The label text renderer is an <code>ITextRenderer</code> instance.
-		 * The available properties depend on which <code>ITextRenderer</code>
-		 * implementation is returned by <code>labelFactory</code>. The most
-		 * common implementations are <code>BitmapFontTextRenderer</code> and
-		 * <code>TextFieldTextRenderer</code>.
-		 *
-		 * <p>The following example gives the button label properties for the
-		 * selected down state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedDownLabelProperties.textFormat = new BitmapFontTextFormat( bitmapFont );</listing>
-		 *
-		 * @default null
-		 *
-		 * @see feathers.core.ITextRenderer
-		 * @see feathers.controls.text.BitmapFontTextRenderer
-		 * @see feathers.controls.text.TextFieldTextRenderer
-		 * @see #defaultLabelProperties
-		 * @see #defaultSelectedLabelProperties
-		 * @see #downLabelProperties
-		 */
-		public function get selectedDownLabelProperties():Object
-		{
-			var value:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DOWN, true));
-			if(!value)
-			{
-				value = new PropertyProxy(childProperties_onChange);
-				this._labelPropertiesSelector.setValueForState(value, STATE_DOWN, true);
-			}
-			return value;
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set selectedDownLabelProperties(value:Object):void
-		{
-			if(!(value is PropertyProxy))
-			{
-				value = PropertyProxy.fromObject(value);
-			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DOWN, true));
-			if(oldValue)
-			{
-				oldValue.removeOnChangeCallback(childProperties_onChange);
-			}
-			this._labelPropertiesSelector.setValueForState(value, STATE_DOWN, true);
-			if(value)
-			{
-				PropertyProxy(value).addOnChangeCallback(childProperties_onChange);
-			}
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-
-		/**
-		 * A set of key/value pairs to be passed down ot the button's label
-		 * text renderer when the button is in the hover state and is selected.
-		 * If <code>null</code>, then <code>defaultSelectedLabelProperties</code>
-		 * is used instead. If <code>defaultSelectedLabelProperties</code> is also
-		 * <code>null</code>, then <code>defaultLabelProperties</code> is used.
-		 * The label text renderer is an <code>ITextRenderer</code> instance.
-		 * The available properties depend on which <code>ITextRenderer</code>
-		 * implementation is returned by <code>labelFactory</code>. The most
-		 * common implementations are <code>BitmapFontTextRenderer</code> and
-		 * <code>TextFieldTextRenderer</code>.
-		 *
-		 * <p>The following example gives the button label properties for the
-		 * selected hover state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedHoverLabelProperties.textFormat = new BitmapFontTextFormat( bitmapFont );</listing>
-		 *
-		 * @default null
-		 *
-		 * @see feathers.core.ITextRenderer
-		 * @see feathers.controls.text.BitmapFontTextRenderer
-		 * @see feathers.controls.text.TextFieldTextRenderer
-		 * @see #defaultLabelProperties
-		 * @see #defaultSelectedLabelProperties
-		 * @see #hoverLabelProperties
-		 */
-		public function get selectedHoverLabelProperties():Object
-		{
-			var value:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_HOVER, true));
-			if(!value)
-			{
-				value = new PropertyProxy(childProperties_onChange);
-				this._labelPropertiesSelector.setValueForState(value, STATE_HOVER, true);
-			}
-			return value;
-		}
-
-		/**
-		 * @private
-		 */
-		public function set selectedHoverLabelProperties(value:Object):void
-		{
-			if(!(value is PropertyProxy))
-			{
-				value = PropertyProxy.fromObject(value);
-			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_HOVER, true));
-			if(oldValue)
-			{
-				oldValue.removeOnChangeCallback(childProperties_onChange);
-			}
-			this._labelPropertiesSelector.setValueForState(value, STATE_HOVER, true);
-			if(value)
-			{
-				PropertyProxy(value).addOnChangeCallback(childProperties_onChange);
-			}
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-
-		/**
-		 * A set of key/value pairs to be passed down ot the button's label
-		 * text renderer when the button is in the disabled state and is
-		 * selected. If <code>null</code>, then <code>defaultSelectedLabelProperties</code>
-		 * is used instead. If <code>defaultSelectedLabelProperties</code> is also
-		 * <code>null</code>, then <code>defaultLabelProperties</code> is used.
-		 * The label text renderer is an <code>ITextRenderer</code> instance.
-		 * The available properties depend on which <code>ITextRenderer</code>
-		 * implementation is returned by <code>labelFactory</code>. The most
-		 * common implementations are <code>BitmapFontTextRenderer</code> and
-		 * <code>TextFieldTextRenderer</code>.
-		 *
-		 * <p>The following example gives the button label properties for the
-		 * selected disabled state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedDisabledLabelProperties.textFormat = new BitmapFontTextFormat( bitmapFont );</listing>
-		 *
-		 * @default null
-		 *
-		 * @see feathers.core.ITextRenderer
-		 * @see feathers.controls.text.BitmapFontTextRenderer
-		 * @see feathers.controls.text.TextFieldTextRenderer
-		 * @see #defaultLabelProperties
-		 * @see #defaultSelectedLabelProperties
-		 * @see #disabledLabelProperties
-		 */
-		public function get selectedDisabledLabelProperties():Object
-		{
-			var value:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DISABLED, true));
-			if(!value)
-			{
-				value = new PropertyProxy(childProperties_onChange);
-				this._labelPropertiesSelector.setValueForState(value, STATE_DISABLED, true);
-			}
-			return value;
-		}
-
-		/**
-		 * @private
-		 */
-		public function set selectedDisabledLabelProperties(value:Object):void
-		{
-			if(!(value is PropertyProxy))
-			{
-				value = PropertyProxy.fromObject(value);
-			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DISABLED, true));
-			if(oldValue)
-			{
-				oldValue.removeOnChangeCallback(childProperties_onChange);
-			}
-			this._labelPropertiesSelector.setValueForState(value, STATE_DISABLED, true);
 			if(value)
 			{
 				PropertyProxy(value).addOnChangeCallback(childProperties_onChange);
@@ -2277,7 +1883,10 @@ package feathers.controls
 		
 		/**
 		 * The icon used when no other icon is defined for the current state.
-		 * Intended for use when multiple states should use the same icon.
+		 * Intended to be used when multiple states should share the same icon.
+		 *
+		 * <p>This property will be ignored if a function is passed to the
+		 * <code>stateToIconFunction</code> property.</p>
 		 *
 		 * <p>The following example gives the button a default icon to use for
 		 * all states when no specific icon is available:</p>
@@ -2292,11 +1901,6 @@ package feathers.controls
 		 * @see #downIcon
 		 * @see #hoverIcon
 		 * @see #disabledIcon
-		 * @see #defaultSelectedIcon
-		 * @see #selectedUpIcon
-		 * @see #selectedDownIcon
-		 * @see #selectedHoverIcon
-		 * @see #selectedDisabledIcon
 		 */
 		public function get defaultIcon():DisplayObject
 		{
@@ -2317,46 +1921,11 @@ package feathers.controls
 		}
 		
 		/**
-		 * The icon used when no other icon is defined for the current state
-		 * when the button is selected. Has a higher priority than
-		 * <code>defaultIcon</code>, but a lower priority than other selected
-		 * icons.
-		 *
-		 * <p>The following example gives the button a default icon to use for
-		 * all selected states when no specific icon is available:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.defaultSelectedIcon = new Image( texture );</listing>
-		 *
-		 * @default null
-		 * 
-		 * @see #defaultIcon
-		 * @see #selectedUpIcon
-		 * @see #selectedDownIcon
-		 * @see #selectedHoverIcon
-		 * @see #selectedDisabledIcon
-		 */
-		public function get defaultSelectedIcon():DisplayObject
-		{
-			return DisplayObject(this._iconSelector.defaultSelectedValue);
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set defaultSelectedIcon(value:DisplayObject):void
-		{
-			if(this._iconSelector.defaultSelectedValue == value)
-			{
-				return;
-			}
-			this._iconSelector.defaultSelectedValue = value;
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-		
-		/**
 		 * The icon used for the button's up state. If <code>null</code>, then
 		 * <code>defaultIcon</code> is used instead.
+		 *
+		 * <p>This property will be ignored if a function is passed to the
+		 * <code>stateToIconFunction</code> property.</p>
 		 *
 		 * <p>The following example gives the button an icon for the up state:</p>
 		 *
@@ -2366,7 +1935,6 @@ package feathers.controls
 		 * @default null
 		 * 
 		 * @see #defaultIcon
-		 * @see #selectedUpIcon
 		 */
 		public function get upIcon():DisplayObject
 		{
@@ -2390,6 +1958,9 @@ package feathers.controls
 		 * The icon used for the button's down state. If <code>null</code>, then
 		 * <code>defaultIcon</code> is used instead.
 		 *
+		 * <p>This property will be ignored if a function is passed to the
+		 * <code>stateToIconFunction</code> property.</p>
+		 *
 		 * <p>The following example gives the button an icon for the down state:</p>
 		 *
 		 * <listing version="3.0">
@@ -2398,7 +1969,6 @@ package feathers.controls
 		 * @default null
 		 * 
 		 * @see #defaultIcon
-		 * @see #selectedDownIcon
 		 */
 		public function get downIcon():DisplayObject
 		{
@@ -2422,6 +1992,9 @@ package feathers.controls
 		 * The icon used for the button's hover state. If <code>null</code>, then
 		 * <code>defaultIcon</code> is used instead.
 		 *
+		 * <p>This property will be ignored if a function is passed to the
+		 * <code>stateToIconFunction</code> property.</p>
+		 *
 		 * <p>The following example gives the button an icon for the hover state:</p>
 		 *
 		 * <listing version="3.0">
@@ -2430,7 +2003,6 @@ package feathers.controls
 		 * @default null
 		 *
 		 * @see #defaultIcon
-		 * @see #selectedDownIcon
 		 */
 		public function get hoverIcon():DisplayObject
 		{
@@ -2454,6 +2026,9 @@ package feathers.controls
 		 * The icon used for the button's disabled state. If <code>null</code>, then
 		 * <code>defaultIcon</code> is used instead.
 		 *
+		 * <p>This property will be ignored if a function is passed to the
+		 * <code>stateToIconFunction</code> property.</p>
+		 *
 		 * <p>The following example gives the button an icon for the disabled state:</p>
 		 *
 		 * <listing version="3.0">
@@ -2462,7 +2037,6 @@ package feathers.controls
 		 * @default null
 		 * 
 		 * @see #defaultIcon
-		 * @see #selectedDisabledIcon
 		 */
 		public function get disabledIcon():DisplayObject
 		{
@@ -2480,181 +2054,6 @@ package feathers.controls
 			}
 			this._iconSelector.setValueForState(value, STATE_DISABLED, false);
 			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-		
-		/**
-		 * The icon used for the button's up state when the button is
-		 * selected. If <code>null</code>, then <code>defaultSelectedIcon</code>
-		 * is used instead. If <code>defaultSelectedIcon</code> is also
-		 * <code>null</code>, then <code>defaultIcon</code> is used.
-		 *
-		 * <p>The following example gives the button an icon for the selected up state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedUpIcon = new Image( texture );</listing>
-		 *
-		 * @default null
-		 * 
-		 * @see #defaultIcon
-		 * @see #defaultSelectedIcon
-		 */
-		public function get selectedUpIcon():DisplayObject
-		{
-			return DisplayObject(this._iconSelector.getValueForState(STATE_UP, true));
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set selectedUpIcon(value:DisplayObject):void
-		{
-			if(this._iconSelector.getValueForState(STATE_UP, true) == value)
-			{
-				return;
-			}
-			this._iconSelector.setValueForState(value, STATE_UP, true);
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-		
-		/**
-		 * The icon used for the button's down state when the button is
-		 * selected. If <code>null</code>, then <code>defaultSelectedIcon</code>
-		 * is used instead. If <code>defaultSelectedIcon</code> is also
-		 * <code>null</code>, then <code>defaultIcon</code> is used.
-		 *
-		 * <p>The following example gives the button an icon for the selected down state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedDownIcon = new Image( texture );</listing>
-		 *
-		 * @default null
-		 * 
-		 * @see #defaultIcon
-		 * @see #defaultSelectedIcon
-		 */
-		public function get selectedDownIcon():DisplayObject
-		{
-			return DisplayObject(this._iconSelector.getValueForState(STATE_DOWN, true));
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set selectedDownIcon(value:DisplayObject):void
-		{
-			if(this._iconSelector.getValueForState(STATE_DOWN, true) == value)
-			{
-				return;
-			}
-			this._iconSelector.setValueForState(value, STATE_DOWN, true);
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-
-		/**
-		 * The icon used for the button's hover state when the button is
-		 * selected. If <code>null</code>, then <code>defaultSelectedIcon</code>
-		 * is used instead. If <code>defaultSelectedIcon</code> is also
-		 * <code>null</code>, then <code>defaultIcon</code> is used.
-		 *
-		 * <p>The following example gives the button an icon for the selected hover state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedHoverIcon = new Image( texture );</listing>
-		 *
-		 * @default null
-		 *
-		 * @see #defaultIcon
-		 * @see #defaultSelectedIcon
-		 */
-		public function get selectedHoverIcon():DisplayObject
-		{
-			return DisplayObject(this._iconSelector.getValueForState(STATE_HOVER, true));
-		}
-
-		/**
-		 * @private
-		 */
-		public function set selectedHoverIcon(value:DisplayObject):void
-		{
-			if(this._iconSelector.getValueForState(STATE_HOVER, true) == value)
-			{
-				return;
-			}
-			this._iconSelector.setValueForState(value, STATE_HOVER, true);
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-
-		/**
-		 * The icon used for the button's disabled state when the button is
-		 * selected. If <code>null</code>, then <code>defaultSelectedIcon</code>
-		 * is used instead. If <code>defaultSelectedIcon</code> is also
-		 * <code>null</code>, then <code>defaultIcon</code> is used.
-		 *
-		 * <p>The following example gives the button an icon for the selected disabled state:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.selectedDisabledIcon = new Image( texture );</listing>
-		 *
-		 * @default null
-		 *
-		 * @see #defaultIcon
-		 * @see #defaultSelectedIcon
-		 */
-		public function get selectedDisabledIcon():DisplayObject
-		{
-			return DisplayObject(this._iconSelector.getValueForState(STATE_DISABLED, true));
-		}
-
-		/**
-		 * @private
-		 */
-		public function set selectedDisabledIcon(value:DisplayObject):void
-		{
-			if(this._iconSelector.getValueForState(STATE_DISABLED, true) == value)
-			{
-				return;
-			}
-			this._iconSelector.setValueForState(value, STATE_DISABLED, true);
-			this.invalidate(INVALIDATION_FLAG_STYLES);
-		}
-		
-		/**
-		 * @private
-		 */
-		protected var _autoFlatten:Boolean = false;
-		
-		/**
-		 * Determines if the button should automatically call <code>flatten()</code>
-		 * after it finishes drawing. In some cases, this will improve
-		 * performance.
-		 *
-		 * <p>The following example tells the button to flatten after it validates:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.autoFlatten = true;</listing>
-		 *
-		 * @default false
-		 */
-		public function get autoFlatten():Boolean
-		{
-			return this._autoFlatten;
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set autoFlatten(value:Boolean):void
-		{
-			if(this._autoFlatten == value)
-			{
-				return;
-			}
-			this._autoFlatten = value;
-			this.unflatten();
-			if(this._autoFlatten)
-			{
-				this.flatten();
-			}
 		}
 
 		/**
@@ -2738,19 +2137,102 @@ package feathers.controls
 				this.removeEventListener(Event.ENTER_FRAME, longPress_enterFrameHandler);
 			}
 		}
+
+		/**
+		 * @private
+		 */
+		protected var _scaleWhenDown:Number = 1;
+
+		/**
+		 * The button renders at this scale in the down state.
+		 *
+		 * <p>The following example scales the button in the down state:</p>
+		 *
+		 * <listing version="3.0">
+		 * button.scaleWhenDown = 0.9;</listing>
+		 *
+		 * @default 1
+		 */
+		public function get scaleWhenDown():Number
+		{
+			return this._scaleWhenDown;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set scaleWhenDown(value:Number):void
+		{
+			this._scaleWhenDown = value;
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _scaleWhenHovering:Number = 1;
+
+		/**
+		 * The button renders at this scale in the hover state.
+		 *
+		 * <p>The following example scales the button in the hover state:</p>
+		 *
+		 * <listing version="3.0">
+		 * button.scaleWhenHovering = 0.9;</listing>
+		 *
+		 * @default 1
+		 */
+		public function get scaleWhenHovering():Number
+		{
+			return this._scaleWhenHovering;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set scaleWhenHovering(value:Number):void
+		{
+			this._scaleWhenHovering = value;
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _ignoreIconResizes:Boolean = false;
+
+		/**
+		 * @private
+		 */
+		override public function render(support:RenderSupport, parentAlpha:Number):void
+		{
+			var scale:Number = 1;
+			if(this._currentState == STATE_DOWN)
+			{
+				scale = this._scaleWhenDown;
+			}
+			else if(this._currentState == STATE_HOVER)
+			{
+				scale = this._scaleWhenHovering;
+			}
+			if(scale !== 1)
+			{
+				support.scaleMatrix(scale, scale);
+				support.translateMatrix(Math.round((1 - scale) / 2 * this.actualWidth),
+					Math.round((1 - scale) / 2 * this.actualHeight));
+			}
+			super.render(support, parentAlpha);
+		}
 		
 		/**
 		 * @private
 		 */
 		override protected function draw():void
 		{
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
 			var sizeInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SIZE);
-			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
-			const selectedInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SELECTED);
-			const textRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_RENDERER);
-			const focusInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_FOCUS);
+			var stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			var textRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_RENDERER);
+			var focusInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_FOCUS);
 
 			if(textRendererInvalid)
 			{
@@ -2762,38 +2244,32 @@ package feathers.controls
 				this.refreshLabel();
 			}
 
-			if(stylesInvalid || stateInvalid || selectedInvalid)
+			if(stylesInvalid || stateInvalid)
 			{
 				this.refreshSkin();
 				this.refreshIcon();
 			}
 
-			if(textRendererInvalid || stylesInvalid || stateInvalid || selectedInvalid)
+			if(textRendererInvalid || stylesInvalid || stateInvalid)
 			{
 				this.refreshLabelStyles();
 			}
 
 			sizeInvalid = this.autoSizeIfNeeded() || sizeInvalid;
 			
-			if(stylesInvalid || stateInvalid || selectedInvalid || sizeInvalid)
+			if(stylesInvalid || stateInvalid || sizeInvalid)
 			{
 				this.scaleSkin();
 			}
 			
-			if(textRendererInvalid || stylesInvalid || stateInvalid || selectedInvalid || dataInvalid || sizeInvalid)
+			if(textRendererInvalid || stylesInvalid || stateInvalid || dataInvalid || sizeInvalid)
 			{
 				this.layoutContent();
-				}
+			}
 
-				if(sizeInvalid || focusInvalid)
-				{
-					this.refreshFocusIndicator();
-				}
-			
-			if(this._autoFlatten)
+			if(sizeInvalid || focusInvalid)
 			{
-				this.unflatten();
-				this.flatten();
+				this.refreshFocusIndicator();
 			}
 		}
 
@@ -2815,14 +2291,21 @@ package feathers.controls
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
-			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
+			var needsWidth:Boolean = this.explicitWidth !== this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight !== this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
 			}
-			this.refreshMaxLabelWidth(true);
-			this.labelTextRenderer.measureText(HELPER_POINT);
+			this.refreshMaxLabelSize(true);
+			if(this.labelTextRenderer)
+			{
+				this.labelTextRenderer.measureText(HELPER_POINT);
+			}
+			else
+			{
+				HELPER_POINT.setTo(0, 0);
+			}
 			var newWidth:Number = this.explicitWidth;
 			if(needsWidth)
 			{
@@ -2852,7 +2335,7 @@ package feathers.controls
 					newWidth = HELPER_POINT.x;
 				}
 				newWidth += this._paddingLeft + this._paddingRight;
-				if(newWidth != newWidth) //isNaN
+				if(newWidth !== newWidth) //isNaN
 				{
 					newWidth = this._originalSkinWidth;
 					if(newWidth != newWidth)
@@ -2860,7 +2343,7 @@ package feathers.controls
 						newWidth = 0;
 					}
 				}
-				else if(this._originalSkinWidth == this._originalSkinWidth) //!isNaN
+				else if(this._originalSkinWidth === this._originalSkinWidth) //!isNaN
 				{
 					if(this._originalSkinWidth > newWidth)
 					{
@@ -2905,7 +2388,7 @@ package feathers.controls
 						newHeight = 0;
 					}
 				}
-				else if(this._originalSkinHeight == this._originalSkinHeight) //!isNaN
+				else if(this._originalSkinHeight === this._originalSkinHeight) //!isNaN
 				{
 					if(this._originalSkinHeight > newHeight)
 					{
@@ -2935,10 +2418,13 @@ package feathers.controls
 				this.labelTextRenderer = null;
 			}
 
-			const factory:Function = this._labelFactory != null ? this._labelFactory : FeathersControl.defaultTextRendererFactory;
-			this.labelTextRenderer = ITextRenderer(factory());
-			this.labelTextRenderer.styleNameList.add(this.labelName);
-			this.addChild(DisplayObject(this.labelTextRenderer));
+			if(this._hasLabelTextRenderer)
+			{
+				var factory:Function = this._labelFactory != null ? this._labelFactory : FeathersControl.defaultTextRendererFactory;
+				this.labelTextRenderer = ITextRenderer(factory());
+				this.labelTextRenderer.styleNameList.add(this.labelName);
+				this.addChild(DisplayObject(this.labelTextRenderer));
+			}
 		}
 
 		/**
@@ -2946,6 +2432,10 @@ package feathers.controls
 		 */
 		protected function refreshLabel():void
 		{
+			if(!this.labelTextRenderer)
+			{
+				return;
+			}
 			this.labelTextRenderer.text = this._label;
 			this.labelTextRenderer.visible = this._label !== null && this._label.length > 0;
 			this.labelTextRenderer.isEnabled = this._isEnabled;
@@ -2958,7 +2448,7 @@ package feathers.controls
 		 */
 		protected function refreshSkin():void
 		{
-			const oldSkin:DisplayObject = this.currentSkin;
+			var oldSkin:DisplayObject = this.currentSkin;
 			if(this._stateToSkinFunction != null)
 			{
 				this.currentSkin = DisplayObject(this._stateToSkinFunction(this, this._currentState, oldSkin));
@@ -2979,8 +2469,8 @@ package feathers.controls
 				}
 			}
 			if(this.currentSkin &&
-				(this._originalSkinWidth != this._originalSkinWidth || //isNaN
-				this._originalSkinHeight != this._originalSkinHeight))
+				(this._originalSkinWidth !== this._originalSkinWidth || //isNaN
+				this._originalSkinHeight !== this._originalSkinHeight))
 			{
 				if(this.currentSkin is IValidating)
 				{
@@ -2998,7 +2488,7 @@ package feathers.controls
 		 */
 		protected function refreshIcon():void
 		{
-			const oldIcon:DisplayObject = this.currentIcon;
+			var oldIcon:DisplayObject = this.currentIcon;
 			if(this._stateToIconFunction != null)
 			{
 				this.currentIcon = DisplayObject(this._stateToIconFunction(this, this._currentState, oldIcon));
@@ -3015,13 +2505,25 @@ package feathers.controls
 			{
 				if(oldIcon)
 				{
+					if(oldIcon is IFeathersControl)
+					{
+						IFeathersControl(oldIcon).removeEventListener(FeathersEventType.RESIZE, currentIcon_resizeHandler);
+					}
 					this.removeChild(oldIcon, false);
 				}
 				if(this.currentIcon)
 				{
 					//we want the icon to appear below the label text renderer
-					var index:int = this.getChildIndex(DisplayObject(this.labelTextRenderer));
+					var index:int = this.numChildren;
+					if(this.labelTextRenderer)
+					{
+						index = this.getChildIndex(DisplayObject(this.labelTextRenderer));
+					}
 					this.addChildAt(this.currentIcon, index);
+					if(this.currentIcon is IFeathersControl)
+					{
+						IFeathersControl(this.currentIcon).addEventListener(FeathersEventType.RESIZE, currentIcon_resizeHandler);
+					}
 				}
 			}
 		}
@@ -3031,6 +2533,10 @@ package feathers.controls
 		 */
 		protected function refreshLabelStyles():void
 		{
+			if(!this.labelTextRenderer)
+			{
+				return;
+			}
 			if(this._stateToLabelPropertiesFunction != null)
 			{
 				var properties:Object = this._stateToLabelPropertiesFunction(this, this._currentState);
@@ -3039,15 +2545,10 @@ package feathers.controls
 			{
 				properties = this._labelPropertiesSelector.updateValue(this, this._currentState);
 			}
-
-			const displayLabelRenderer:DisplayObject = DisplayObject(this.labelTextRenderer);
 			for(var propertyName:String in properties)
 			{
-				if(displayLabelRenderer.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = properties[propertyName];
-					displayLabelRenderer[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = properties[propertyName];
+				this.labelTextRenderer[propertyName] = propertyValue;
 			}
 		}
 		
@@ -3083,8 +2584,10 @@ package feathers.controls
 		 */
 		protected function layoutContent():void
 		{
-			this.refreshMaxLabelWidth(false);
-			if(this._label && this.currentIcon)
+			var oldIgnoreIconResizes:Boolean = this._ignoreIconResizes;
+			this._ignoreIconResizes = true;
+			this.refreshMaxLabelSize(false);
+			if(this._label && this.labelTextRenderer && this.currentIcon)
 			{
 				this.labelTextRenderer.validate();
 				this.positionSingleChild(DisplayObject(this.labelTextRenderer));
@@ -3094,12 +2597,12 @@ package feathers.controls
 				}
 
 			}
-			else if(this._label && !this.currentIcon)
+			else if(this._label && this.labelTextRenderer && !this.currentIcon)
 			{
 				this.labelTextRenderer.validate();
 				this.positionSingleChild(DisplayObject(this.labelTextRenderer));
 			}
-			else if(!this._label && this.currentIcon && this._iconPosition != ICON_POSITION_MANUAL)
+			else if((!this._label || !this.labelTextRenderer) && this.currentIcon && this._iconPosition != ICON_POSITION_MANUAL)
 			{
 				this.positionSingleChild(this.currentIcon);
 			}
@@ -3114,52 +2617,59 @@ package feathers.controls
 				this.currentIcon.x += this._iconOffsetX;
 				this.currentIcon.y += this._iconOffsetY;
 			}
-			if(this._label)
+			if(this._label && this.labelTextRenderer)
 			{
 				this.labelTextRenderer.x += this._labelOffsetX;
 				this.labelTextRenderer.y += this._labelOffsetY;
 			}
+			this._ignoreIconResizes = oldIgnoreIconResizes;
 		}
 
 		/**
 		 * @private
 		 */
-		protected function refreshMaxLabelWidth(forMeasurement:Boolean):void
+		protected function refreshMaxLabelSize(forMeasurement:Boolean):void
 		{
 			if(this.currentIcon is IValidating)
 			{
 				IValidating(this.currentIcon).validate();
 			}
 			var calculatedWidth:Number = this.actualWidth;
+			var calculatedHeight:Number = this.actualHeight;
 			if(forMeasurement)
 			{
 				calculatedWidth = this.explicitWidth;
-				if(calculatedWidth != calculatedWidth) //isNaN
+				if(calculatedWidth !== calculatedWidth) //isNaN
 				{
 					calculatedWidth = this._maxWidth;
 				}
+				calculatedHeight = this.explicitHeight;
+				if(calculatedHeight !== calculatedHeight) //isNaN
+				{
+					calculatedHeight = this._maxHeight;
+				}
 			}
-			if(this._label && this.currentIcon)
+			if(this._label && this.labelTextRenderer)
 			{
-				if(this._iconPosition == ICON_POSITION_LEFT || this._iconPosition == ICON_POSITION_LEFT_BASELINE ||
-					this._iconPosition == ICON_POSITION_RIGHT || this._iconPosition == ICON_POSITION_RIGHT_BASELINE)
+				this.labelTextRenderer.maxWidth = calculatedWidth - this._paddingLeft - this._paddingRight;
+				this.labelTextRenderer.maxHeight = calculatedHeight - this._paddingTop - this._paddingBottom;
+				if(this.currentIcon)
 				{
 					var adjustedGap:Number = this._gap;
 					if(adjustedGap == Number.POSITIVE_INFINITY)
 					{
 						adjustedGap = this._minGap;
 					}
-					this.labelTextRenderer.maxWidth = calculatedWidth - this._paddingLeft - this._paddingRight - this.currentIcon.width - adjustedGap;
+					if(this._iconPosition == ICON_POSITION_LEFT || this._iconPosition == ICON_POSITION_LEFT_BASELINE ||
+						this._iconPosition == ICON_POSITION_RIGHT || this._iconPosition == ICON_POSITION_RIGHT_BASELINE)
+					{
+						this.labelTextRenderer.maxWidth -= (this.currentIcon.width + adjustedGap);
+					}
+					if(this._iconPosition == ICON_POSITION_TOP || this._iconPosition == ICON_POSITION_BOTTOM)
+					{
+						this.labelTextRenderer.maxHeight -= (this.currentIcon.height + adjustedGap);
+					}
 				}
-				else
-				{
-					this.labelTextRenderer.maxWidth = calculatedWidth - this._paddingLeft - this._paddingRight;
-				}
-
-			}
-			else if(this._label && !this.currentIcon)
-			{
-				this.labelTextRenderer.maxWidth = calculatedWidth - this._paddingLeft - this._paddingRight;
 			}
 		}
 		
@@ -3178,7 +2688,7 @@ package feathers.controls
 			}
 			else //center
 			{
-				displayObject.x = this._paddingLeft + (this.actualWidth - this._paddingLeft - this._paddingRight - displayObject.width) / 2;
+				displayObject.x = this._paddingLeft + Math.round((this.actualWidth - this._paddingLeft - this._paddingRight - displayObject.width) / 2);
 			}
 			if(this._verticalAlign == VERTICAL_ALIGN_TOP)
 			{
@@ -3190,7 +2700,7 @@ package feathers.controls
 			}
 			else //middle
 			{
-				displayObject.y = this._paddingTop + (this.actualHeight - this._paddingTop - this._paddingBottom - displayObject.height) / 2;
+				displayObject.y = this._paddingTop + Math.round((this.actualHeight - this._paddingTop - this._paddingBottom - displayObject.height) / 2);
 			}
 		}
 		
@@ -3214,7 +2724,7 @@ package feathers.controls
 					}
 					else if(this._verticalAlign == VERTICAL_ALIGN_MIDDLE)
 					{
-						this.labelTextRenderer.y += (this.currentIcon.height + this._gap) / 2;
+						this.labelTextRenderer.y += Math.round((this.currentIcon.height + this._gap) / 2);
 					}
 					this.currentIcon.y = this.labelTextRenderer.y - this.currentIcon.height - this._gap;
 				}
@@ -3234,7 +2744,7 @@ package feathers.controls
 					}
 					else if(this._horizontalAlign == HORIZONTAL_ALIGN_CENTER)
 					{
-						this.labelTextRenderer.x -= (this.currentIcon.width + this._gap) / 2;
+						this.labelTextRenderer.x -= Math.round((this.currentIcon.width + this._gap) / 2);
 					}
 					this.currentIcon.x = this.labelTextRenderer.x + this.labelTextRenderer.width + this._gap;
 				}
@@ -3254,7 +2764,7 @@ package feathers.controls
 					}
 					else if(this._verticalAlign == VERTICAL_ALIGN_MIDDLE)
 					{
-						this.labelTextRenderer.y -= (this.currentIcon.height + this._gap) / 2;
+						this.labelTextRenderer.y -= Math.round((this.currentIcon.height + this._gap) / 2);
 					}
 					this.currentIcon.y = this.labelTextRenderer.y + this.labelTextRenderer.height + this._gap;
 				}
@@ -3274,7 +2784,7 @@ package feathers.controls
 					}
 					else if(this._horizontalAlign == HORIZONTAL_ALIGN_CENTER)
 					{
-						this.labelTextRenderer.x += (this._gap + this.currentIcon.width) / 2;
+						this.labelTextRenderer.x += Math.round((this._gap + this.currentIcon.width) / 2);
 					}
 					this.currentIcon.x = this.labelTextRenderer.x - this._gap - this.currentIcon.width;
 				}
@@ -3292,7 +2802,7 @@ package feathers.controls
 				}
 				else
 				{
-					this.currentIcon.y = this._paddingTop + (this.actualHeight - this._paddingTop - this._paddingBottom - this.currentIcon.height) / 2;
+					this.currentIcon.y = this._paddingTop + Math.round((this.actualHeight - this._paddingTop - this._paddingBottom - this.currentIcon.height) / 2);
 				}
 			}
 			else if(this._iconPosition == ICON_POSITION_LEFT_BASELINE || this._iconPosition == ICON_POSITION_RIGHT_BASELINE)
@@ -3311,7 +2821,7 @@ package feathers.controls
 				}
 				else
 				{
-					this.currentIcon.x = this._paddingLeft + (this.actualWidth - this._paddingLeft - this._paddingRight - this.currentIcon.width) / 2;
+					this.currentIcon.x = this._paddingLeft + Math.round((this.actualWidth - this._paddingLeft - this._paddingRight - this.currentIcon.width) / 2);
 				}
 			}
 		}
@@ -3331,6 +2841,14 @@ package feathers.controls
 			{
 				this.currentState = STATE_DISABLED;
 			}
+		}
+
+		/**
+		 * Triggers the button.
+		 */
+		protected function trigger():void
+		{
+			this.dispatchEventWith(Event.TRIGGERED);
 		}
 
 		/**
@@ -3359,6 +2877,19 @@ package feathers.controls
 			super.focusOutHandler(event);
 			this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
 			this.stage.removeEventListener(KeyboardEvent.KEY_UP, stage_keyUpHandler);
+
+			if(this.touchPointID >= 0)
+			{
+				this.touchPointID = -1;
+				if(this._isEnabled)
+				{
+					this.currentState = STATE_UP;
+				}
+				else
+				{
+					this.currentState = STATE_DISABLED;
+				}
+			}
 		}
 
 		/**
@@ -3390,7 +2921,7 @@ package feathers.controls
 				}
 
 				touch.getLocation(this.stage, HELPER_POINT);
-				const isInBounds:Boolean = this.contains(this.stage.hitTest(HELPER_POINT, true));
+				var isInBounds:Boolean = this.contains(this.stage.hitTest(HELPER_POINT, true));
 				if(touch.phase == TouchPhase.MOVED)
 				{
 					if(isInBounds || this.keepDownStateOnRollOut)
@@ -3409,11 +2940,7 @@ package feathers.controls
 					//won't be able to happen until the next touch begins
 					if(!this._hasLongPressed && isInBounds)
 					{
-						this.dispatchEventWith(Event.TRIGGERED);
-						if(this._isToggle)
-						{
-							this.isSelected = !this._isSelected;
-						}
+						this.trigger();
 					}
 				}
 				return;
@@ -3486,13 +3013,20 @@ package feathers.controls
 			{
 				return;
 			}
-			this.touchPointID = -1;
-			this.currentState = STATE_UP;
-			this.dispatchEventWith(Event.TRIGGERED);
-			if(this._isToggle)
+			this.resetTouchState();
+			this.trigger();
+		}
+
+		/**
+		 * @private
+		 */
+		protected function currentIcon_resizeHandler():void
+		{
+			if(this._ignoreIconResizes)
 			{
-				this.isSelected = !this._isSelected;
+				return;
 			}
+			this.invalidate(INVALIDATION_FLAG_SIZE);
 		}
 		
 		/**

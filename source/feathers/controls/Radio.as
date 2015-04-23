@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -9,6 +9,7 @@ package feathers.controls
 {
 	import feathers.core.IGroupedToggle;
 	import feathers.core.ToggleGroup;
+	import feathers.skins.IStyleProvider;
 
 	import flash.errors.IllegalOperationError;
 
@@ -26,26 +27,26 @@ package feathers.controls
 	 * <listing version="3.0">
 	 * var group:ToggleGroup = new ToggleGroup();
 	 * group.addEventListener( Event.CHANGE, group_changeHandler );
-	 *
+	 * 
 	 * var radio1:Radio = new Radio();
 	 * radio1.label = "One";
 	 * radio1.toggleGroup = group;
 	 * this.addChild( radio1 );
-	 *
+	 * 
 	 * var radio2:Radio = new Radio();
 	 * radio2.label = "Two";
 	 * radio2.toggleGroup = group;
 	 * this.addChild( radio2 );
-	 *
+	 * 
 	 * var radio3:Radio = new Radio();
 	 * radio3.label = "Three";
 	 * radio3.toggleGroup = group;
 	 * this.addChild( radio3 );</listing>
 	 *
-	 * @see http://wiki.starling-framework.org/feathers/radio
+	 * @see ../../../help/radio.html How to use the Feathers Radio component
 	 * @see feathers.core.ToggleGroup
 	 */
-	public class Radio extends Button implements IGroupedToggle
+	public class Radio extends ToggleButton implements IGroupedToggle
 	{
 		/**
 		 * If a <code>Radio</code> has not been added to a <code>ToggleGroup</code>,
@@ -56,13 +57,31 @@ package feathers.controls
 		public static const defaultRadioGroup:ToggleGroup = new ToggleGroup();
 
 		/**
+		 * The default <code>IStyleProvider</code> for all <code>Radio</code>
+		 * components.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
+		 */
+		public static var globalStyleProvider:IStyleProvider;
+
+		/**
 		 * Constructor.
 		 */
 		public function Radio()
 		{
+			super();
 			super.isToggle = true;
 			this.addEventListener(Event.ADDED_TO_STAGE, radio_addedToStageHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, radio_removedFromStageHandler);
+		}
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return Radio.globalStyleProvider;
 		}
 
 		/**

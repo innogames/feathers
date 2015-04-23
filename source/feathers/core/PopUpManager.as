@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -130,7 +130,7 @@ package feathers.core
 		 * The default factory that creates overlays for modal pop-ups. Creates
 		 * an invisible <code>Quad</code>.
 		 *
-		 * @see starling.display.Quad
+		 * @see http://doc.starling-framework.org/core/starling/display/Quad.html starling.display.Quad
 		 */
 		public static function defaultOverlayFactory():DisplayObject
 		{

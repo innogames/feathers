@@ -1,13 +1,13 @@
 package feathers.examples.componentsExplorer.screens
 {
 	import feathers.controls.Button;
+	import feathers.controls.Header;
 	import feathers.controls.List;
 	import feathers.controls.PanelScreen;
 	import feathers.controls.PickerList;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ListCollection;
-	import feathers.events.FeathersEventType;
 	import feathers.layout.AnchorLayout;
 	import feathers.layout.AnchorLayoutData;
 	import feathers.system.DeviceCapabilities;
@@ -23,14 +23,17 @@ package feathers.examples.componentsExplorer.screens
 		public function PickerListScreen()
 		{
 			super();
-			this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
 		}
 
-		private var _backButton:Button;
 		private var _list:PickerList;
-		
-		protected function initializeHandler(event:Event):void
+
+		override protected function initialize():void
 		{
+			//never forget to call super.initialize()
+			super.initialize();
+
+			this.title = "Picker List";
+
 			this.layout = new AnchorLayout();
 
 			var items:Array = [];
@@ -46,7 +49,7 @@ package feathers.examples.componentsExplorer.screens
 			this._list.dataProvider = new ListCollection(items);
 			//normally, the first item is selected, but let's show the prompt
 			this._list.selectedIndex = -1;
-			const listLayoutData:AnchorLayoutData = new AnchorLayoutData();
+			var listLayoutData:AnchorLayoutData = new AnchorLayoutData();
 			listLayoutData.horizontalCenter = 0;
 			listLayoutData.verticalCenter = 0;
 			this._list.layoutData = listLayoutData;
@@ -79,22 +82,33 @@ package feathers.examples.componentsExplorer.screens
 				return list;
 			};
 
-			this.headerProperties.title = "Picker List";
+			this.headerFactory = this.customHeaderFactory;
 
+			//this screen doesn't use a back button on tablets because the main
+			//app's uses a split layout
 			if(!DeviceCapabilities.isTablet(Starling.current.nativeStage))
 			{
-				this._backButton = new Button();
-				this._backButton.styleNameList.add(Button.ALTERNATE_NAME_BACK_BUTTON);
-				this._backButton.label = "Back";
-				this._backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
-
-				this.headerProperties.leftItems = new <DisplayObject>
-				[
-					this._backButton
-				];
-
 				this.backButtonHandler = this.onBackButton;
 			}
+		}
+
+		private function customHeaderFactory():Header
+		{
+			var header:Header = new Header();
+			//this screen doesn't use a back button on tablets because the main
+			//app's uses a split layout
+			if(!DeviceCapabilities.isTablet(Starling.current.nativeStage))
+			{
+				var backButton:Button = new Button();
+				backButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_BACK_BUTTON);
+				backButton.label = "Back";
+				backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
+				header.leftItems = new <DisplayObject>
+				[
+					backButton
+				];
+			}
+			return header;
 		}
 		
 		private function onBackButton():void

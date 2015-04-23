@@ -9,6 +9,9 @@
 		<package name="feathers.controls"> 
 			<shortDescription><![CDATA[User interface controls and containers.]]></shortDescription>
 		</package>
+		<package name="feathers.controls.supportClasses"> 
+			<shortDescription><![CDATA[Supporting class and interfaces used by Feathers user interface components.]]></shortDescription>
+		</package>
 		<package name="feathers.controls.popups"> 
 			<shortDescription><![CDATA[Managers for the display of pop-up sub-components.]]></shortDescription>
 		</package>
@@ -33,6 +36,9 @@
 		<package name="feathers.layout"> 
 			<shortDescription><![CDATA[A variety of layout algorithms used to customize Feathers controls and containers.]]></shortDescription>
 		</package>
+		<package name="feathers.media"> 
+			<shortDescription><![CDATA[User interface controls for media playback.]]></shortDescription>
+		</package>
 		<package name="feathers.skins"> 
 			<shortDescription><![CDATA[Classes related to skinning and themes in Feathers.]]></shortDescription>
 		</package>
@@ -48,6 +54,9 @@
 		<package name="feathers.system"> 
 			<shortDescription><![CDATA[Higher level queries for system-level capabilities.]]></shortDescription>
 		</package>
+		<package name="feathers.themes"> 
+			<shortDescription><![CDATA[Classes related to theming and styling components.]]></shortDescription>
+		</package>
 		<package name="feathers.utils"> 
 			<shortDescription><![CDATA[Utility classes and function.]]></shortDescription>
 		</package>
@@ -59,6 +68,9 @@
 		</package>
 		<package name="feathers.utils.math"> 
 			<shortDescription><![CDATA[Utilities for common mathematical calculations.]]></shortDescription>
+		</package>
+		<package name="feathers.utils.text"> 
+			<shortDescription><![CDATA[Utilities for text components.]]></shortDescription>
 		</package>
 	</packages>
 </overviews>

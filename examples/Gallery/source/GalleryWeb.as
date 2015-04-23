@@ -43,10 +43,10 @@ package
 			this.gotoAndStop(2);
 			this.graphics.clear();
 
-			Starling.handleLostContext = true;
 			Starling.multitouchEnabled = true;
-			const MainType:Class = getDefinitionByName("feathers.examples.gallery.Main") as Class;
+			var MainType:Class = getDefinitionByName("feathers.examples.gallery.Main") as Class;
 			this._starling = new Starling(MainType, this.stage);
+			this._starling.supportHighResolutions = true;
 			this._starling.start();
 
 			this.stage.addEventListener(Event.RESIZE, stage_resizeHandler, false, int.MAX_VALUE, true);
@@ -66,7 +66,7 @@ package
 			this._starling.stage.stageWidth = this.stage.stageWidth;
 			this._starling.stage.stageHeight = this.stage.stageHeight;
 
-			const viewPort:Rectangle = this._starling.viewPort;
+			var viewPort:Rectangle = this._starling.viewPort;
 			viewPort.width = this.stage.stageWidth;
 			viewPort.height = this.stage.stageHeight;
 			try

@@ -1,6 +1,7 @@
 package feathers.examples.youtube.screens
 {
 	import feathers.controls.Button;
+	import feathers.controls.Header;
 	import feathers.controls.PanelScreen;
 	import feathers.controls.ScrollText;
 	import feathers.events.FeathersEventType;
@@ -20,7 +21,7 @@ package feathers.examples.youtube.screens
 	{
 		public function VideoDetailsScreen()
 		{
-			this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
+			super();
 		}
 
 		private var _backButton:Button;
@@ -44,8 +45,11 @@ package feathers.examples.youtube.screens
 			this.invalidate(INVALIDATION_FLAG_DATA);
 		}
 
-		protected function initializeHandler(event:Event):void
+		override protected function initialize():void
 		{
+			//never forget to call super.initialize()
+			super.initialize();
+
 			this.layout = new AnchorLayout();
 
 			this._scrollText = new ScrollText();
@@ -54,11 +58,22 @@ package feathers.examples.youtube.screens
 			this._scrollText.layoutData = new AnchorLayoutData(0, 0, 0, 0);
 			this.addChild(this._scrollText);
 
+			this.headerFactory = this.customHeaderFactory;
+
+			this.backButtonHandler = onBackButton;
+
+			this.addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, transitionInCompleteHandler);
+		}
+
+		private function customHeaderFactory():Header
+		{
+			var header:Header = new Header();
+
 			this._backButton = new Button();
-			this._backButton.styleNameList.add(Button.ALTERNATE_NAME_BACK_BUTTON);
+			this._backButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_BACK_BUTTON);
 			this._backButton.label = "Back";
 			this._backButton.addEventListener(Event.TRIGGERED, onBackButton);
-			this.headerProperties.leftItems = new <DisplayObject>
+			header.leftItems = new <DisplayObject>
 			[
 				this._backButton
 			];
@@ -66,22 +81,22 @@ package feathers.examples.youtube.screens
 			this._watchButton = new Button();
 			this._watchButton.label = "Watch";
 			this._watchButton.addEventListener(Event.TRIGGERED, watchButton_triggeredHandler);
-			this.headerProperties.rightItems = new <DisplayObject>
+			header.rightItems = new <DisplayObject>
 			[
 				this._watchButton
 			];
 
-			this.backButtonHandler = onBackButton;
+			return header;
 		}
 
 		override protected function draw():void
 		{
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
 			if(dataInvalid)
 			{
 				if(this._model && this._model.selectedVideo)
 				{
-					this.headerProperties.title = this._model.selectedVideo.title;
+					this.title = this._model.selectedVideo.title;
 					var content:String = '<p><b><font size="+2">' + this._model.selectedVideo.title + '</font></b></p>';
 					content += '<p><font size="-2" color="#999999">' + this._model.selectedVideo.author + '</font></p><br>';
 					content += this._model.selectedVideo.description.replace(/\r\n/g, "<br>");
@@ -89,7 +104,7 @@ package feathers.examples.youtube.screens
 				}
 				else
 				{
-					this.headerProperties.title = null;
+					this.title = null;
 					this._scrollText.text = "";
 				}
 			}
@@ -101,6 +116,11 @@ package feathers.examples.youtube.screens
 		private function onBackButton(event:Event = null):void
 		{
 			this.dispatchEventWith(Event.COMPLETE);
+		}
+
+		private function transitionInCompleteHandler(event:Event):void
+		{
+			this.revealScrollBars();
 		}
 
 		private function watchButton_triggeredHandler(event:Event):void

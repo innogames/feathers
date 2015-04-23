@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -45,7 +45,7 @@ package feathers.layout
 	 * layout will change in height as the number of items increases or
 	 * decreases.
 	 *
-	 * @see http://wiki.starling-framework.org/feathers/tiled-rows-layout
+	 * @see ../../../help/tiled-rows-layout.html How to use TiledRowsLayout with Feathers containers
 	 */
 	public class TiledRowsLayout extends EventDispatcher implements IVirtualLayout
 	{
@@ -418,6 +418,93 @@ package feathers.layout
 		/**
 		 * @private
 		 */
+		protected var _requestedColumnCount:int = 0;
+
+		/**
+		 * Requests that the layout uses a specific number of columns in a row,
+		 * if possible. Set to <code>0</code> to calculate the maximum of
+		 * columns that will fit in the available space.
+		 *
+		 * <p>If the view port's explicit or maximum width is not large enough
+		 * to fit the requested number of columns, it will use fewer. If the
+		 * view port doesn't have an explicit width and the maximum width is
+		 * equal to <code>Number.POSITIVE_INFINITY</code>, the width will be
+		 * calculated automatically to fit the exact number of requested
+		 * columns.</p>
+		 *
+		 * <p>If paging is enabled, this value will be used to calculate the
+		 * number of columns in a page. If paging isn't enabled, this value will
+		 * be used to calculate a minimum number of columns, even if there
+		 * aren't enough items to fill each column.</p>
+		 *
+		 * @default 0
+		 */
+		public function get requestedColumnCount():int
+		{
+			return this._requestedColumnCount;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set requestedColumnCount(value:int):void
+		{
+			if(value < 0)
+			{
+				throw RangeError("requestedColumnCount requires a value >= 0");
+			}
+			if(this._requestedColumnCount == value)
+			{
+				return;
+			}
+			this._requestedColumnCount = value;
+			this.dispatchEventWith(Event.CHANGE);
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _requestedRowCount:int = 0;
+
+		/**
+		 * Requests that the layout uses a specific number of rows, if possible.
+		 * If the view port's explicit or maximum height is not large enough to
+		 * fit the requested number of rows, it will use fewer. Set to <code>0</code>
+		 * to calculate the number of rows automatically based on width and
+		 * height.
+		 *
+		 * <p>If paging is enabled, this value will be used to calculate the
+		 * number of rows in a page. If paging isn't enabled, this value will
+		 * be used to calculate a minimum number of rows, even if there aren't
+		 * enough items to fill each row.</p>
+		 *
+		 * @default 0
+		 */
+		public function get requestedRowCount():int
+		{
+			return this._requestedRowCount;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set requestedRowCount(value:int):void
+		{
+			if(value < 0)
+			{
+				throw RangeError("requestedRowCount requires a value >= 0");
+			}
+			if(this._requestedRowCount == value)
+			{
+				return;
+			}
+			this._requestedRowCount = value;
+			this.dispatchEventWith(Event.CHANGE);
+		}
+
+		/**
+		 * @private
+		 */
 		protected var _verticalAlign:String = VERTICAL_ALIGN_TOP;
 
 		[Inspectable(type="String",enumeration="top,middle,bottom")]
@@ -624,9 +711,18 @@ package feathers.layout
 
 		/**
 		 * Determines if items will be set invisible if they are outside the
-		 * view port. Can improve performance, especially for non-virtual
-		 * layouts. If <code>true</code>, you will not be able to manually
+		 * view port. If <code>true</code>, you will not be able to manually
 		 * change the <code>visible</code> property of any items in the layout.
+		 *
+		 * <p><strong>DEPRECATION WARNING:</strong> This property is deprecated
+		 * starting with Feathers 2.0. It will be removed in a future version of
+		 * Feathers according to the standard
+		 * <a target="_top" href="../../../help/deprecation-policy.html">Feathers deprecation policy</a>.
+		 * Originally, the <code>manageVisibility</code> property could be used
+		 * to improve performance of non-virtual layouts by hiding items that
+		 * were outside the view port. However, other performance improvements
+		 * have made it so that setting <code>manageVisibility</code> can now
+		 * sometimes hurt performance instead of improving it.</p>
 		 *
 		 * @default false
 		 */
@@ -862,16 +958,16 @@ package feathers.layout
 				return result;
 			}
 
-			const scrollX:Number = viewPortBounds ? viewPortBounds.scrollX : 0;
-			const scrollY:Number = viewPortBounds? viewPortBounds.scrollY : 0;
-			const boundsX:Number = viewPortBounds ? viewPortBounds.x : 0;
-			const boundsY:Number = viewPortBounds ? viewPortBounds.y : 0;
-			const minWidth:Number = viewPortBounds ? viewPortBounds.minWidth : 0;
-			const minHeight:Number = viewPortBounds ? viewPortBounds.minHeight : 0;
-			const maxWidth:Number = viewPortBounds ? viewPortBounds.maxWidth : Number.POSITIVE_INFINITY;
-			const maxHeight:Number = viewPortBounds ? viewPortBounds.maxHeight : Number.POSITIVE_INFINITY;
-			const explicitWidth:Number = viewPortBounds ? viewPortBounds.explicitWidth : NaN;
-			const explicitHeight:Number = viewPortBounds ? viewPortBounds.explicitHeight : NaN;
+			var scrollX:Number = viewPortBounds ? viewPortBounds.scrollX : 0;
+			var scrollY:Number = viewPortBounds? viewPortBounds.scrollY : 0;
+			var boundsX:Number = viewPortBounds ? viewPortBounds.x : 0;
+			var boundsY:Number = viewPortBounds ? viewPortBounds.y : 0;
+			var minWidth:Number = viewPortBounds ? viewPortBounds.minWidth : 0;
+			var minHeight:Number = viewPortBounds ? viewPortBounds.minHeight : 0;
+			var maxWidth:Number = viewPortBounds ? viewPortBounds.maxWidth : Number.POSITIVE_INFINITY;
+			var maxHeight:Number = viewPortBounds ? viewPortBounds.maxHeight : Number.POSITIVE_INFINITY;
+			var explicitWidth:Number = viewPortBounds ? viewPortBounds.explicitWidth : NaN;
+			var explicitHeight:Number = viewPortBounds ? viewPortBounds.explicitHeight : NaN;
 
 			if(this._useVirtualLayout)
 			{
@@ -883,7 +979,7 @@ package feathers.layout
 			this.validateItems(items);
 
 			this._discoveredItemsCache.length = 0;
-			const itemCount:int = items.length;
+			var itemCount:int = items.length;
 			var tileWidth:Number = this._useVirtualLayout ? calculatedTypicalItemWidth : 0;
 			var tileHeight:Number = this._useVirtualLayout ? calculatedTypicalItemHeight : 0;
 			//a virtual layout assumes that all items are the same size as
@@ -936,46 +1032,98 @@ package feathers.layout
 			var availableWidth:Number = NaN;
 			var availableHeight:Number = NaN;
 
-			var horizontalTileCount:int = itemCount;
-			if(!isNaN(explicitWidth))
+			var horizontalTileCount:int;
+			if(explicitWidth === explicitWidth) //!isNaN
 			{
 				availableWidth = explicitWidth;
 				horizontalTileCount = (explicitWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / (tileWidth + this._horizontalGap);
 			}
-			else if(!isNaN(maxWidth))
+			else if(maxWidth === maxWidth && //!isNaN
+				maxWidth < Number.POSITIVE_INFINITY)
 			{
 				availableWidth = maxWidth;
 				horizontalTileCount = (maxWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / (tileWidth + this._horizontalGap);
 			}
+			else if(this._requestedColumnCount > 0)
+			{
+				horizontalTileCount = this._requestedColumnCount;
+				availableWidth = this._paddingLeft + this._paddingRight + ((tileWidth + this._horizontalGap) * horizontalTileCount) - this._horizontalGap;
+			}
+			else
+			{
+				//put everything in one row
+				horizontalTileCount = itemCount;
+			}
 			if(horizontalTileCount < 1)
 			{
+				//we must have at least one tile per row
 				horizontalTileCount = 1;
 			}
-			var verticalTileCount:int = 1;
-			if(!isNaN(explicitHeight))
+			else if(this._requestedColumnCount > 0)
+			{
+				if(availableWidth !== availableWidth) //isNaN
+				{
+					horizontalTileCount = this._requestedColumnCount;
+					availableWidth = horizontalTileCount * (tileWidth + this._horizontalGap) - this._horizontalGap - this._paddingLeft - this._paddingRight;
+				}
+				else if(horizontalTileCount > this._requestedColumnCount)
+				{
+					horizontalTileCount = this._requestedColumnCount;
+				}
+			}
+			var verticalTileCount:int;
+			if(explicitHeight === explicitHeight) //!isNaN
 			{
 				availableHeight = explicitHeight;
 				verticalTileCount = (explicitHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / (tileHeight + this._verticalGap);
 			}
-			else if(!isNaN(maxHeight))
+			else if(maxHeight === maxHeight && //!isNaN
+				maxHeight < Number.POSITIVE_INFINITY)
 			{
 				availableHeight = maxHeight;
 				verticalTileCount = (maxHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / (tileHeight + this._verticalGap);
 			}
+			else
+			{
+				//using the horizontal tile count, calculate how many rows will
+				//be required for the total number of items.
+				verticalTileCount = Math.ceil(itemCount / horizontalTileCount);
+			}
 			if(verticalTileCount < 1)
 			{
+				//we must have at least one tile per column
 				verticalTileCount = 1;
 			}
+			else if(this._requestedRowCount > 0)
+			{
+				if(availableHeight !== availableHeight) //isNaN
+				{
+					verticalTileCount = this._requestedRowCount;
+					availableHeight = verticalTileCount * (tileHeight + this._verticalGap) - this._verticalGap - this._paddingTop - this._paddingBottom;
+				}
+				else if(verticalTileCount > this._requestedRowCount)
+				{
+					verticalTileCount = this._requestedRowCount;
+				}
+			}
 
-			const totalPageWidth:Number = horizontalTileCount * (tileWidth + this._horizontalGap) - this._horizontalGap + this._paddingLeft + this._paddingRight;
-			const totalPageHeight:Number = verticalTileCount * (tileHeight + this._verticalGap) - this._verticalGap + this._paddingTop + this._paddingBottom;
-			const availablePageWidth:Number = isNaN(availableWidth) ? totalPageWidth : availableWidth;
-			const availablePageHeight:Number = isNaN(availableHeight) ? totalPageHeight : availableHeight;
+			var totalPageWidth:Number = horizontalTileCount * (tileWidth + this._horizontalGap) - this._horizontalGap + this._paddingLeft + this._paddingRight;
+			var totalPageHeight:Number = verticalTileCount * (tileHeight + this._verticalGap) - this._verticalGap + this._paddingTop + this._paddingBottom;
+			var availablePageWidth:Number = availableWidth;
+			if(availablePageWidth !== availablePageWidth) //isNaN
+			{
+				availablePageWidth = totalPageWidth;
+			}
+			var availablePageHeight:Number = availableHeight;
+			if(availablePageHeight !== availablePageHeight) //isNaN
+			{
+				availablePageHeight = totalPageHeight;
+			}
 
-			const startX:Number = boundsX + this._paddingLeft;
-			const startY:Number = boundsY + this._paddingTop;
+			var startX:Number = boundsX + this._paddingLeft;
+			var startY:Number = boundsY + this._paddingTop;
 
-			const perPage:int = horizontalTileCount * verticalTileCount;
+			var perPage:int = horizontalTileCount * verticalTileCount;
 			var pageIndex:int = 0;
 			var nextPageStartIndex:int = perPage;
 			var pageStartX:Number = startX;
@@ -1006,7 +1154,7 @@ package feathers.layout
 						var discoveredItemsLastIndex:int = this._useVirtualLayout ? (this._discoveredItemsCache.length - 1) : (itemIndex - 1);
 						this.applyHorizontalAlign(discoveredItems, discoveredItemsFirstIndex, discoveredItemsLastIndex, totalPageWidth, availablePageWidth);
 						this.applyVerticalAlign(discoveredItems, discoveredItemsFirstIndex, discoveredItemsLastIndex, totalPageHeight, availablePageHeight);
-						if(this.manageVisibility)
+						if(this._manageVisibility)
 						{
 							this.applyVisible(discoveredItems, discoveredItemsFirstIndex, discoveredItemsLastIndex,
 								boundsX + scrollX, scrollX + availableWidth, boundsY + scrollY, scrollY + availableHeight);
@@ -1036,46 +1184,46 @@ package feathers.layout
 					{
 						case TILE_HORIZONTAL_ALIGN_JUSTIFY:
 						{
-							item.x = positionX;
+							item.x = item.pivotX + positionX;
 							item.width = tileWidth;
 							break;
 						}
 						case TILE_HORIZONTAL_ALIGN_LEFT:
 						{
-							item.x = positionX;
+							item.x = item.pivotX + positionX;
 							break;
 						}
 						case TILE_HORIZONTAL_ALIGN_RIGHT:
 						{
-							item.x = positionX + tileWidth - item.width;
+							item.x = item.pivotX + positionX + tileWidth - item.width;
 							break;
 						}
 						default: //center or unknown
 						{
-							item.x = positionX + (tileWidth - item.width) / 2;
+							item.x = item.pivotX + positionX + Math.round((tileWidth - item.width) / 2);
 						}
 					}
 					switch(this._tileVerticalAlign)
 					{
 						case TILE_VERTICAL_ALIGN_JUSTIFY:
 						{
-							item.y = positionY;
+							item.y = item.pivotY + positionY;
 							item.height = tileHeight;
 							break;
 						}
 						case TILE_VERTICAL_ALIGN_TOP:
 						{
-							item.y = positionY;
+							item.y = item.pivotY + positionY;
 							break;
 						}
 						case TILE_VERTICAL_ALIGN_BOTTOM:
 						{
-							item.y = positionY + tileHeight - item.height;
+							item.y = item.pivotY + positionY + tileHeight - item.height;
 							break;
 						}
 						default: //middle or unknown
 						{
-							item.y = positionY + (tileHeight - item.height) / 2;
+							item.y = item.pivotY + positionY + Math.round((tileHeight - item.height) / 2);
 						}
 					}
 					if(this._useVirtualLayout)
@@ -1095,7 +1243,7 @@ package feathers.layout
 				discoveredItemsLastIndex = this._useVirtualLayout ? (discoveredItems.length - 1) : (i - 1);
 				this.applyHorizontalAlign(discoveredItems, discoveredItemsFirstIndex, discoveredItemsLastIndex, totalPageWidth, availablePageWidth);
 				this.applyVerticalAlign(discoveredItems, discoveredItemsFirstIndex, discoveredItemsLastIndex, totalPageHeight, availablePageHeight);
-				if(this.manageVisibility)
+				if(this._manageVisibility)
 				{
 					this.applyVisible(discoveredItems, discoveredItemsFirstIndex, discoveredItemsLastIndex,
 						boundsX + scrollX, scrollX + availableWidth, boundsY + scrollY, scrollY + availableHeight);
@@ -1103,12 +1251,13 @@ package feathers.layout
 			}
 
 			var totalWidth:Number = totalPageWidth;
-			if(!isNaN(availableWidth) && this._paging == PAGING_HORIZONTAL)
+			if(availableWidth === availableWidth && //!isNaN
+				this._paging == PAGING_HORIZONTAL)
 			{
 				totalWidth = Math.ceil(itemCount / perPage) * availableWidth;
 			}
 			var totalHeight:Number = positionY + tileHeight + this._paddingBottom;
-			if(!isNaN(availableHeight))
+			if(availableHeight === availableHeight) //!isNaN
 			{
 				if(this._paging == PAGING_HORIZONTAL)
 				{
@@ -1119,11 +1268,11 @@ package feathers.layout
 					totalHeight = Math.ceil(itemCount / perPage) * availableHeight;
 				}
 			}
-			if(isNaN(availableWidth))
+			if(availableWidth !== availableWidth) //isNaN
 			{
 				availableWidth = totalWidth;
 			}
-			if(isNaN(availableHeight))
+			if(availableHeight !== availableHeight) //isNaN
 			{
 				availableHeight = totalHeight;
 			}
@@ -1142,7 +1291,7 @@ package feathers.layout
 				discoveredItemsLastIndex = discoveredItems.length - 1;
 				this.applyHorizontalAlign(discoveredItems, 0, discoveredItemsLastIndex, totalWidth, availableWidth);
 				this.applyVerticalAlign(discoveredItems, 0, discoveredItemsLastIndex, totalHeight, availableHeight);
-				if(this.manageVisibility)
+				if(this._manageVisibility)
 				{
 					this.applyVisible(discoveredItems, discoveredItemsFirstIndex, discoveredItemsLastIndex,
 						boundsX + scrollX, scrollX + availableWidth, boundsY + scrollY, scrollY + availableHeight);
@@ -1174,22 +1323,22 @@ package feathers.layout
 				throw new IllegalOperationError("measureViewPort() may be called only if useVirtualLayout is true.")
 			}
 
-			const explicitWidth:Number = viewPortBounds ? viewPortBounds.explicitWidth : NaN;
-			const explicitHeight:Number = viewPortBounds ? viewPortBounds.explicitHeight : NaN;
-			const needsWidth:Boolean = isNaN(explicitWidth);
-			const needsHeight:Boolean = isNaN(explicitHeight);
+			var explicitWidth:Number = viewPortBounds ? viewPortBounds.explicitWidth : NaN;
+			var explicitHeight:Number = viewPortBounds ? viewPortBounds.explicitHeight : NaN;
+			var needsWidth:Boolean = explicitWidth !== explicitWidth; //isNaN;
+			var needsHeight:Boolean = explicitHeight !== explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				result.x = explicitWidth;
 				result.y = explicitHeight;
 				return result;
 			}
-			const boundsX:Number = viewPortBounds ? viewPortBounds.x : 0;
-			const boundsY:Number = viewPortBounds ? viewPortBounds.y : 0;
-			const minWidth:Number = viewPortBounds ? viewPortBounds.minWidth : 0;
-			const minHeight:Number = viewPortBounds ? viewPortBounds.minHeight : 0;
-			const maxWidth:Number = viewPortBounds ? viewPortBounds.maxWidth : Number.POSITIVE_INFINITY;
-			const maxHeight:Number = viewPortBounds ? viewPortBounds.maxHeight : Number.POSITIVE_INFINITY;
+			var boundsX:Number = viewPortBounds ? viewPortBounds.x : 0;
+			var boundsY:Number = viewPortBounds ? viewPortBounds.y : 0;
+			var minWidth:Number = viewPortBounds ? viewPortBounds.minWidth : 0;
+			var minHeight:Number = viewPortBounds ? viewPortBounds.minHeight : 0;
+			var maxWidth:Number = viewPortBounds ? viewPortBounds.maxWidth : Number.POSITIVE_INFINITY;
+			var maxHeight:Number = viewPortBounds ? viewPortBounds.maxHeight : Number.POSITIVE_INFINITY;
 
 			this.prepareTypicalItem();
 			var calculatedTypicalItemWidth:Number = this._typicalItem ? this._typicalItem.width : 0;
@@ -1220,43 +1369,82 @@ package feathers.layout
 			var availableWidth:Number = NaN;
 			var availableHeight:Number = NaN;
 
-			var horizontalTileCount:int = itemCount;
-			if(!isNaN(explicitWidth))
+			var horizontalTileCount:int;
+			if(explicitWidth === explicitWidth) //!isNaN
 			{
 				availableWidth = explicitWidth;
 				horizontalTileCount = (explicitWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / (tileWidth + this._horizontalGap);
 			}
-			else if(!isNaN(maxWidth))
+			else if(maxWidth === maxWidth && //!isNaN
+				maxWidth < Number.POSITIVE_INFINITY)
 			{
 				availableWidth = maxWidth;
 				horizontalTileCount = (maxWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / (tileWidth + this._horizontalGap);
+			}
+			else if(this._requestedColumnCount > 0)
+			{
+				horizontalTileCount = this._requestedColumnCount;
+				availableWidth = this._paddingLeft + this._paddingRight + ((tileWidth + this._horizontalGap) * horizontalTileCount) - this._horizontalGap;
+			}
+			else
+			{
+				horizontalTileCount = itemCount;
 			}
 			if(horizontalTileCount < 1)
 			{
 				horizontalTileCount = 1;
 			}
-			var verticalTileCount:int = 1;
-			if(!isNaN(explicitHeight))
+			else if(this._requestedColumnCount > 0)
+			{
+				if(availableWidth !== availableWidth) //isNaN
+				{
+					horizontalTileCount = this._requestedColumnCount;
+					availableWidth = horizontalTileCount * (tileWidth + this._horizontalGap) - this._horizontalGap - this._paddingLeft - this._paddingRight;
+				}
+				else if(horizontalTileCount > this._requestedColumnCount)
+				{
+					horizontalTileCount = this._requestedColumnCount;
+				}
+			}
+			var verticalTileCount:int;
+			if(explicitHeight === explicitHeight) //!isNaN
 			{
 				availableHeight = explicitHeight;
 				verticalTileCount = (explicitHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / (tileHeight + this._verticalGap);
 			}
-			else if(!isNaN(maxHeight))
+			else if(maxHeight === maxHeight && //!isNaN
+				maxHeight < Number.POSITIVE_INFINITY)
 			{
 				availableHeight = maxHeight;
 				verticalTileCount = (maxHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / (tileHeight + this._verticalGap);
+			}
+			else
+			{
+				verticalTileCount = Math.ceil(itemCount / horizontalTileCount);
 			}
 			if(verticalTileCount < 1)
 			{
 				verticalTileCount = 1;
 			}
+			else if(this._requestedRowCount > 0)
+			{
+				if(availableHeight !== availableHeight) //isNaN
+				{
+					verticalTileCount = this._requestedRowCount;
+					availableHeight = verticalTileCount * (tileHeight + this._verticalGap) - this._verticalGap - this._paddingTop - this._paddingBottom;
+				}
+				else if(verticalTileCount > this._requestedRowCount)
+				{
+					verticalTileCount = this._requestedRowCount;
+				}
+			}
 
-			const totalPageWidth:Number = horizontalTileCount * (tileWidth + this._horizontalGap) - this._horizontalGap + this._paddingLeft + this._paddingRight;
+			var totalPageWidth:Number = horizontalTileCount * (tileWidth + this._horizontalGap) - this._horizontalGap + this._paddingLeft + this._paddingRight;
 
-			const startX:Number = boundsX + this._paddingLeft;
-			const startY:Number = boundsY + this._paddingTop;
+			var startX:Number = boundsX + this._paddingLeft;
+			var startY:Number = boundsY + this._paddingTop;
 
-			const perPage:int = horizontalTileCount * verticalTileCount;
+			var perPage:int = horizontalTileCount * verticalTileCount;
 			var pageIndex:int = 0;
 			var nextPageStartIndex:int = perPage;
 			var pageStartX:Number = startX;
@@ -1290,12 +1478,13 @@ package feathers.layout
 			}
 
 			var totalWidth:Number = totalPageWidth;
-			if(!isNaN(availableWidth) && this._paging == PAGING_HORIZONTAL)
+			if(availableWidth === availableWidth && //!isNaN
+				this._paging == PAGING_HORIZONTAL)
 			{
 				totalWidth = Math.ceil(itemCount / perPage) * availableWidth;
 			}
 			var totalHeight:Number = positionY + tileHeight + this._paddingBottom;
-			if(!isNaN(availableHeight))
+			if(availableHeight === availableHeight) //!isNaN
 			{
 				if(this._paging == PAGING_HORIZONTAL)
 				{
@@ -1381,101 +1570,18 @@ package feathers.layout
 		/**
 		 * @inheritDoc
 		 */
+		public function getNearestScrollPositionForIndex(index:int, scrollX:Number, scrollY:Number, items:Vector.<DisplayObject>,
+			x:Number, y:Number, width:Number, height:Number, result:Point = null):Point
+		{
+			return this.calculateScrollPositionForIndex(index, items, x, y, width, height, result, true, scrollX, scrollY);
+		}
+
+		/**
+		 * @inheritDoc
+		 */
 		public function getScrollPositionForIndex(index:int, items:Vector.<DisplayObject>, x:Number, y:Number, width:Number, height:Number, result:Point = null):Point
 		{
-			if(!result)
-			{
-				result = new Point();
-			}
-
-			if(this._useVirtualLayout)
-			{
-				this.prepareTypicalItem();
-				var calculatedTypicalItemWidth:Number = this._typicalItem ? this._typicalItem.width : 0;
-				var calculatedTypicalItemHeight:Number = this._typicalItem ? this._typicalItem.height : 0;
-			}
-
-			const itemCount:int = items.length;
-			var tileWidth:Number = this._useVirtualLayout ? calculatedTypicalItemWidth : 0;
-			var tileHeight:Number = this._useVirtualLayout ? calculatedTypicalItemHeight : 0;
-			//a virtual layout assumes that all items are the same size as
-			//the typical item, so we don't need to measure every item in
-			//that case
-			if(!this._useVirtualLayout)
-			{
-				for(var i:int = 0; i < itemCount; i++)
-				{
-					var item:DisplayObject = items[i];
-					if(!item)
-					{
-						continue;
-					}
-					if(item is ILayoutDisplayObject && !ILayoutDisplayObject(item).includeInLayout)
-					{
-						continue;
-					}
-					var itemWidth:Number = item.width;
-					var itemHeight:Number = item.height;
-					if(itemWidth > tileWidth)
-					{
-						tileWidth = itemWidth;
-					}
-					if(itemHeight > tileHeight)
-					{
-						tileHeight = itemHeight;
-					}
-				}
-			}
-			if(tileWidth < 0)
-			{
-				tileWidth = 0;
-			}
-			if(tileHeight < 0)
-			{
-				tileHeight = 0;
-			}
-			if(this._useSquareTiles)
-			{
-				if(tileWidth > tileHeight)
-				{
-					tileHeight = tileWidth;
-				}
-				else if(tileHeight > tileWidth)
-				{
-					tileWidth = tileHeight;
-				}
-			}
-			var horizontalTileCount:int = (width - this._paddingLeft - this._paddingRight + this._horizontalGap) / (tileWidth + this._horizontalGap);
-			if(horizontalTileCount < 1)
-			{
-				horizontalTileCount = 1;
-			}
-			if(this._paging != PAGING_NONE)
-			{
-				var verticalTileCount:int = (height - this._paddingTop - this._paddingBottom + this._verticalGap) / (tileHeight + this._verticalGap);
-				if(verticalTileCount < 1)
-				{
-					verticalTileCount = 1;
-				}
-				const perPage:Number = horizontalTileCount * verticalTileCount;
-				const pageIndex:int = index / perPage;
-				if(this._paging == PAGING_HORIZONTAL)
-				{
-					result.x = pageIndex * width;
-					result.y = 0;
-				}
-				else
-				{
-					result.x = 0;
-					result.y = pageIndex * height;
-				}
-			}
-			else
-			{
-				result.x = 0;
-				result.y = this._paddingTop + ((tileHeight + this._verticalGap) * int(index / horizontalTileCount)) - (height - tileHeight) / 2;
-			}
-			return result;
+			return this.calculateScrollPositionForIndex(index, items, x, y, width, height, result, false);
 		}
 
 		/**
@@ -1490,8 +1596,8 @@ package feathers.layout
 				{
 					continue;
 				}
-				var itemX:Number = item.x;
-				var itemY:Number = item.y;
+				var itemX:Number = item.x - item.pivotX;
+				var itemY:Number = item.y - item.pivotY;
 				item.visible = ((itemX + item.width) >= startX) && (itemX < endX) &&
 					((itemY + item.height) >= startY) && (itemY < endY);
 			}
@@ -1515,7 +1621,7 @@ package feathers.layout
 			{
 				//we're going to default to center if we encounter an
 				//unknown value
-				horizontalAlignOffsetX = (availableWidth - totalItemWidth) / 2;
+				horizontalAlignOffsetX = Math.round((availableWidth - totalItemWidth) / 2);
 			}
 			if(horizontalAlignOffsetX != 0)
 			{
@@ -1547,7 +1653,7 @@ package feathers.layout
 			}
 			else if(this._verticalAlign == VERTICAL_ALIGN_MIDDLE)
 			{
-				verticalAlignOffsetY = (availableHeight - totalItemHeight) / 2;
+				verticalAlignOffsetY = Math.round((availableHeight - totalItemHeight) / 2);
 			}
 			if(verticalAlignOffsetY != 0)
 			{
@@ -1598,12 +1704,16 @@ package feathers.layout
 			{
 				horizontalTileCount = 1;
 			}
+			else if(this._requestedColumnCount > 0 && horizontalTileCount > this._requestedColumnCount)
+			{
+				horizontalTileCount = this._requestedColumnCount;
+			}
 			var verticalTileCount:int = (height - this._paddingTop - this._paddingBottom + this._verticalGap) / (tileHeight + this._verticalGap);
 			if(verticalTileCount < 1)
 			{
 				verticalTileCount = 1;
 			}
-			const perPage:int = horizontalTileCount * verticalTileCount;
+			var perPage:int = horizontalTileCount * verticalTileCount;
 			var minimumItemCount:int = perPage + 2 * verticalTileCount;
 			if(minimumItemCount > itemCount)
 			{
@@ -1624,7 +1734,7 @@ package feathers.layout
 				}
 				else if(this._horizontalAlign == HORIZONTAL_ALIGN_CENTER)
 				{
-					leftSideOffset = rightSideOffset = (width - this._paddingLeft - this._paddingRight - totalRowWidth) / 2;
+					leftSideOffset = rightSideOffset = Math.round((width - this._paddingLeft - this._paddingRight - totalRowWidth) / 2);
 				}
 				else if(this._horizontalAlign == HORIZONTAL_ALIGN_LEFT)
 				{
@@ -1738,12 +1848,16 @@ package feathers.layout
 			{
 				horizontalTileCount = 1;
 			}
+			else if(this._requestedColumnCount > 0 && horizontalTileCount > this._requestedColumnCount)
+			{
+				horizontalTileCount = this._requestedColumnCount;
+			}
 			var verticalTileCount:int = (height - this._paddingTop - this._paddingBottom + this._verticalGap) / (tileHeight + this._verticalGap);
 			if(verticalTileCount < 1)
 			{
 				verticalTileCount = 1;
 			}
-			const perPage:int = horizontalTileCount * verticalTileCount;
+			var perPage:int = horizontalTileCount * verticalTileCount;
 			var minimumItemCount:int = perPage + 2 * horizontalTileCount;
 			if(minimumItemCount > itemCount)
 			{
@@ -1764,7 +1878,7 @@ package feathers.layout
 				}
 				else if(this._verticalAlign == VERTICAL_ALIGN_MIDDLE)
 				{
-					topSideOffset = bottomSideOffset = (height - this._paddingTop - this._paddingBottom - totalColumnHeight) / 2;
+					topSideOffset = bottomSideOffset = Math.round((height - this._paddingTop - this._paddingBottom - totalColumnHeight) / 2);
 				}
 				else if(this._verticalAlign == VERTICAL_ALIGN_TOP)
 				{
@@ -1851,14 +1965,18 @@ package feathers.layout
 			{
 				horizontalTileCount = 1;
 			}
-			const verticalTileCount:int = Math.ceil((height + this._verticalGap) / (tileHeight + this._verticalGap)) + 1;
+			else if(this._requestedColumnCount > 0 && horizontalTileCount > this._requestedColumnCount)
+			{
+				horizontalTileCount = this._requestedColumnCount;
+			}
+			var verticalTileCount:int = Math.ceil((height + this._verticalGap) / (tileHeight + this._verticalGap)) + 1;
 			var minimumItemCount:int = verticalTileCount * horizontalTileCount;
 			if(minimumItemCount > itemCount)
 			{
 				minimumItemCount = itemCount;
 			}
 			var rowIndexOffset:int = 0;
-			const totalRowHeight:Number = Math.ceil(itemCount / horizontalTileCount) * (tileHeight + this._verticalGap) - this._verticalGap;
+			var totalRowHeight:Number = Math.ceil(itemCount / horizontalTileCount) * (tileHeight + this._verticalGap) - this._verticalGap;
 			if(totalRowHeight < height)
 			{
 				if(this._verticalAlign == VERTICAL_ALIGN_BOTTOM)
@@ -1870,7 +1988,7 @@ package feathers.layout
 					rowIndexOffset = Math.ceil((height - totalRowHeight) / (tileHeight + this._verticalGap) / 2);
 				}
 			}
-			const rowIndex:int = -rowIndexOffset + Math.floor((scrollY - this._paddingTop + this._verticalGap) / (tileHeight + this._verticalGap));
+			var rowIndex:int = -rowIndexOffset + Math.floor((scrollY - this._paddingTop + this._verticalGap) / (tileHeight + this._verticalGap));
 			var minimum:int = rowIndex * horizontalTileCount;
 			if(minimum < 0)
 			{
@@ -1895,7 +2013,7 @@ package feathers.layout
 		 */
 		protected function validateItems(items:Vector.<DisplayObject>):void
 		{
-			const itemCount:int = items.length;
+			var itemCount:int = items.length;
 			for(var i:int = 0; i < itemCount; i++)
 			{
 				var item:DisplayObject = items[i];
@@ -1928,6 +2046,136 @@ package feathers.layout
 			{
 				IValidating(this._typicalItem).validate();
 			}
+		}
+
+		/**
+		 * @inheritDoc
+		 */
+		public function calculateScrollPositionForIndex(index:int, items:Vector.<DisplayObject>,
+			x:Number, y:Number, width:Number, height:Number, result:Point = null,
+			nearest:Boolean = false, scrollX:Number = 0, scrollY:Number = 0):Point
+		{
+			if(!result)
+			{
+				result = new Point();
+			}
+
+			if(this._useVirtualLayout)
+			{
+				this.prepareTypicalItem();
+				var calculatedTypicalItemWidth:Number = this._typicalItem ? this._typicalItem.width : 0;
+				var calculatedTypicalItemHeight:Number = this._typicalItem ? this._typicalItem.height : 0;
+			}
+
+			var itemCount:int = items.length;
+			var tileWidth:Number = this._useVirtualLayout ? calculatedTypicalItemWidth : 0;
+			var tileHeight:Number = this._useVirtualLayout ? calculatedTypicalItemHeight : 0;
+			//a virtual layout assumes that all items are the same size as
+			//the typical item, so we don't need to measure every item in
+			//that case
+			if(!this._useVirtualLayout)
+			{
+				for(var i:int = 0; i < itemCount; i++)
+				{
+					var item:DisplayObject = items[i];
+					if(!item)
+					{
+						continue;
+					}
+					if(item is ILayoutDisplayObject && !ILayoutDisplayObject(item).includeInLayout)
+					{
+						continue;
+					}
+					var itemWidth:Number = item.width;
+					var itemHeight:Number = item.height;
+					if(itemWidth > tileWidth)
+					{
+						tileWidth = itemWidth;
+					}
+					if(itemHeight > tileHeight)
+					{
+						tileHeight = itemHeight;
+					}
+				}
+			}
+			if(tileWidth < 0)
+			{
+				tileWidth = 0;
+			}
+			if(tileHeight < 0)
+			{
+				tileHeight = 0;
+			}
+			if(this._useSquareTiles)
+			{
+				if(tileWidth > tileHeight)
+				{
+					tileHeight = tileWidth;
+				}
+				else if(tileHeight > tileWidth)
+				{
+					tileWidth = tileHeight;
+				}
+			}
+			var horizontalTileCount:int = (width - this._paddingLeft - this._paddingRight + this._horizontalGap) / (tileWidth + this._horizontalGap);
+			if(horizontalTileCount < 1)
+			{
+				horizontalTileCount = 1;
+			}
+			else if(this._requestedColumnCount > 0 && horizontalTileCount > this._requestedColumnCount)
+			{
+				horizontalTileCount = this._requestedColumnCount;
+			}
+			if(this._paging != PAGING_NONE)
+			{
+				var verticalTileCount:int = (height - this._paddingTop - this._paddingBottom + this._verticalGap) / (tileHeight + this._verticalGap);
+				if(verticalTileCount < 1)
+				{
+					verticalTileCount = 1;
+				}
+				var perPage:Number = horizontalTileCount * verticalTileCount;
+				var pageIndex:int = index / perPage;
+				if(this._paging == PAGING_HORIZONTAL)
+				{
+					result.x = pageIndex * width;
+					result.y = 0;
+				}
+				else
+				{
+					result.x = 0;
+					result.y = pageIndex * height;
+				}
+			}
+			else
+			{
+				var resultY:Number = this._paddingTop + ((tileHeight + this._verticalGap) * int(index / horizontalTileCount));
+				if(nearest)
+				{
+					var bottomPosition:Number = resultY - (height - tileHeight);
+					if(scrollY >= bottomPosition && scrollY <= resultY)
+					{
+						//keep the current scroll position because the item is already
+						//fully visible
+						resultY = scrollY;
+					}
+					else
+					{
+						var topDifference:Number = Math.abs(resultY - scrollY);
+						var bottomDifference:Number = Math.abs(bottomPosition - scrollY);
+						if(bottomDifference < topDifference)
+						{
+							resultY = bottomPosition;
+						}
+					}
+				}
+				else
+				{
+					resultY -= Math.round((height - tileHeight) / 2);
+				}
+				result.x = 0;
+				result.y = resultY;
+			}
+			return result;
 		}
 	}
 }

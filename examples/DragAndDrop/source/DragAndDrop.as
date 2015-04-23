@@ -28,11 +28,9 @@ package
 
 		private function loaderInfo_completeHandler(event:Event):void
 		{
-			Starling.handleLostContext = true;
 			Starling.multitouchEnabled = true;
 			this._starling = new Starling(Main, this.stage);
-			this._starling.enableErrorChecking = false;
-			//this._starling.showStats = true;
+			this._starling.supportHighResolutions = true;
 			this._starling.start();
 
 			this.stage.addEventListener(Event.RESIZE, stage_resizeHandler, false, int.MAX_VALUE, true);
@@ -44,7 +42,7 @@ package
 			this._starling.stage.stageWidth = this.stage.stageWidth;
 			this._starling.stage.stageHeight = this.stage.stageHeight;
 
-			const viewPort:Rectangle = this._starling.viewPort;
+			var viewPort:Rectangle = this._starling.viewPort;
 			viewPort.width = this.stage.stageWidth;
 			viewPort.height = this.stage.stageHeight;
 			try
@@ -52,12 +50,11 @@ package
 				this._starling.viewPort = viewPort;
 			}
 			catch(error:Error) {}
-			//this._starling.showStatsAt(HAlign.LEFT, VAlign.BOTTOM);
 		}
 
 		private function stage_deactivateHandler(event:Event):void
 		{
-			this._starling.stop();
+			this._starling.stop(true);
 			this.stage.addEventListener(Event.ACTIVATE, stage_activateHandler, false, 0, true);
 		}
 

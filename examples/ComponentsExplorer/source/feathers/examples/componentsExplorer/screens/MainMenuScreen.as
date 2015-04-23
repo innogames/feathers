@@ -1,9 +1,7 @@
 package feathers.examples.componentsExplorer.screens
 {
-	import feathers.controls.Header;
 	import feathers.controls.List;
 	import feathers.controls.PanelScreen;
-	import feathers.controls.Screen;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ListCollection;
@@ -13,8 +11,9 @@ package feathers.examples.componentsExplorer.screens
 	import feathers.skins.StandardIcons;
 	import feathers.system.DeviceCapabilities;
 
-	import starling.core.Starling;
+	import flash.system.Capabilities;
 
+	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.textures.Texture;
 
@@ -32,6 +31,7 @@ package feathers.examples.componentsExplorer.screens
 	[Event(name="showProgressBar",type="starling.events.Event")]
 	[Event(name="showScrollText",type="starling.events.Event")]
 	[Event(name="showSlider",type="starling.events.Event")]
+	[Event(name="showSpinnerList",type="starling.events.Event")]
 	[Event(name="showTabBar",type="starling.events.Event")]
 	[Event(name="showTextInput",type="starling.events.Event")]
 	[Event(name="showToggles",type="starling.events.Event")]
@@ -39,6 +39,7 @@ package feathers.examples.componentsExplorer.screens
 	public class MainMenuScreen extends PanelScreen
 	{
 		public static const SHOW_ALERT:String = "showAlert";
+		public static const SHOW_AUTO_COMPLETE:String = "showAutoComplete";
 		public static const SHOW_BUTTON:String = "showButton";
 		public static const SHOW_BUTTON_GROUP:String = "showButtonGroup";
 		public static const SHOW_CALLOUT:String = "showCallout";
@@ -52,30 +53,36 @@ package feathers.examples.componentsExplorer.screens
 		public static const SHOW_PROGRESS_BAR:String = "showProgressBar";
 		public static const SHOW_SCROLL_TEXT:String = "showScrollText";
 		public static const SHOW_SLIDER:String = "showSlider";
+		public static const SHOW_SPINNER_LIST:String = "showSpinnerList";
 		public static const SHOW_TAB_BAR:String = "showTabBar";
 		public static const SHOW_TEXT_INPUT:String = "showTextInput";
 		public static const SHOW_TOGGLES:String = "showToggles";
+		public static const SHOW_WEB_VIEW:String = "showWebView";
 		
 		public function MainMenuScreen()
 		{
 			super();
-			this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
 		}
 
 		private var _list:List;
-		
-		protected function initializeHandler(event:Event):void
+
+		public var savedVerticalScrollPosition:Number = 0;
+		public var savedSelectedIndex:int = -1;
+
+		override protected function initialize():void
 		{
-			var isTablet:Boolean = DeviceCapabilities.isTablet(Starling.current.nativeStage);
+			//never forget to call super.initialize()
+			super.initialize();
+
+			this.title = "Feathers";
 
 			this.layout = new AnchorLayout();
-
-			this.headerProperties.title = "Feathers";
 
 			this._list = new List();
 			this._list.dataProvider = new ListCollection(
 			[
 				{ label: "Alert", event: SHOW_ALERT },
+				{ label: "Auto-complete", event: SHOW_AUTO_COMPLETE },
 				{ label: "Button", event: SHOW_BUTTON },
 				{ label: "Button Group", event: SHOW_BUTTON_GROUP },
 				{ label: "Callout", event: SHOW_CALLOUT },
@@ -89,15 +96,21 @@ package feathers.examples.componentsExplorer.screens
 				{ label: "Progress Bar", event: SHOW_PROGRESS_BAR },
 				{ label: "Scroll Text", event: SHOW_SCROLL_TEXT },
 				{ label: "Slider", event: SHOW_SLIDER},
+				{ label: "Spinner List", event: SHOW_SPINNER_LIST },
 				{ label: "Tab Bar", event: SHOW_TAB_BAR },
 				{ label: "Text Input", event: SHOW_TEXT_INPUT },
 				{ label: "Toggles", event: SHOW_TOGGLES },
 			]);
+			if(Capabilities.playerType == "Desktop") //this means AIR, even for mobile
+			{
+				this._list.dataProvider.addItem( { label: "Web View", event: SHOW_WEB_VIEW } );
+			}
 			this._list.layoutData = new AnchorLayoutData(0, 0, 0, 0);
 			this._list.clipContent = false;
 			this._list.autoHideBackground = true;
-			this._list.addEventListener(Event.CHANGE, list_changeHandler);
+			this._list.verticalScrollPosition = this.savedVerticalScrollPosition;
 
+			var isTablet:Boolean = DeviceCapabilities.isTablet(Starling.current.nativeStage);
 			var itemRendererAccessorySourceFunction:Function = null;
 			if(!isTablet)
 			{
@@ -118,7 +131,14 @@ package feathers.examples.componentsExplorer.screens
 
 			if(isTablet)
 			{
+				this._list.addEventListener(Event.CHANGE, list_changeHandler);
 				this._list.selectedIndex = 0;
+				this._list.revealScrollBars();
+			}
+			else
+			{
+				this._list.selectedIndex = this.savedSelectedIndex;
+				this.addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, transitionInCompleteHandler);
 			}
 			this.addChild(this._list);
 		}
@@ -128,10 +148,33 @@ package feathers.examples.componentsExplorer.screens
 			return StandardIcons.listDrillDownAccessoryTexture;
 		}
 		
+		private function transitionInCompleteHandler(event:Event):void
+		{
+			if(!DeviceCapabilities.isTablet(Starling.current.nativeStage))
+			{
+				this._list.selectedIndex = -1;
+				this._list.addEventListener(Event.CHANGE, list_changeHandler);
+			}
+			this._list.revealScrollBars();
+		}
+		
 		private function list_changeHandler(event:Event):void
 		{
-			const eventType:String = this._list.selectedItem.event as String;
-			this.dispatchEventWith(eventType);
+			var eventType:String = this._list.selectedItem.event as String;
+			if(DeviceCapabilities.isTablet(Starling.current.nativeStage))
+			{
+				this.dispatchEventWith(eventType);
+				return;
+			}
+
+			//save the list's scroll position and selected index so that we
+			//can restore some context when this screen when we return to it
+			//again later.
+			this.dispatchEventWith(eventType, false,
+			{
+				savedVerticalScrollPosition: this._list.verticalScrollPosition,
+				savedSelectedIndex: this._list.selectedIndex
+			});
 		}
 	}
 }

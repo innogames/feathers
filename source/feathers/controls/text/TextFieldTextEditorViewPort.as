@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2015 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -79,7 +79,7 @@ package feathers.controls.text
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value !== value) //isNaN
 			{
 				throw new ArgumentError("minVisibleWidth cannot be NaN");
 			}
@@ -109,7 +109,7 @@ package feathers.controls.text
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value !== value) //isNaN
 			{
 				throw new ArgumentError("maxVisibleWidth cannot be NaN");
 			}
@@ -135,7 +135,8 @@ package feathers.controls.text
 		 */
 		public function set visibleWidth(value:Number):void
 		{
-			if(this._visibleWidth == value || (isNaN(value) && isNaN(this._visibleWidth)))
+			if(this._visibleWidth == value ||
+				(value !== value && this._visibleWidth !== this._visibleWidth)) //isNaN
 			{
 				return;
 			}
@@ -165,7 +166,7 @@ package feathers.controls.text
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value !== value) //isNaN
 			{
 				throw new ArgumentError("minVisibleHeight cannot be NaN");
 			}
@@ -195,7 +196,7 @@ package feathers.controls.text
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value !== value) //isNaN
 			{
 				throw new ArgumentError("maxVisibleHeight cannot be NaN");
 			}
@@ -221,7 +222,8 @@ package feathers.controls.text
 		 */
 		public function set visibleHeight(value:Number):void
 		{
-			if(this._visibleHeight == value || (isNaN(value) && isNaN(this._visibleHeight)))
+			if(this._visibleHeight == value ||
+				(value !== value && this._visibleHeight !== this._visibleHeight)) //isNaN
 			{
 				return;
 			}
@@ -278,12 +280,9 @@ package feathers.controls.text
 		 */
 		public function set horizontalScrollPosition(value:Number):void
 		{
-			if(this._horizontalScrollPosition == value)
-			{
-				return;
-			}
+			//this value is basically ignored because the text does not scroll
+			//horizontally. instead, it wraps.
 			this._horizontalScrollPosition = value;
-			this.invalidate(INVALIDATION_FLAG_SCROLL);
 		}
 
 		/**
@@ -310,6 +309,153 @@ package feathers.controls.text
 			}
 			this._verticalScrollPosition = value;
 			this.invalidate(INVALIDATION_FLAG_SCROLL);
+			//hack because the superclass doesn't know about the scroll flag
+			this.invalidate(INVALIDATION_FLAG_SIZE);
+		}
+
+		/**
+		 * Quickly sets all padding properties to the same value. The
+		 * <code>padding</code> getter always returns the value of
+		 * <code>paddingTop</code>, but the other padding values may be
+		 * different.
+		 *
+		 * @default 0
+		 *
+		 * @see #paddingTop
+		 * @see #paddingRight
+		 * @see #paddingBottom
+		 * @see #paddingLeft
+		 */
+		public function get padding():Number
+		{
+			return this._paddingTop;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set padding(value:Number):void
+		{
+			this.paddingTop = value;
+			this.paddingRight = value;
+			this.paddingBottom = value;
+			this.paddingLeft = value;
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _paddingTop:Number = 0;
+
+		/**
+		 * The minimum space, in pixels, between the view port's top edge and
+		 * the view port's content.
+		 *
+		 * @default 0
+		 */
+		public function get paddingTop():Number
+		{
+			return this._paddingTop;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set paddingTop(value:Number):void
+		{
+			if(this._paddingTop == value)
+			{
+				return;
+			}
+			this._paddingTop = value;
+			this.invalidate(INVALIDATION_FLAG_STYLES);
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _paddingRight:Number = 0;
+
+		/**
+		 * The minimum space, in pixels, between the view port's right edge and
+		 * the view port's content.
+		 *
+		 * @default 0
+		 */
+		public function get paddingRight():Number
+		{
+			return this._paddingRight;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set paddingRight(value:Number):void
+		{
+			if(this._paddingRight == value)
+			{
+				return;
+			}
+			this._paddingRight = value;
+			this.invalidate(INVALIDATION_FLAG_STYLES);
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _paddingBottom:Number = 0;
+
+		/**
+		 * The minimum space, in pixels, between the view port's bottom edge and
+		 * the view port's content.
+		 *
+		 * @default 0
+		 */
+		public function get paddingBottom():Number
+		{
+			return this._paddingBottom;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set paddingBottom(value:Number):void
+		{
+			if(this._paddingBottom == value)
+			{
+				return;
+			}
+			this._paddingBottom = value;
+			this.invalidate(INVALIDATION_FLAG_STYLES);
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _paddingLeft:Number = 0;
+
+		/**
+		 * The minimum space, in pixels, between the view port's left edge and
+		 * the view port's content.
+		 *
+		 * @default 0
+		 */
+		public function get paddingLeft():Number
+		{
+			return this._paddingLeft;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set paddingLeft(value:Number):void
+		{
+			if(this._paddingLeft == value)
+			{
+				return;
+			}
+			this._paddingLeft = value;
+			this.invalidate(INVALIDATION_FLAG_STYLES);
 		}
 
 		/**
@@ -322,16 +468,35 @@ package feathers.controls.text
 				result = new Point();
 			}
 
-			const needsWidth:Boolean = isNaN(this._visibleWidth);
+			var needsWidth:Boolean = this._visibleWidth !== this._visibleWidth; //isNaN
 
 			this.commitStylesAndData(this.measureTextField);
+
+			var gutterDimensionsOffset:Number = 4;
+			if(this._useGutter)
+			{
+				gutterDimensionsOffset = 0;
+			}
+
 			var newWidth:Number = this._visibleWidth;
-			this.measureTextField.width = newWidth;
+			this.measureTextField.width = newWidth - this._paddingLeft - this._paddingRight + gutterDimensionsOffset;
 			if(needsWidth)
 			{
-				newWidth = Math.max(this._minVisibleWidth, Math.min(this._maxVisibleWidth, this.measureTextField.textWidth + 4));
+				newWidth = this.measureTextField.width + this._paddingLeft + this._paddingRight - gutterDimensionsOffset;
+				if(newWidth < this._minVisibleWidth)
+				{
+					newWidth = this._minVisibleWidth;
+				}
+				else if(newWidth > this._maxVisibleWidth)
+				{
+					newWidth = this._maxVisibleWidth;
+				}
 			}
-			var newHeight:Number = this.measureTextField.textHeight + 4;
+			var newHeight:Number = this.measureTextField.height + this._paddingTop + this._paddingBottom - gutterDimensionsOffset;
+			if(this._useGutter)
+			{
+				newHeight += 4;
+			}
 
 			result.x = newWidth;
 			result.y = newHeight;
@@ -342,30 +507,39 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
+		override protected function getSelectionIndexAtPoint(pointX:Number, pointY:Number):int
+		{
+			pointY += this._verticalScrollPosition;
+			return this.textField.getCharIndexAtPoint(pointX, pointY);
+		}
+
+		/**
+		 * @private
+		 */
 		override protected function refreshSnapshotParameters():void
 		{
-			var textFieldWidth:Number = this._visibleWidth;
-			if(isNaN(textFieldWidth))
+			var textFieldWidth:Number = this._visibleWidth - this._paddingLeft - this._paddingRight;
+			if(textFieldWidth !== textFieldWidth) //isNaN
 			{
 				if(this._maxVisibleWidth < Number.POSITIVE_INFINITY)
 				{
-					textFieldWidth = this._maxVisibleWidth;
+					textFieldWidth = this._maxVisibleWidth - this._paddingLeft - this._paddingRight;
 				}
 				else
 				{
-					textFieldWidth = this._minVisibleWidth;
+					textFieldWidth = this._minVisibleWidth - this._paddingLeft - this._paddingRight;
 				}
 			}
-			var textFieldHeight:Number = this._visibleHeight;
-			if(isNaN(textFieldHeight))
+			var textFieldHeight:Number = this._visibleHeight - this._paddingTop - this._paddingBottom;
+			if(textFieldHeight !== textFieldHeight) //isNaN
 			{
 				if(this._maxVisibleHeight < Number.POSITIVE_INFINITY)
 				{
-					textFieldHeight = this._maxVisibleHeight;
+					textFieldHeight = this._maxVisibleHeight - this._paddingTop - this._paddingBottom;
 				}
 				else
 				{
-					textFieldHeight = this._minVisibleHeight;
+					textFieldHeight = this._minVisibleHeight - this._paddingTop - this._paddingBottom;
 				}
 			}
 
@@ -375,8 +549,18 @@ package feathers.controls.text
 			this._textFieldClipRect.y = 0;
 
 			this.getTransformationMatrix(this.stage, HELPER_MATRIX);
-			this._textFieldClipRect.width = textFieldWidth * Starling.contentScaleFactor * matrixToScaleX(HELPER_MATRIX);
-			this._textFieldClipRect.height = textFieldHeight * Starling.contentScaleFactor * matrixToScaleY(HELPER_MATRIX);
+			var clipWidth:Number = textFieldWidth * Starling.contentScaleFactor * matrixToScaleX(HELPER_MATRIX);
+			if(clipWidth < 0)
+			{
+				clipWidth = 0;
+			}
+			var clipHeight:Number = textFieldHeight * Starling.contentScaleFactor * matrixToScaleY(HELPER_MATRIX);
+			if(clipHeight < 0)
+			{
+				clipHeight = 0;
+			}
+			this._textFieldClipRect.width = clipWidth;
+			this._textFieldClipRect.height = clipHeight;
 		}
 
 		/**
@@ -384,14 +568,20 @@ package feathers.controls.text
 		 */
 		override protected function refreshTextFieldSize():void
 		{
-			const oldIgnoreScrolling:Boolean = this._ignoreScrolling;
-			this._ignoreScrolling = true;
-			this.textField.width = this._visibleWidth;
-			if(this.textField.height != this._visibleHeight)
+			var oldIgnoreScrolling:Boolean = this._ignoreScrolling;
+			var gutterDimensionsOffset:Number = 4;
+			if(this._useGutter)
 			{
-				this.textField.height = this._visibleHeight;
+				gutterDimensionsOffset = 0;
 			}
-			const scroller:Scroller = Scroller(this.parent);
+			this._ignoreScrolling = true;
+			this.textField.width = this._visibleWidth - this._paddingLeft - this._paddingRight + gutterDimensionsOffset;
+			var textFieldHeight:Number = this._visibleHeight - this._paddingTop - this._paddingBottom + gutterDimensionsOffset;
+			if(this.textField.height != textFieldHeight)
+			{
+				this.textField.height = textFieldHeight;
+			}
+			var scroller:Scroller = Scroller(this.parent);
 			this.textField.scrollV = Math.round(1 + ((this.textField.maxScrollV - 1) * (this._verticalScrollPosition / scroller.maxVerticalScrollPosition)));
 			this._ignoreScrolling = oldIgnoreScrolling;
 		}
@@ -417,23 +607,44 @@ package feathers.controls.text
 			{
 				return;
 			}
-			HELPER_POINT.x = HELPER_POINT.y = 0;
-			this.getTransformationMatrix(this.stage, HELPER_MATRIX);
-			MatrixUtil.transformCoords(HELPER_MATRIX, 0, 0, HELPER_POINT);
-			const offsetX:Number = Math.round(this._horizontalScrollPosition);
-			const offsetY:Number = Math.round(this._verticalScrollPosition);
-			var starlingViewPort:Rectangle = Starling.current.viewPort;
 			var nativeScaleFactor:Number = 1;
 			if(Starling.current.supportHighResolutions)
 			{
 				nativeScaleFactor = Starling.current.nativeStage.contentsScaleFactor;
 			}
 			var scaleFactor:Number = Starling.contentScaleFactor / nativeScaleFactor;
-			this.textField.x = offsetX + Math.round(starlingViewPort.x + (HELPER_POINT.x * scaleFactor));
-			this.textField.y = offsetY + Math.round(starlingViewPort.y + (HELPER_POINT.y * scaleFactor));
+			HELPER_POINT.x = HELPER_POINT.y = 0;
+			this.getTransformationMatrix(this.stage, HELPER_MATRIX);
+			MatrixUtil.transformCoords(HELPER_MATRIX, 0, 0, HELPER_POINT);
+			var scaleX:Number = matrixToScaleX(HELPER_MATRIX) * scaleFactor;
+			var scaleY:Number = matrixToScaleY(HELPER_MATRIX) * scaleFactor;
+			var offsetX:Number = Math.round(this._paddingLeft * scaleX);
+			var offsetY:Number = Math.round((this._paddingTop + this._verticalScrollPosition) * scaleY);
+			var starlingViewPort:Rectangle = Starling.current.viewPort;
+			var gutterPositionOffset:Number = 2;
+			if(this._useGutter)
+			{
+				gutterPositionOffset = 0;
+			}
+			this.textField.x = offsetX + Math.round(starlingViewPort.x + (HELPER_POINT.x * scaleFactor) - gutterPositionOffset * scaleX);
+			this.textField.y = offsetY + Math.round(starlingViewPort.y + (HELPER_POINT.y * scaleFactor) - gutterPositionOffset * scaleY);
 			this.textField.rotation = matrixToRotation(HELPER_MATRIX) * 180 / Math.PI;
-			this.textField.scaleX = matrixToScaleX(HELPER_MATRIX);
-			this.textField.scaleY = matrixToScaleY(HELPER_MATRIX);
+			this.textField.scaleX = scaleX;
+			this.textField.scaleY = scaleY;
+		}
+
+		/**
+		 * @private
+		 */
+		override protected function positionSnapshot():void
+		{
+			if(!this.textSnapshot)
+			{
+				return;
+			}
+			this.getTransformationMatrix(this.stage, HELPER_MATRIX);
+			this.textSnapshot.x = this._paddingLeft + Math.round(HELPER_MATRIX.tx) - HELPER_MATRIX.tx;
+			this.textSnapshot.y = this._paddingTop + this._verticalScrollPosition + Math.round(HELPER_MATRIX.ty) - HELPER_MATRIX.ty;
 		}
 
 		/**
@@ -464,10 +675,6 @@ package feathers.controls.text
 		 */
 		override protected function textField_focusInHandler(event:FocusEvent):void
 		{
-			const oldIgnoreScrolling:Boolean = this._ignoreScrolling;
-			this._ignoreScrolling = true;
-			this.textField.height = this._visibleHeight;
-			this._ignoreScrolling = oldIgnoreScrolling;
 			this.textField.addEventListener(Event.SCROLL, textField_scrollHandler);
 			super.textField_focusInHandler(event);
 			this.invalidate(INVALIDATION_FLAG_SIZE);
@@ -496,10 +703,10 @@ package feathers.controls.text
 			{
 				return;
 			}
-			const scroller:Scroller = Scroller(this.parent);
+			var scroller:Scroller = Scroller(this.parent);
 			if(scroller.maxVerticalScrollPosition > 0 && this.textField.maxScrollV > 1)
 			{
-				const calculatedVerticalScrollPosition:Number = scroller.maxVerticalScrollPosition * (scrollV - 1) / (this.textField.maxScrollV - 1);
+				var calculatedVerticalScrollPosition:Number = scroller.maxVerticalScrollPosition * (scrollV - 1) / (this.textField.maxScrollV - 1);
 				scroller.verticalScrollPosition = roundToNearest(calculatedVerticalScrollPosition, this._scrollStep);
 			}
 		}

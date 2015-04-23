@@ -1,19 +1,15 @@
 package
 {
+	import feathers.system.DeviceCapabilities;
+
 	import flash.display.MovieClip;
-	import flash.display.Sprite;
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
-	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
 	import flash.ui.ContextMenu;
 	import flash.utils.getDefinitionByName;
 
-	import feathers.system.DeviceCapabilities;
-
 	import starling.core.Starling;
-	import starling.utils.HAlign;
-	import starling.utils.VAlign;
 
 	[SWF(width="960",height="640",frameRate="60",backgroundColor="#4a4137")]
 	public class TodosWeb extends MovieClip
@@ -45,11 +41,10 @@ package
 			this.gotoAndStop(2);
 			this.graphics.clear();
 			
-			Starling.handleLostContext = true;
 			Starling.multitouchEnabled = true;
-			const MainType:Class = getDefinitionByName("feathers.examples.todos.Main") as Class;
+			var MainType:Class = getDefinitionByName("feathers.examples.todos.Main") as Class;
 			this._starling = new Starling(MainType, this.stage);
-			this._starling.enableErrorChecking = false;
+			this._starling.supportHighResolutions = true;
 			this._starling.start();
 		}
 		

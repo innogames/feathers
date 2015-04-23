@@ -4,22 +4,19 @@ package feathers.examples.trainTimes.screens
 	import feathers.controls.Header;
 	import feathers.controls.List;
 	import feathers.controls.PanelScreen;
-	import feathers.controls.Screen;
 	import feathers.data.ListCollection;
-	import feathers.events.FeathersEventType;
 	import feathers.examples.trainTimes.model.TimeData;
 	import feathers.layout.AnchorLayout;
 	import feathers.layout.AnchorLayoutData;
 
 	import starling.display.DisplayObject;
-
 	import starling.events.Event;
 
 	[Event(name="complete",type="starling.events.Event")]
 
 	public class TimesScreen extends PanelScreen
 	{
-		public static const CHILD_NAME_TIMES_LIST:String = "timesList";
+		public static const CHILD_STYLE_NAME_TIMES_LIST:String = "timesList";
 
 		private static const NORTH_TIMES:Vector.<TimeData> = new <TimeData>
 		[
@@ -41,51 +38,61 @@ package feathers.examples.trainTimes.screens
 
 		public function TimesScreen()
 		{
-			this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
+			super();
 		}
 
 		private var _backButton:Button;
 		private var _list:List;
 
-		protected function initializeHandler(event:Event):void
+		override protected function initialize():void
 		{
+			//never forget to call super.initialize()
+			super.initialize();
+
+			this.title = "Schedule";
+
 			this.layout = new AnchorLayout();
 
 			this._list = new List();
-			this._list.styleNameList.add(CHILD_NAME_TIMES_LIST);
+			this._list.styleNameList.add(CHILD_STYLE_NAME_TIMES_LIST);
 			this._list.dataProvider = new ListCollection(NORTH_TIMES);
 			this._list.layoutData = new AnchorLayoutData(0, 0, 0, 0);
 			this._list.itemRendererProperties.labelFunction = list_labelFunction;
 			this.addChild(this._list);
 
-			this._backButton = new Button();
-			this._backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
-
-			this.headerProperties.title = "Schedule";
-			this.headerProperties.leftItems = new <DisplayObject>
-			[
-				this._backButton
-			];
+			this.headerFactory = this.customHeaderFactory;
 
 			this.backButtonHandler = this.onBackButton;
 		}
 
+		private function customHeaderFactory():Header
+		{
+			var header:Header = new Header();
+			this._backButton = new Button();
+			this._backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
+			header.leftItems = new <DisplayObject>
+			[
+				this._backButton
+			];
+			return header;
+		}
+
 		private function list_labelFunction(item:TimeData):String
 		{
-			const departureTime:Date = item.departureTime;
-			const arrivalTime:Date = item.arrivalTime;
-			const duration:int = (arrivalTime.getTime() - departureTime.getTime()) / 1000 / 60;
+			var departureTime:Date = item.departureTime;
+			var arrivalTime:Date = item.arrivalTime;
+			var duration:int = (arrivalTime.getTime() - departureTime.getTime()) / 1000 / 60;
 			return this.formatTimeAsString(departureTime) + "\t" + this.formatTimeAsString(arrivalTime) + "\t" +
 				item.trainNumber + "\t" + duration + "mins";
 		}
 
 		private function formatTimeAsString(time:Date):String
 		{
-			const hours:Number = time.hours;
-			const isAM:Boolean = hours < 12;
-			const hoursAsString:String = ((isAM ? hours : (hours - 12)) + 1).toString();
-			const minutes:Number = time.minutes;
-			const minutesAsString:String = minutes < 10 ? "0" + minutes : minutes.toString();
+			var hours:Number = time.hours;
+			var isAM:Boolean = hours < 12;
+			var hoursAsString:String = ((isAM ? hours : (hours - 12)) + 1).toString();
+			var minutes:Number = time.minutes;
+			var minutesAsString:String = minutes < 10 ? "0" + minutes : minutes.toString();
 			return hoursAsString + ":" + minutesAsString + (isAM ? "am" : "pm");
 		}
 

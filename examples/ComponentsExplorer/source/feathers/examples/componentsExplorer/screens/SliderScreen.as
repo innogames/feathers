@@ -1,13 +1,11 @@
 package feathers.examples.componentsExplorer.screens
 {
 	import feathers.controls.Button;
-	import feathers.controls.Label;
+	import feathers.controls.Header;
 	import feathers.controls.PanelScreen;
 	import feathers.controls.Slider;
-	import feathers.events.FeathersEventType;
 	import feathers.examples.componentsExplorer.data.SliderSettings;
-	import feathers.layout.AnchorLayout;
-	import feathers.layout.AnchorLayoutData;
+	import feathers.skins.IStyleProvider;
 	import feathers.system.DeviceCapabilities;
 
 	import starling.core.Starling;
@@ -21,73 +19,87 @@ package feathers.examples.componentsExplorer.screens
 	{
 		public static const SHOW_SETTINGS:String = "showSettings";
 
+		public static var globalStyleProvider:IStyleProvider;
+
 		public function SliderScreen()
 		{
 			super();
-			this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
 		}
 
 		public var settings:SliderSettings;
 
-		private var _slider:Slider;
-		private var _backButton:Button;
-		private var _settingsButton:Button;
-		private var _valueLabel:Label;
-		
-		protected function initializeHandler(event:Event):void
+		private var _horizontalSlider:Slider;
+		private var _verticalSlider:Slider;
+
+		override protected function get defaultStyleProvider():IStyleProvider
 		{
-			this.layout = new AnchorLayout();
+			return SliderScreen.globalStyleProvider;
+		}
+		
+		override protected function initialize():void
+		{
+			//never forget to call super.initialize()
+			super.initialize();
 
-			this._slider = new Slider();
-			this._slider.minimum = 0;
-			this._slider.maximum = 100;
-			this._slider.value = 50;
-			this._slider.step = this.settings.step;
-			this._slider.page = this.settings.page;
-			this._slider.direction = this.settings.direction;
-			this._slider.liveDragging = this.settings.liveDragging;
-			this._slider.addEventListener(Event.CHANGE, slider_changeHandler);
-			const sliderLayoutData:AnchorLayoutData = new AnchorLayoutData();
-			sliderLayoutData.horizontalCenter = 0;
-			sliderLayoutData.verticalCenter = 0;
-			this._slider.layoutData = sliderLayoutData;
-			this.addChild(this._slider);
-			
-			this._valueLabel = new Label();
-			this._valueLabel.text = this._slider.value.toString();
-			const valueLabelLayoutData:AnchorLayoutData = new AnchorLayoutData();
-			valueLabelLayoutData.left = 20 * this.dpiScale;
-			valueLabelLayoutData.leftAnchorDisplayObject = this._slider;
-			valueLabelLayoutData.verticalCenter = 0;
-			valueLabelLayoutData.verticalCenterAnchorDisplayObject = this._slider;
-			this._valueLabel.layoutData = valueLabelLayoutData;
-			this.addChild(this._valueLabel);
+			this.title = "Slider";
 
-			this.headerProperties.title = "Slider";
+			this._horizontalSlider = new Slider();
+			this._horizontalSlider.direction = Slider.DIRECTION_HORIZONTAL;
+			this._horizontalSlider.minimum = 0;
+			this._horizontalSlider.maximum = 100;
+			this._horizontalSlider.value = 50;
+			this._horizontalSlider.step = this.settings.step;
+			this._horizontalSlider.page = this.settings.page;
+			this._horizontalSlider.liveDragging = this.settings.liveDragging;
+			this._horizontalSlider.addEventListener(Event.CHANGE, horizontalSlider_changeHandler);
+			this.addChild(this._horizontalSlider);
 
+			this._verticalSlider = new Slider();
+			this._verticalSlider.direction = Slider.DIRECTION_VERTICAL;
+			this._verticalSlider.minimum = 0;
+			this._verticalSlider.maximum = 100;
+			this._verticalSlider.value = 50;
+			this._verticalSlider.step = this.settings.step;
+			this._verticalSlider.page = this.settings.page;
+			this._verticalSlider.liveDragging = this.settings.liveDragging;
+			this._verticalSlider.addEventListener(Event.CHANGE, horizontalSlider_changeHandler);
+			this.addChild(this._verticalSlider);
+
+			this.headerFactory = this.customHeaderFactory;
+
+			//this screen doesn't use a back button on tablets because the main
+			//app's uses a split layout
 			if(!DeviceCapabilities.isTablet(Starling.current.nativeStage))
 			{
-				this._backButton = new Button();
-				this._backButton.styleNameList.add(Button.ALTERNATE_NAME_BACK_BUTTON);
-				this._backButton.label = "Back";
-				this._backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
-
-				this.headerProperties.leftItems = new <DisplayObject>
-				[
-					this._backButton
-				];
-
 				this.backButtonHandler = this.onBackButton;
 			}
+		}
 
-			this._settingsButton = new Button();
-			this._settingsButton.label = "Settings";
-			this._settingsButton.addEventListener(Event.TRIGGERED, settingsButton_triggeredHandler);
+		private function customHeaderFactory():Header
+		{
+			var header:Header = new Header();
+			//this screen doesn't use a back button on tablets because the main
+			//app's uses a split layout
+			if(!DeviceCapabilities.isTablet(Starling.current.nativeStage))
+			{
+				var backButton:Button = new Button();
+				backButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_BACK_BUTTON);
+				backButton.label = "Back";
+				backButton.addEventListener(Event.TRIGGERED, backButton_triggeredHandler);
+				header.leftItems = new <DisplayObject>
+				[
+					backButton
+				];
+			}
 
-			this.headerProperties.rightItems = new <DisplayObject>
+			var settingsButton:Button = new Button();
+			settingsButton.label = "Settings";
+			settingsButton.addEventListener(Event.TRIGGERED, settingsButton_triggeredHandler);
+			header.rightItems = new <DisplayObject>
 			[
-				this._settingsButton
+				settingsButton
 			];
+			return header;
 		}
 		
 		private function onBackButton():void
@@ -95,9 +107,9 @@ package feathers.examples.componentsExplorer.screens
 			this.dispatchEventWith(Event.COMPLETE);
 		}
 		
-		private function slider_changeHandler(event:Event):void
+		private function horizontalSlider_changeHandler(event:Event):void
 		{
-			this._valueLabel.text = this._slider.value.toString();
+			trace("slider change:", this._horizontalSlider.value.toString());
 		}
 		
 		private function backButton_triggeredHandler(event:Event):void

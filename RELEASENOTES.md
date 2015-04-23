@@ -2,6 +2,337 @@
 
 Noteworthy changes in official, stable releases of [Feathers](http://feathersui.com/).
 
+## 2.1.1
+
+* BitmapFontTextRenderer, ScrollContainer: added workarounds for compiler bugs in Adobe Flex SDK 4.6.
+* ButtonGroup, TabBar: fixed issue where buttons or tabs would flicker and resize for a frame when the container resizes.
+* HorizontalLayout, VerticalLayout: fixed an issue that resulted in no scrolling when the scrollToDisplayIndex() function is called on a List.
+* ScrollContainer: fixed issue where setting autoSizeMode to AUTO_SIZE_MODE_STAGE resulted in being unable to scroll.
+* SpinnerList: fixed issue where setting the selected index programmatically didn't always update the scroll position.
+* TextBlockTextRenderer, TextFieldTextRenderer: fixed issue where text would appear blurry because snapToPixels incorrectly snapped on the y-axis.
+
+## 2.1.0
+
+* New Component: AutoComplete, a TextInput that provides a pop-up list of suggestions.
+* New Component: SpinnerList, a list that changes selection when scrolling to an item.
+* New Component: StackScreenNavigator, a variation of ScreenNavigator with a history stack that you can push and pop.
+* New Component: WebView, displays a native web browser using StageWebView, but may be positioned in local coordinates. Available in AIR only.
+* New Layout: VerticalSpinnerLayout, the default layout for the new SpinnerList component.
+* New Transitions: ColorFade, Cover, Cube, Fade, Flip, Reveal, Slide.
+* New Example: TransitionsExplorer demonstrates each transition.
+* Unit tests: created unit tests for a number of Feathers components.
+* Help: help files are now distributed with Feathers for offline use.
+* AnchorLayout: fixed issue where items positioned relative to horizontalCenterAnchorDisplayObject or verticalCenterAnchorDisplayObject were not positioned correctly whent he anchor was at a higher depth.
+* Button: added scaleWhenDown and scaleWhenHovering properties to scale the button in these states.
+* BaseDefaultItemRenderer: fixed issue where data that is == null would be ignored in some cases by changing to stricter === null check.
+* BitmapFontTextRenderer: fixed issue where a runtime error could be thrown if a character in the bitmap font had a width or height of 0.
+* BitmapFontTextEditor, TextBlockTextEditor: fixed issue where clearing the text on focus would cause the selection range to be invalid.
+* BitmapFontTextEditor, TextBlockTextEditor: listens for flash.events.Event.SELECT_ALL instead of Ctrl/Command+A with a keyboard event because it didn't work properly on Mac.
+* BitmapFontTextRenderer: fixed issue where the last word of a line would sometimes appear on the next line.
+* CalloutPopUpContentManager, DropDownPopUpContentManager, VerticalCenteredPopUpContentManager: detects if pop-up is removed from stage externally so that Event.CLOSE is properly dispatched.
+* DropDownPopUpContentManager: fixed issue where the source would close the pop-up while validating, but the pop-up was being positioned, causing a runtime error, so now checks if open after source is validated.
+* FeathersControl: added move() convenience function to set x and y properties, similar to how setSize() sets width and height.
+* FeathersControl: the styleProvider property may be changed after initialization.
+* FeathersControl: changes to styleNameList after initialization now causes the styleProvider to be re-applied.
+* FeathersControl: may now flatten even when not initialized or on stage.
+* FEATHERS_VERSION: new constant that can be used to see the version of Feathers being used.
+* FocusManager: both containers and their children may receive focus separately (to allow the container to scroll with the keyboard), thanks to the new IFocusContainer interface.
+* HierarchicalCollection: added removeAll() function, similar to ListCollection.
+* HorizontalLayout, VerticalLayout: when alignment is justified, the size of the item renderer is reset so that an accurate measurement can be taken instead of using the old justified size.
+* HorizontalLayout: added requestColumnCount property for more control over width auto-measurement.
+* HorizontalLayout, VerticalLayout: fixed issue where the number of item renderers didn't remain constant when using hasVariableItemDimensions when all item renderers were the same size.
+* ILayout: added getNearestScrollPositionForIndex() function to support scrolling when changing selected index in components like List.
+* Label: added backgroundSkin, backgroundDisabledSkin, and padding properties.
+* LayoutGroup: added LayoutGroup.ALTERNATE_STYLE_NAME_TOOLBAR.
+* LayoutGroup: added autoSizeMode property to specify that it should fill the stage.
+* List, GroupedList: fixed issue where scrolling backwards would sometimes cause item renderers to jump around instead of scrolling smoothly with a virtual layout with variable item dimensions where an item resized. Layout may adjust scroll position, if needed.
+* List, GroupedList: updates scroll position, if needed, when using arrow keys to change selection.
+* List, GroupedList: dispatches Event.TRIGGERED when an item renderer is triggered. The event data is the item from the data provider.
+* List, GroupedList: added stricter === null check when checking if a typicalItem has been set because values like 0 could match == null.
+* List, GroupedList: fixed issue where layout didn't update after an item renderer resized while the list wasn't validating.
+* List, GroupedList: fixed issue where the typical item renderer resized, but the layout wasn't updated.
+* List, GroupedList: fixed issue where changing the index of a typical item chosen from the data provider would not update the index of its item renderer.
+* ListCollection: setting data property to null keeps null instead of removing all items from existing data.
+* NumericStepper: added valueFormatFunction and valueParseFunction properties to support custom formatting.
+* Panel: added new title and headerTitleField properties to use instead of going through headerProperties.
+* Panel: fixed issue where outerPaddingBottom was ignored if the panel didn't have a footer.
+* PanelScreen: added missing DEFAULT_CHILD_STYLE_NAME_FOOTER constant for use in themes.
+* PickerList: dispatches Event.OPEN and Event.CLOSE when the pop-up list opens and closes.
+* PickerList, TabBar: fixes issue where Event.CHANGE was incorrectly dispatched on disposal because dataProvider was set to null.
+* Scale3Textures, Scale9Textures: fixed validation of region sizes when using a scaled texture that doesn't match Starling.contentScaleFactor.
+* ScreenNavigator: fixes issue where new screen wasn't resized properly by validating self if validation queue is currently busy.
+* ScreenNavigator: adds a delay of two frames before starting a transition animation because it significantly improves the performance of the transition.
+* ScreenNavigator: added isTransition active property to indicate if a transition is currently in progress.
+* ScreenNavigator: fixed issue where clearing a screen didn't dispatch FeathersEventType.TRANSITION_START.
+* ScreenNavigator: added support for transitions that may cancel themselves.
+* ScreenNavigator: added optional transition function argument to showScreen() and clearScreen().
+* ScreenNavigator: fixes issue where active screen wasn't properly cleared if removed with removeScreen() or removeAllScreens().
+* ScreenNavigator: dispatches FeathersEventType.TRANSITION_IN_START, FeathersEventType.TRANSITION_IN_COMPLETE, FeathersEventType.TRANSITION_OUT_START, and FeathersEventType.TRANSITION_OUT_COMPLETE on screens (not on self). Screens may listen for these events instead of the events dispatched by ScreenNavigator.
+* ScreenNavigatorItem: added setFunctionForEvent() and setScreenIDForEvent().
+* ScreenNavigatorItem: The properties getter will always be a valid object. It won't return null.
+* ScrollBar: hides thumb when ranging is infinite.
+* ScrollBar: sets touchable to false on tracks when range is 0 or infinite.
+* Scroller: performance improvements from less garbage collection.
+* Scroller: added support for scrolling horizontally with vertical scroll wheel.
+* Scroller: can receive focus to control scroll position with keyboard.
+* Scroller: fixed issue where snapToPages was ignored when using mouse wheel or throwing.
+* Scroller: fixed issue where animation for elastic snapping would restart on every touch when the distance was less than 1 pixel, causing it to appear that the item renderers could not be touched.
+* ScrollContainer: added autoSizeMode property to specify that it should fill the stage.
+* ScrollContainer: fixed issue where outer container didn't invalidate when adding or removing children, or when children are resized, causing validate() to have no effect.
+* StageTextTextEditor, TextFieldTextEditor: fixes issue where focus remained when parent was set invisible.
+* StyleNameFunctionTheme: the getStyleProviderForClass() function is now public.
+* TabBar, ToggleGroup, List, GroupedList, PickerList: fixed issue where Event.CHANGE was not dispatched when removing an item and the selectedIndex remains the same, but the selectedItem is different.
+* TabBar: default selectedIndex is -1 until the data provider is set.
+* TabBar: Event.CHANGE is dispatched immediately when selectedIndex property changes instead of waiting for validation. Makes it more consistent with other components, like List.
+* TextFieldTextEditor: fixed issue where HTML formatting is lost if edited when isHTML is true.
+* TextFieldTextEditor: fixed issue where snapshot wasn't updated when size changed, but data or styles did not.
+* TextFieldTextEditorViewPort: added padding properties.
+* TextFieldTextEditorViewPort: fixed issue where the selection index was wrong from touch.
+* TextFieldTextRenderer, TextBlockTextRenderer: fixed issue where native filters could cause the text renderer to create a texture that is larger than the maximum dimensions allowed.
+* TextFieldTextRenderer, TextBlockTextRenderer: fixed issue where only the first texture (if multiple textures were required) was positioned properly when using native filters.
+* TextFieldTextRenderer, TextBlockTextRenderer: fixed issue where texture snapshots could be clipped too small when using native filters.
+* VerticalLayout: added requestRowCount property for more control over height auto-measurement.
+
+### 2.1 BETA Deprecated APIs
+
+All deprecated APIs are subject to the [Feathers deprecation policy](http://wiki.starling-framework.org/feathers/deprecation-policy). Please migrate to the new APIs as soon as possible because the deprecated APIs **will** be removed in a future version of Feathers.
+
+The `nameList` property on the `IFeathersControl` interface has been deprecated, and it is replaced by the `styleNameList` property. The `name` property is no longer connected to style names, and situations where it failed to work with `getChildByName()` have been resolved. The `styleName` property has been added to replace the former usage of the `name` property as a concatenated version of `nameList` (now, `styleNameList`). The `nameList` property was deprecated in Feathers 2.0.0, and it remains deprecated in Feathers 2.1.0.
+
+The `manageVisibility` property on layouts has been deprecated. In previous versions, this property could be used to improve performance of non-virtual layouts by hiding items that were outside the view port. However, other performance improvements have made it so that setting `manageVisibility` can now sometimes hurt performance instead of improving it. The `manageVisibility` property was deprecated in Feathers 2.0.0, and it remains deprecated in Feathers 2.1.0.
+
+Similar to how the `nameList` property was renamed `styleNameList` in Feathers 2.0.0, properties such as `customThumbName` on the `Slider` component have have been renamed too. In this case, `customThumbName` is deprecated and replaced by `customThumbStyleName`. Similarly, the static constant `Slider.DEFAULT_CHILD_NAME_THUMB` has been deprecated and renamed `Slider.DEFAULT_CHILD_STYLE_NAME_THUMB`. Similarly, the static constant `Button.ALTERNATE_NAME_BACK_BUTTON` has been deprecated and renamed `Button.ALTERNATE_STYLE_NAME_BACK_BUTTON`. On all components, APIs that refer to the *name* of sub-components have been deprecated and they have been replaced by a similar API that refers to the *style name* instead. For brevity, the list below shows the mapping between the old naming conventions and the new naming conventions instead of listing each renamed property individually.
+
+* `custom*Name` => `custom*StyleName`
+* `DEFAULT_CHILD_NAME_*` => `DEFAULT_CHILD_STYLE_NAME_*`
+* `ALTERNATE_NAME_*` => `ALTERNATE_STYLE_NAME_*`
+
+The `List` and `GroupedList` components had some properties that didn't follow the original `custom*Name` naming convention. In both classes, the `itemRendererName` property has been deprecated and replaced by `customItemRendererStyleName`. In `GroupedList`, `firstItemRendererName`, `lastItemRendererName` and `singleItemRendererName` have been deprecated and replaced by `customFirstItemRendererStyleName`, `customLastItemRendererStyleName`, and `customSingleItemRendererStyleName` respectively. Similarly, `headerRendererName` and `footerRendererName` have been deprecated and replaced by `customHeaderRendererStyleName` and `customFooterRendererStyleName` respectively. With this change, these properties no longer diverge from the naming convention used for similar properties on other components.
+
+### 2.1 BETA API Changes
+
+#### ILayout
+
+The `getNearestScrollPositionForIndex()` method has been added to the `ILayout` interface. Custom implementations of `ILayout` created before Feathers 2.1.0 will have compiler errors until the required changes are made.
+
+This method is meant to calculate an updated scroll position for a specific index that requires the minimum amount of scrolling to fully display the specified index within the container's view port. It was added so that components like `List` could update the scroll position when changing the selected index with the keyboard when the component has focus.
+
+To maintain the existing behavior (where the container doesn't scroll at all) to simply bypass the compiler error, the following implementation will return the existing scroll position:
+
+	public function getNearestScrollPositionForIndex(index:int, scrollX:Number, scrollY:Number, items:Vector.<DisplayObject>, x:Number, y:Number, width:Number, height:Number, result:Point = null):Point
+	{
+		if(!result)
+		{
+			return new Point(scrollX, scrollY);
+		}
+		result.setTo(scrollX, scrollY);
+		return result;
+	}
+
+#### Scroller now implements IFocusDisplayObject
+
+With the addition of the new `IFocusContainer` interface, it is now possible for a container and its children to both appear in the tab focus chain when the `FocusManager` is enabled. Previously, subclasses of `Scroller`, like `List` or `ScrollContainer`, could not receive focus to allow the user to control the scroll position with the keyboard because the children wouldn't be able to receive focus too. Now, with the new interface and an updated focus manager, that restriction is lifted, and `Scroller` implements `IFocusDisplayObject` to support keyboard scrolling.
+
+Subclasses of `Scroller` that need to support passing focus to children must now implement `IFocusContainer`. `List`, `ScrollContainer`, `GroupedList` have been updated, obviously, but custom subclasses of `Scroller` may need to be updated to support focus. `IFocusContainer` requires one property, `isChildFocusEnabled`. For convenience, you may copy following implementation of `isChildFocusEnabled` into a subclass of `Scroller`:
+
+	protected var _isChildFocusEnabled:Boolean = true;
+
+	public function get isChildFocusEnabled():Boolean
+	{
+		return this._isEnabled && this._isChildFocusEnabled;
+	}
+
+	public function set isChildFocusEnabled(value:Boolean):void
+	{
+		this._isChildFocusEnabled = value;
+	}
+
+## 2.0.1
+
+* AddOnFunctionStyleProvider: fixed issue where function passed into constructor would be ignored.
+* LayoutGroup: fixed issue where background skin would not validate after setting its dimensions.
+* Scale3Image, Scale9Image, TiledImage: updated to listen for Event.FLATTEN to validate instead of overriding flatten() to remain compatible with the new flatten() function signature in Starling 1.6.
+* StageTextTextEditor: fixed issue where StageText.stage was null, and calling drawViewPortToBitmapData() resulted in a runtime error.
+* StageTextTextEditor: fixed issue where setFocus() didn't work if StageText.stage was null.
+* TextInput: fixed issue where runtime error would be thrown after changing prompt from null to a valid string after input had validated.
+* Themes: fixed issue in desktop themes where assets displayed at 4x instead of 2x on HiDPI Macs.
+* Themes: fixed issue in desktop themes where PanelScreen and ScrollScreen would incorrectly use mobile scroll bars and behaviors.
+* Themes: fixed issue where a subclass would add a style function for the ToggleSwitch class, and that would cause some ToggleSwitch instances to be missing skins.
+* Themes: fixed issue where wrong arguments were passed to Texture.fromBitmap().
+* Added workarounds for stack overflow runtime errors when compiling with legacy Flex 4.6 compiler.
+
+## 2.0.0
+
+* New style provider architecture for skinning and themes.
+* Components may always be validated, even if they are not on the display list yet.
+* New Text Editor: TextBlockTextEditor is a desktop-only text editor built on FTE, similar to TextBlockTextRenderer.
+* New Text Editor: BitmapFontTextEditor is a desktop-only text editor built on bitmap fonts, similar to BitmapFontTextRenderer.
+* All Components: subComponentProperties pattern is now stricter. If properties that don't exist are set, a runtime error will be thrown.
+* BitmapFontTextRenderer: properly redraws when isEnabled is changed.
+* BitmapFontTextRenderer: if textFormat is null, generates a default value so that something will be displayed (using Starling's embedded BitmapFont.MINI).
+* Button: added minGap property that is used when gap is set to Number.POSITIVE_INFINITY.
+* Button: pulled out toggle functionality into a subclass: ToggleButton.
+* Button: removed now-useless autoFlatten property.
+* Button: added new hasLabelTextRenderer that may be set to false to avoid creating the text renderer (for things like scroll bar or slider button sub-components).
+* Button: fixed issue where button didn't return to up state when focus is changed with keyboard while in another state.
+* Callout: added stagePadding property to set stagePaddingTop, stagePaddingRight, stagePaddingBottom, and stagePaddingLeft properties all at once.
+* Callout: fixed issue where touch listener was removed when callout was removed, but it wasn't re-added when the same callout instance was shown again.
+* DefaultGroupedListHeaderOrFooterRenderer: fixed issue where content wasn't disabled when isEnabled changed.
+* Drawers: added optional overlaySkin property to fade in a display object over the content when a drawer is opened.
+* Drawers: checks if event types are null before adding listeners.
+* Drawers: open and close events now pass the display object in the event data.
+* Drawers: fix for issue where wrong toggle duration may used sometimes.
+* DropDownPopUpContentManager: added new gap property.
+* FeathersControl: enforced as an abstract class. If you need a generic Feathers component wrapper for layoutData and things, use LayoutGroup.
+* FeathersControl: added styleName and styleNameList property to replace nameList. The name property is no longer used for styling, and it will work for getChildByName() in the rare situations where it was broken. The nameList property is deprecated.
+* FeathersControl: fixed issue where changing minTouchWidth or minTouchHeight did not update the hit area if the width or height wasn't changed at the same time.
+* FeathersControl: fixed issue where component would validate when disposed.
+* FeathersControl: fixed issue in setSize() where scaled dimensions weren't updated.
+* FocusManager: support for custom IFocusManager instances and support for multiple Starling stages.
+* FocusManager: fixed issue where disabled components could receive focus.
+* Header: added useExtraPaddingForOSStatusBar property to support iOS 7 status bar behavior.
+* Header: getters for leftItems, rightItems, and centerItems no longer duplicate the array.
+* Header: now disposed leftItems, rightItems, and centerItems by default. Can be controlled with new disposeItems property.
+* Header: fixed issue where title text renderer's isEnabled property wasn't properly updated.
+* Header: fixed issue where the touchable property was incorrectly set to false on some children.
+* IFocusDisplayObject: added new focusOwner property to allow pop-ups to be owned by another component. Allows the focus manager to manage focus order better with components like PickerList.
+* ImageLoader: checks for lost context before creating a texture from a loaded URL.
+* ImageLoader: fixed issue where isLoaded getter didn't always return true if the source is a texture.
+* ImageLoader: fixed issue where loaded textures could be uploaded to wrong Starling instance if multiple Starling instances were active.
+* Item Renderers: added skinField, skinFunction, and itemHasSkin for background skins from the data provider.
+* Item Renderers: added isSelectableOnAccessoryTouch property to control whether the selection will change or not when the accessory is touched.
+* Item Renderers: added minGap and minAccessoryGap properties that are used when gap or accessoryGap are set to Number.POSITIVE_INFINITY.
+* ITextEditor, ITextRenderer: extend a new IBaselineTextControl interface that defines a common baseline property.
+* Layouts: fixed issue where they didn't account for pivotX and pivotY.
+* Layouts: when centering items, rounds the x and y positions to the nearest integer.
+* LayoutGroup: added new backgroundSkin and backgroundDisabledSkin properties.
+* List, GroupedList: if dataProvider property is changed, or the collection dispatches CollectionEventType.RESET, automatically behaves as if updateItemAt() were called on all item renderers.
+* ListCollection, HierarchicalCollection: added dispose() function to support a way to dispose things like display objects or textures in items.
+* NumericStepper: claims exclusive touch so that it won't repeat while scrolling with touch.
+* NumericStepper: fixes for obscure situations where text input changes are not reflected in the value.
+* NumericStepper: improved auto-measurement for values that are not integers.
+* NumericStepper: added textInputGap and buttonGap properties.
+* PageIndicator: added new interactionMode property to allow alternate precise selection of symbols on tap, instead of previous back/next behavior.
+* Panel: added new outerPadding properties to support padding that is around the everything, including the header and footer. The existing (inner) padding properties only apply to the content between the header and footer.
+* PanelScreen: turns on clipping by default.
+* PickerList: added toggleButtonOnOpenAndClose property.
+* PickerList: implements IFocusDisplayObject and manages focus of children better.
+* PickerList: closes on enter key to match native behavior.
+* PopUpManager: when centering a pop-up, rounds the x and y positions to the nearest integer.
+* ProgressBar: fixed vertical fill so that it starts from the bottom and fills up.
+* PropertyProxy: added toString() function to allow a PropertyProxy to be output to console.
+* Scale3Image, Scale9Image, fixed issue where scaling smaller than the minimum size would cause overlapping instead of distortion when end regions weren't the same size.
+* Scale3Textures, Scale9Textures: fixed rendering of textures with a scale property that isn't equal to 1.
+* Screens: removed dpiScale, pixelScale, originalWidth, and originalHeight properties. The kinds of calculations these values were used for should be handled in the theme (or somewhere else outside of the screen if not using a theme).
+* ScrollBar: increment and decrement buttons are hidden, like the thumb, if the minimum is equal to the maximum. The track fills the full dimensions.
+* ScrollBar: fix for wrongly positioned track when direction is horizontal.
+* ScrollContainer: fixed wrong measurement when using no layout with children at negative coordinates.
+* Scroller: fixed issue where a floating scroll bar wouldn't disappear.
+* Scroller: refactored scrolling behavior to more closely match iOS native scrolling.
+* Scroller: touch overlay and background skins are added and removed instead of changing visible property. Works better with Monster Debugger.
+* Scroller: fixes issue where events were dispatched for a completed scroll when the scroll position didn't actually change from calling throwTo().
+* Scroller: added support for a view port that doesn't necessarily auto-size to show its full content. In other words, a view port can choose to measure so that it needs to scroll.
+* Scroller: fixed issue where background wasn't sized property when isEnabled was changed.
+* Scroller: skips some unnecessary code when dimensions are explicit to improve performance.
+* Scroller: added new measureViewPort property that can be set to false to exclude the view port from auto-measurement and only use the background skin.
+* Scroller: automatically sets direction property on scroll bars, so that you don't need to, thanks to the new IDirectionalScrollBar interface.
+* ScrollText: added disabledTextFormat property.
+* ScrollText: may receive focus and use keyboard arrow keys to scroll.
+* Slider: added new trackInteractionMode property to control whether touching the track updates the value by page or jumps directly to the nearest value.
+* SmartDisplayObjectValueSelector: fixed issue where getValueTypeHandler() function had an extra parameter.
+* SmartDisplayObjectValueSelector: added support for null value other than the default.
+* SmartDisplayObjectValueSelector: stricter reuse of display objects. Type must match exactly. Fixes issue where Image is incorrectly reused because it is a subclass of Quad.
+* StageTextTextEditor: fixed issue where measurement was wrong when text was an empty string.
+* StageTextTextEditor: fixed issue on iOS where characters were masked immediately instead of showing in the clear for a moment.
+* StageTextTextEditor: fixed issue where the clipboard menu appeared unexpectedly when multiline is true.
+* StageTextTextEditor: draws StageText to BitmapData with double dimensions on Mac HiDPI, thanks to Adobe's bug fix.
+* TabBarSlideTransitionManager: fixes bug where switching between tabs quickly would break the transition.
+* Text: will use non-power-of-two textures for snapshots, if the Stage 3D profile supports it.
+* Text: if a renderer or editor supports native filters, does some extra cleanup in dispose() that is actually unnecessary, but will ease some pressure if there's a memory leak.
+* Text: fixed issue where snapshot wasn't updated when isEnabled changed.
+* TextBlockTextRenderer: if elementFormat is null, generates a default value so that something will be displayed.
+* TextBlockTextRenderer: fixed issue where width was calculated wrong when text ended in whitespace.
+* TextFieldTextEditor, TextFieldTextRenderer: added useGutter property to allow removal of the 2-pixel "gutter" that Flash adds to a TextField.
+* TextInput, TextArea: added hasFocus getter to allow checking focus, even if there is no focus manager.
+* TextInput, Text Editors: added new selectionBeginIndex and selectionEndIndex properties.
+* TextInput: fixes issue where prompt text renderer's isEnabled property wasn't updated.
+* TextInput: added new verticalAlign property to support top, middle, bottom, or justify.
+* TextInput: won't throw an error if there's no background skin, but auto-measurement will result in a width and height of 0, unless typicalText is set.
+* TextInput: improved support for text editors that are completely on the Starling display list without a native overlay.
+* TextInput: doesn't create prompt text renderer if prompt is null.
+* TextArea: added stateToSkinFunction, similar to Button background skin.
+* TextArea: fixed issue where background skin was sometimes missing.
+* TextArea: added clearFocus() function match API of TextInput.
+* TextArea: further improvements to positioning and scaling of texture snapshot.
+* Text Editors: improved support for Mac HiDPI.
+* Text Editors: added disabled font styles.
+* Text Renderers: uses generateFilterRect() when using nativeFilters for improved texture dimensions.
+* Text Renderers: ITextRenderer now has a first-class wordWrap property that is required by all renderers.
+* TiledColumnsLayout, TiledRowsLayouts: fixed result of getScrollPositionForIndex() when paging is disable to allow the item to be properly centered.
+* TiledColumnsLayout, TiledRowsLayouts: fixed calculation of tile count when padding is used.
+* TiledColumnsLayout, TiledRowsLayout: added requestedRowCount and requestedColumnCount properties.
+* ToggleSwitch: fixed issue where the isEnabled property of text renderers wasn't properly updated.
+* ToggleSwitch: added toggleThumbSelection property to update the isSelected property of the thumb (if it's a ToggleButton) to match the isSelected property of the switch.
+* ToggleSwitch: fixed issue where selection change wasn't animated when triggered with the keyboard instead of a touch.
+* ToggleSwitch: added new setSelectionWithAnimation() method so that programmatic selection changes can be optionally animated.
+* Examples: override initialize() instead of listening for FeathersEventType.INITIALIZE.
+* Example Themes: rewritten using the new style provider system.
+* Example Themes: tweaked padding, gap, dimensions, and other values to be based on a simple grid system for more consistency.
+
+### 2.0.0 Deprecated APIs
+
+All deprecated APIs are subject to the [Feathers deprecation policy](http://wiki.starling-framework.org/feathers/deprecation-policy). Please migrate to the new APIs as soon as possible because the deprecated APIs **will** be removed in a future version of Feathers.
+
+The `nameList` property has been deprecated, and it is replaced by the `styleNameList` property. The `name` property is no longer connected to style names, and situations where it failed to work with `getChildByName()` have been resolved. The `styleName` property has been added to replace the former usage of the `name` property as a concatenated version of `nameList` (now, `styleNameList`).
+
+The `manageVisibility` property on layouts has been deprecated. In previous versions, this property could be used to improve performance of non-virtual layouts by hiding items that were outside the view port. However, other performance improvements have made it so that setting `manageVisibility` can now sometimes hurt performance instead of improving it.
+
+### 2.0.0 Default Behavior and API Changes
+
+This is a major update to Feathers, so it includes more breaking changes than usual. Be sure to read this section thoroughly to see if any of these changes will affect your apps.
+
+`TextFieldTextRenderer` and `TextFieldTextEditor` now have a `useGutter` property that controls whether the 2-pixel gutter around the edges of the `flash.text.TextField` will be used in measurement and layout. In previous versions of Feathers, the gutter was always enabled. The gutter is now disabled by default to allow text controls based on `TextField` to more easily align with other text controls.
+
+The `ITextRenderer` and `ITextEditor` interfaces now extend the `ITextBaselineControl` interface. In the case of `ITextEditor`, a new `baseline` getter is required.
+
+The `ITextRenderer` interface now requires a `wordWrap` property.
+
+The `IFocusDisplayObject` interface now requires a `focusOwner` property.
+
+Properties including `dpiScale`, `pixelScale`, `originalWidth`, `originalHeight`, and `originalDPI` have been removed from `Screen`, `ScrollScreen` and `PanelScreen`. The calculations previously offered by these properties should be handled in skinning code, such as the theme.
+
+The `Button` class no longer supports selection. This functionality has been moved into a subclass, `ToggleButton`.
+
+The `autoFlatten` property has been removed from the `Button` class.
+
+Setting the properties of a sub-component, such as using `thumbProperties` on a `Slider` to set properties on the slider's thumb sub-component, is now stricter. Previously, when a property did not exist, it was silently ignored. Now, an error will be thrown.
+
+If no text format is defined, `BitmapFontTextRenderer` defaults to using `BitmapFont.MINI` so that the text will always be rendered. Previously, it would render nothing.
+
+If no element format is defined, `TextBlockTextRenderer` defaults to using a new `ElementFormat` with default arguments so that the text will always be rendered. Previously, an error was thrown.
+
+A `trackInteractionMode` property has been added to `Slider`. In previous versions, `Slider` behaved as if `trackInteractionMode` were set to `Slider.TRACK_INTERACTION_MODE_BY_PAGE`. Now, the default value is `Slider.TRACK_INTERACTION_MODE_TO_VALUE`.
+
+A `verticalAlign` property has been added to `TextInput`. In previous versions, `TextInput` behaved as if `verticalAlign` were set to `TextInput.VERTICAL_ALIGN_JUSTIFY`. Now, the default value is `TextInput.VERTICAL_ALIGN_MIDDLE`.
+
+The `FeathersControl` class is now considered abstract. It will throw a runtime error if instantiated directly instead of being subclassed. If you need a generic Feathers component as a wrapper for another display object, use `LayoutGroup` instead.
+
+The `leftItems`, `rightItems`, and `centerItems` getters on the `Header` class no longer make a copy of their storage variables. Take care when modifying these values directly.
+
+Focus management now supports multiple Starling stages (for AIR desktop apps). The static `isEnabled` property has been removed. Instead, you should use the static `setEnabledForStage()` function:
+
+```as3
+FocusManager.setEnabledForStage( Starling.current.stage, true );
+```
+
+All layouts now account for the `pivotX` and `pivotY` properties when positioning display objects. In previous versions, these properties were ignored.
+
+When the `direction` property of a `ProgressBar` is equal to `ProgressBar.DIRECTION_VERTICAL`, the fill now starts at the bottom and fills up.
+
+The increment button and decrement button sub-components of a `ScrollBar` are now hidden when the scroll bar's maximum scroll position is equal to its minimum scroll position, just like how the thumb is hidden. The track will be resized to fill the extra space where the buttons were previously rendered.
+
+When replacing the `dataProvider` of a `List` or `GroupedList` (or replacing the `data` property of a `ListCollection` or `HierarchicalCollection`), it is no longer necessary to call `updateItemAt()` on the new collection if it contains some of the same items as the previous collection. This behavior will happen automatically.
+
 ## 1.3.1
 
 * NumericStepper: fixed issue where using step to calculate a new value didn't account for the minimum value.
@@ -174,7 +505,7 @@ The property `requiresLayoutOnScroll` has been added to `ILayout` to provide imp
 * ScreenNavigator: properly resizes if content is resized.
 * ScreenNavigator: clears screen if removeScreen() is called for the active screen.
 * ToggleGroup: added getItemIndex() and setItemIndex().
-* VerticalCenteredPopUpContentManger: touch must begin and end outside of content to close the content.
+* VerticalCenteredPopUpContentManager: touch must begin and end outside of content to close the content.
 * DisplayListWatcher: added initializeObject() function to initialize display objects that are already added when a theme is created.
 * PropertyProxy: support for QName values.
 * SmartDisplayObjectValueSelector: fix to support uint values for Quads.
