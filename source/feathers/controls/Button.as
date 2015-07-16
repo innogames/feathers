@@ -3508,8 +3508,21 @@ package feathers.controls
 			
 			disposeNotOnStageDisplayObject( _iconSelector.defaultValue as DisplayObject);
 			disposeNotOnStageDisplayObject( _iconSelector.defaultSelectedValue as DisplayObject);
+			disposeNotOnStageDisplayObject( _iconSelector.getValueForState(STATE_UP, true) as DisplayObject);
+			disposeNotOnStageDisplayObject( _iconSelector.getValueForState(STATE_DOWN, true) as DisplayObject);
+			disposeNotOnStageDisplayObject( _iconSelector.getValueForState(STATE_HOVER, true) as DisplayObject);
+			disposeNotOnStageDisplayObject( _iconSelector.getValueForState(STATE_DISABLED, true) as DisplayObject);
+			disposeNotOnStageDisplayObject( _iconSelector.getValueForState(STATE_UP, false) as DisplayObject);
+			disposeNotOnStageDisplayObject( _iconSelector.getValueForState(STATE_DOWN, false) as DisplayObject);
+			disposeNotOnStageDisplayObject( _iconSelector.getValueForState(STATE_HOVER, false) as DisplayObject);
+			disposeNotOnStageDisplayObject( _iconSelector.getValueForState(STATE_DISABLED, false) as DisplayObject);
+
 			disposeNotOnStageDisplayObject( _skinSelector.defaultValue as DisplayObject);
 			disposeNotOnStageDisplayObject( _skinSelector.defaultSelectedValue as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_UP, true) as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_DOWN, true) as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_HOVER, true) as DisplayObject);
+			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_DISABLED, true) as DisplayObject);
 			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_UP, false) as DisplayObject);
 			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_DOWN, false) as DisplayObject);
 			disposeNotOnStageDisplayObject( _skinSelector.getValueForState(STATE_HOVER, false) as DisplayObject);
