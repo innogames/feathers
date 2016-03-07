@@ -73,6 +73,15 @@ package feathers.controls.text
 		 */
 		private static const HELPER_POINT:Point = new Point();
 
+
+		public function get textfield(): TextField {
+			return textField;
+		}
+
+		public function set textfield(value: TextField): void {
+			textField = value;
+		}
+
 		/**
 		 * @private
 		 */

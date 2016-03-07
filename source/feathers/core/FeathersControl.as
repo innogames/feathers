@@ -1433,6 +1433,20 @@ package feathers.core
 		}
 
 		/**
+		 * The left edge of the control
+		 */
+		public function get rightEdgePosition(): int {
+			return this.x + this.width;
+		}
+
+		/**
+		 * The bottom edge of the control
+		 */
+		public function get bottomEdgePosition(): int {
+			return this.y + this.height;
+		}
+
+		/**
 		 * @private
 		 */
 		protected var _hasFocus:Boolean = false;
