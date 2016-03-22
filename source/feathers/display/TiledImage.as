@@ -7,6 +7,7 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.display
 {
+
 	import feathers.core.IValidating;
 	import feathers.core.ValidationQueue;
 	import feathers.utils.display.getDisplayObjectDepthFromStage;
@@ -452,10 +453,10 @@ package feathers.display
 		/**
 		 * @private
 		 */
-		override public function flatten():void
+		override public function flatten(ignoreChildOrder: Boolean = false): void
 		{
 			this.validate();
-			super.flatten();
+			super.flatten(ignoreChildOrder);
 		}
 
 		/**
