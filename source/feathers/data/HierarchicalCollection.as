@@ -9,6 +9,8 @@ package feathers.data
 {
 	import feathers.events.CollectionEventType;
 
+	import flash.errors.IllegalOperationError;
+
 	import starling.events.Event;
 	import starling.events.EventDispatcher;
 
@@ -248,7 +250,13 @@ package feathers.data
 		public function getLength(...rest:Array):int
 		{
 			rest.unshift(this._data);
-			return this._dataDescriptor.getLength.apply(null, rest);
+			if (rest.length == 1) {
+				return this._dataDescriptor.getLength(rest[0], []);
+			} else if (rest.length == 2) {
+				return this._dataDescriptor.getLength(rest[0], [rest[1]]);
+			} else {
+				throw new IllegalOperationError("Only one level is hierarchy is supported");
+			}
 		}
 
 		/**
@@ -270,7 +278,13 @@ package feathers.data
 		{
 			rest.unshift(index);
 			rest.unshift(this._data);
-			return this._dataDescriptor.getItemAt.apply(null, rest);
+			if (rest.length == 2) {
+				return this._dataDescriptor.getItemAt(rest[0], index, []);
+			} else if (rest.length == 3) {
+				return this._dataDescriptor.getItemAt(rest[0], index, [rest[2]]);
+			} else {
+				throw new IllegalOperationError("Only one level of hierarchy supported.");
+			}
 		}
 
 		/**

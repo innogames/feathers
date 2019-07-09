@@ -1,7 +1,6 @@
 /*
 Feathers
 Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
-
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
 */
@@ -43,103 +42,98 @@ package feathers.data
 		public function ArrayChildrenHierarchicalCollectionDataDescriptor()
 		{
 		}
-
 		/**
 		 * The field used to access the Array of a branch's children.
 		 */
 		public var childrenField:String = "children";
-
 		/**
 		 * @inheritDoc
 		 */
-		public function getLength(data:Object, ...rest:Array):int
+		public function getLength(data:Object, restArgs:Array):int
 		{
 			var branch:Array = data as Array;
-			const indexCount:int = rest.length;
+			const indexCount:int = restArgs.length;
 			for(var i:int = 0; i < indexCount; i++)
 			{
-				var index:int = rest[i] as int;
+				var index:int = restArgs[i] as int;
 				branch = branch[index][childrenField] as Array;
 			}
-
 			return branch.length;
 		}
-
 		/**
 		 * @inheritDoc
 		 */
-		public function getItemAt(data:Object, index:int, ...rest:Array):Object
+		public function getItemAt(data:Object, index:int, restArgs:Array):Object
 		{
-			rest.unshift(index);
+			restArgs.unshift(index);
 			var branch:Array = data as Array;
-			const indexCount:int = rest.length - 1;
+			const indexCount:int = restArgs.length - 1;
 			for(var i:int = 0; i < indexCount; i++)
 			{
-				index = rest[i] as int;
+				index = restArgs[i] as int;
 				branch = branch[index][childrenField] as Array;
 			}
-			const lastIndex:int = rest[indexCount] as int;
+			const lastIndex:int = restArgs[indexCount] as int;
 			return branch[lastIndex];
 		}
-
 		/**
 		 * @inheritDoc
 		 */
-		public function setItemAt(data:Object, item:Object, index:int, ...rest:Array):void
+		public function setItemAt(data:Object, item:Object, index:int, restArgs:Array):void
 		{
-			rest.unshift(index);
+			restArgs.unshift(index);
 			var branch:Array = data as Array;
-			const indexCount:int = rest.length - 1;
+			const indexCount:int = restArgs.length - 1;
 			for(var i:int = 0; i < indexCount; i++)
 			{
-				index = rest[i] as int;
+				index = restArgs[i] as int;
 				branch = branch[index][childrenField] as Array;
 			}
-			const lastIndex:int = rest[indexCount];
+			const lastIndex:int = restArgs[indexCount];
 			branch[lastIndex] = item;
 		}
-
 		/**
 		 * @inheritDoc
 		 */
-		public function addItemAt(data:Object, item:Object, index:int, ...rest:Array):void
+		public function addItemAt(data:Object, item:Object, index:int, restArgs:Array):void
 		{
-			rest.unshift(index);
+			restArgs.unshift(index);
 			var branch:Array = data as Array;
-			const indexCount:int = rest.length - 1;
+			const indexCount:int = restArgs.length - 1;
 			for(var i:int = 0; i < indexCount; i++)
 			{
-				index = rest[i] as int;
+				index = restArgs[i] as int;
 				branch = branch[index][childrenField] as Array;
 			}
-			const lastIndex:int = rest[indexCount];
+			const lastIndex:int = restArgs[indexCount];
 			branch.splice(lastIndex, 0, item);
 		}
-
 		/**
 		 * @inheritDoc
 		 */
-		public function removeItemAt(data:Object, index:int, ...rest:Array):Object
+		public function removeItemAt(data:Object, index:int, restArgs:Array):Object
 		{
-			rest.unshift(index);
+			restArgs.unshift(index);
 			var branch:Array = data as Array;
-			const indexCount:int = rest.length - 1;
+			const indexCount:int = restArgs.length - 1;
 			for(var i:int = 0; i < indexCount; i++)
 			{
-				index = rest[i] as int;
+				index = restArgs[i] as int;
 				branch = branch[index][childrenField] as Array;
 			}
-			const lastIndex:int = rest[indexCount];
+			const lastIndex:int = restArgs[indexCount];
 			const item:Object = branch[lastIndex];
 			branch.splice(lastIndex, 1);
 			return item;
 		}
-
 		/**
 		 * @inheritDoc
 		 */
-		public function getItemLocation(data:Object, item:Object, result:Vector.<int> = null, ...rest:Array):Vector.<int>
+		public function getItemLocation(data:Object, item:Object, result:Vector.<int> = null, restArgs:Array = null):Vector.<int>
 		{
+			if (restArgs == null) {
+				restArgs = [];
+			}
 			if(!result)
 			{
 				result = new <int>[];
@@ -149,14 +143,13 @@ package feathers.data
 				result.length = 0;
 			}
 			var branch:Array = data as Array;
-			const restCount:int = rest.length;
+			const restCount:int = restArgs.length;
 			for(var i:int = 0; i < restCount; i++)
 			{
-				var index:int = rest[i] as int;
+				var index:int = restArgs[i] as int;
 				result[i] = index;
 				branch = branch[index][childrenField] as Array;
 			}
-
 			const isFound:Boolean = this.findItemInBranch(branch, item, result);
 			if(!isFound)
 			{
@@ -164,7 +157,6 @@ package feathers.data
 			}
 			return result;
 		}
-
 		/**
 		 * @inheritDoc
 		 */
@@ -172,7 +164,6 @@ package feathers.data
 		{
 			return node.hasOwnProperty(this.childrenField) && node[this.childrenField] is Array;
 		}
-
 		/**
 		 * @private
 		 */
@@ -184,7 +175,6 @@ package feathers.data
 				result.push(index);
 				return true;
 			}
-
 			const branchLength:int = branch.length;
 			for(var i:int = 0; i < branchLength; i++)
 			{
