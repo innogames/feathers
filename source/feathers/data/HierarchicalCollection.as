@@ -319,7 +319,7 @@ package feathers.data
 		{
 			rest.unshift(index);
 			rest.unshift(this._data);
-			const item:Object = this._dataDescriptor.removeItemAt.apply(null, rest);
+			const item:Object = this._dataDescriptor.removeItemAt(rest[0], index, []);
 			this.dispatchEventWith(Event.CHANGE);
 			rest.shift();
 			this.dispatchEventWith(CollectionEventType.REMOVE_ITEM, false, rest);
